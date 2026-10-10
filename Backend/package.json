@@ -6,7 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc --noEmit --project ./tsconfig.json"
+    "build": "tsc --noEmit --project ./tsconfig.json",
+    "db:init": "npx sequelize-cli db:create && npx sequelize-cli db:migrate",
+    "db:migrate": "npx sequelize-cli db:migrate",
+    "db:migrate:undo:all": "npx sequelize-cli db:migrate:undo:all"
   },"repository": {
     "type": "git",
     "url": "git+https://github.com/ADS-PIM/RedeCamarao.git"
