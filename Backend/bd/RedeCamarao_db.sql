@@ -78,3 +78,28 @@ create table `messages` (
     constraint `messages_conversations_FK` foreign key (`conversationId`) references `conversations` (`id`) on delete cascade,
     constraint `messages_users_FK` foreign key (`senderId`) references `users` (`id`)
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
+
+create table `administrators` (
+    `id` char(36) not null,
+    `name` varchar(255) not null,
+    `email` varchar(320) not null,
+    `hashPassword` varchar(255) not null,
+    `role` enum('ADMIN', 'SUPER_ADMIN') not null,
+    `active` boolean not null default true,
+    `createdAt` timestamp not null default current_timestamp,
+    `profile_picture` varchar(2048) default null,
+    primary key (`id`),
+    unique key `administrators_unique` (`email`)
+)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
+
+create table `refresh_tokens` (
+    `id` char(36) not null,
+    `adminId` char(36) not null,
+    `tokenHash` varchar(281) not null,
+    `createdAt` timestamp not null default current_timestamp,
+    `expiresAt` datetime not null,
+    `revokedAt` datetime default null,
+    primary key (`id`),
+    key `refreshTokens_administrators_FK` (`adminId`),
+    constraint `refreshTokens_administrators_FK` foreign key (`adminId`) references `administrators` (`id`)
+)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
