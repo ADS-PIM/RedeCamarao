@@ -1,5 +1,5 @@
 import { connection } from '../util/connection';
-import { Admin } from '../model/admin';
+import { Admin } from '../dominio/model/admin';
 import { AdminSearchByIdDTO, AdminSearchDTO } from '../dto/admin.dto';
 
 export type AdminUpdateData = {
