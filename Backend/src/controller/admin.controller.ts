@@ -6,7 +6,7 @@ import { AdminCreateDTO, AdminLoginDTO, AdminUpdateDTO } from '../dto/admin.dto'
 import { AdminService } from '../service/admin.service';
 import { RefreshTokenDAO } from '../dao/refreshToken.dao';
 import jwt from 'jsonwebtoken';
-import { AdminRole } from '../model/admin';
+import { AdminRole } from '../dominio/model/admin';
 import { AuthRequest } from '../../authMiddleware';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
