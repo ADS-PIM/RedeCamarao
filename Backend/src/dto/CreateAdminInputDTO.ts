@@ -1,23 +1,17 @@
 import { IsNotEmpty, IsString, IsEmail, IsEnum, IsOptional, IsBoolean } from 'class-validator';
-import { AdminRole } from '../model/admin';
+import { AdminRole } from '../dominio/model/admin';
 
-export class AdminCreateDTO {
-    @IsNotEmpty()
-    @IsString()
+export type CreateAdminInputDTO = {
     name: string;
-
-    @IsNotEmpty()
-    @IsEmail()
     email: string;
-
-    @IsNotEmpty()
-    @IsString()
     password: string;
-
-    @IsNotEmpty()
-    @IsEnum(AdminRole)
     role: AdminRole;
+    active: boolean;
+    createdAt: Date
+    profile_picture: string | null 
 }
+
+
 
 export class AdminLoginDTO {
     @IsNotEmpty()

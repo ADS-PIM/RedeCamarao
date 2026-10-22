@@ -1,6 +1,6 @@
 import { AdminDAO } from "../dao/admin.dao";
 import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from "../dto/admin.dto";
-import { Admin } from "../model/admin";
+import { Admin } from "../dominio/model/admin";
 import { PasswordCrypto } from './passwordCrypto';
 import { AdminUpdateData } from '../dao/admin.dao';
 
