@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PasswordCrypto } from '../service/passwordCrypto'
-import { AdminCreateDTO, AdminLoginDTO, AdminUpdateDTO } from '../dto/admin.dto';
+import { AdminCreateDTO } from '../dto/AdminCreateInputDTO';
 import { AdminService } from '../service/admin.service';
 import { RefreshTokenDAO } from '../dao/refreshToken.dao';
 import jwt from 'jsonwebtoken';

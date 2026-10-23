@@ -1,7 +1,7 @@
 import { Admin } from "../../dominio/model/admin";
 import { AdminRepositorio } from "../../dominio/repositorios/AdminRepositorio";
-import { CreateAdminInputDTO } from "../../dto/CreateAdminInputDTO";
-import { CreateAdminOutputDTO } from "../../dto/CreateAdminOutputDTO"
+import { CreateAdminInputDTO } from "../../dto/AdminCreateInputDTO";
+import { CreateAdminOutputDTO } from "../../dto/AdminCreateOutputDTO"
 import { UseCase } from "../useCase";
 
 export class CreateAdmin implements UseCase<CreateAdminInputDTO, CreateAdminOutputDTO>{
