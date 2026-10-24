@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AdminController } from "../controller/admin.controller";
 import { AdminService } from "../service/admin.service";
-import { AdminDAO } from "../dao/admin.dao";
+import { AdminDAO } from "../dao/admin.MySQL.dao";
 import authToken, { isSuperAdmin } from "../../authMiddleware";
 import { authenticatedRateLimit, loginRateLimit, passwordRateLimit, passwordRecoveryRateLimit, passwordResetRateLimit, registrationRateLimit, sessionRateLimit } from '../rateLimit/middleware';
 import { PasswordResetController } from '../controller/passwordReset.controller';
@@ -23,10 +23,10 @@ adminRoutes
     .route('/register')
     .post(authToken, authenticatedRateLimit, isSuperAdmin, async (req, res) => adminController.register(req,res))
 
-// Rota usada para cadastrar o Root. Mantida desativada por permitir cadastro sem autenticação.
-// adminRoutes
-//     .route('/register/force')
-//     .post(...registrationRateLimit, async (req, res) => adminController.register(req,res))
+//Rota usada para cadastrar o Root. Mantida desativada por permitir cadastro sem autenticação.
+adminRoutes
+    .route('/register/force')
+    .post(...registrationRateLimit, async (req, res) => adminController.register(req,res))
 
 adminRoutes
     .route('/login')

@@ -1,8 +1,8 @@
-import { AdminDAO } from "../dao/admin.dao";
-import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from "../dto/admin.dto";
+import { AdminDAO } from "../dao/admin.MySQL.dao";
+import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from "../dto/AdminCreateInputDTO";
 import { Admin } from "../dominio/model/admin";
 import { PasswordCrypto } from './passwordCrypto';
-import { AdminUpdateData } from '../dao/admin.dao';
+import { AdminUpdateData } from '../dominio/interfaces/AdminDAOInterface';
 
 export class AdminService {
     public constructor(private adminDAO: AdminDAO) {}
