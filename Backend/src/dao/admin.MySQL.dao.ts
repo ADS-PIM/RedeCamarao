@@ -1,17 +1,10 @@
 import { connection } from '../util/connection';
 import { Admin } from '../dominio/model/admin';
-import { AdminCreateDTO } from '../dto/AdminCreateInputDTO';
+import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from '../dto/AdminCreateInputDTO';
+import { AdminDAOInterface } from '../dominio/interfaces/AdminDAOInterface';
+import { AdminUpdateData } from '../dominio/interfaces/AdminDAOInterface';
 
-export type AdminUpdateData = {
-    name?: string;
-    email?: string;
-    password?: string;
-    role?: Admin['role'];
-    active?: boolean;
-    profile_picture?: string | null;
-}
-
-export class AdminDAO {
+export class AdminDAO implements AdminDAOInterface{
     public async register(admin: Admin): Promise<void> {
         try {
             const [result]: any = await connection.query(
