@@ -2,12 +2,13 @@ import { Request, Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PasswordCrypto } from '../service/passwordCrypto'
-import { AdminCreateDTO } from '../dto/AdminCreateInputDTO';
+import { AdminCreateDTO, AdminLoginDTO } from '../dto/AdminInputDTO';
 import { AdminService } from '../service/admin.service';
 import { RefreshTokenDAO } from '../dao/refreshToken.dao';
 import jwt from 'jsonwebtoken';
 import { AdminRole } from '../dominio/model/admin';
 import { AuthRequest } from '../../authMiddleware';
+import { CreateAdmin, SearchByEmailAdmin } from '../usecase/AdminUseCases';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
@@ -22,9 +23,7 @@ const refreshCookieOptions = {
 export class AdminController {
     private adminService: AdminService;
 
-    constructor(adminService: AdminService) {
-        this.adminService = adminService;
-    }
+    constructor(private createAdmin: CreateAdmin, private searchByEmailAdmin: SearchByEmailAdmin) {}
 
     public async register(req: Request, res: Response ) {
         try {
@@ -35,7 +34,7 @@ export class AdminController {
                 return res.status(400).json({errors});
             }
 
-            await this.adminService.register(adminCreateDTO);
+            await this.createAdmin.execute(adminCreateDTO);
             return res.status(201).json({ message: 'Admin registred succesfully' })
         } catch (error: any) {
             return res.status(500).json({error: error.message});
@@ -209,7 +208,7 @@ export class AdminController {
     }
 
     public async searchByEmail(email: string) {
-        const admin = await this.adminService.searchByEmail(email);
+        const admin = await this.searchByEmailAdmin.execute(email);
         return admin;
     }
 

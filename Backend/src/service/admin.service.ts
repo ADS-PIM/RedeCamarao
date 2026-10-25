@@ -1,30 +1,11 @@
-import { AdminDAO } from "../dao/admin.MySQL.dao";
-import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from "../dto/AdminCreateInputDTO";
+import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from "../dto/AdminInputDTO";
 import { Admin } from "../dominio/model/admin";
 import { PasswordCrypto } from './passwordCrypto';
-import { AdminUpdateData } from '../dominio/interfaces/AdminDAOInterface';
+import { AdminDAOInterface, AdminUpdateData } from '../dominio/interfaces/AdminDAOInterface';
 
 export class AdminService {
-    public constructor(private adminDAO: AdminDAO) {}
-
-    public async register(adminCreateDTO: AdminCreateDTO) {
-        try {
-            if (!adminCreateDTO.name || !adminCreateDTO.email || !adminCreateDTO.password || !adminCreateDTO.role) {
-                throw new Error('Missing required fields');
-            }
-
-            if (await this.searchByEmail(adminCreateDTO.email)) {
-                throw new Error('Email already registered');
-            }
-
-            adminCreateDTO.password = await PasswordCrypto.hashPassword(adminCreateDTO.password);
-            const admin = Admin.construct(adminCreateDTO);
-
-            await this.adminDAO.register(admin);
-        } catch (error: any) {
-            throw new Error('Error registering admin: ' + error.message);
-        }
-    }
+    public constructor(private adminDAO: AdminDAOInterface) {}
+//Vou começar a retirar os métodos que já existem no usecase, para não ter duplicidade de código. O service vai ser usado apenas para manter nota do que ainda não está implementado nos usecases.
 
     public async delete(id: string): Promise<void> {
         const admin = await this.searchById(id);
@@ -36,11 +17,6 @@ export class AdminService {
             throw new Error('Cannot delete SUPER_ADMIN');
         }
         await this.adminDAO.delete(id);
-    }
-
-    public async searchByEmail(email: string): Promise <Admin | null> {
-        const admin: Admin | null = await this.adminDAO.searchByEmail(email);
-        return admin ? Admin.reconstruct(admin) : null;
     }
 
     public async searchById(id: string): Promise<Admin | null> {
