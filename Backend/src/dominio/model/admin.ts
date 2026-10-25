@@ -33,13 +33,13 @@ export class Admin {
     //     return new Admin(props);
     // }
 
-    public static construct({name, email, password, role, active, profile_picture}: { name: string; email: string; password: string; role: AdminRole; active: boolean; profile_picture: string | null }): Admin{
+    public static construct({name, email, password, role}: { name: string; email: string; password: string; role: AdminRole}): Admin{
 
         if (!name || !email || !password || !role) {
             throw new Error('Os dados obrigatórios não foram preenchidos')
         }
 
-        return new Admin({ id: crypto.randomUUID().toString(), name, email, password, role, createdAt: new Date(), active, profile_picture});
+        return new Admin({ id: crypto.randomUUID().toString(), name, email, password, role, active: true, createdAt: new Date(), profile_picture: null });
     }
 
     public static reconstruct(props: propsAdmin) {

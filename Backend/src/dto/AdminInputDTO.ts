@@ -16,20 +16,8 @@ export class AdminCreateDTO {
 
     @IsNotEmpty()
     @IsEnum(AdminRole)
-    role: AdminRole;
-
-    @IsNotEmpty()
-    @IsBoolean()
-    active: boolean;
-
-    @IsNotEmpty()
-    createdAt: Date;
-
-    @IsOptional()
-    profile_picture: string | null 
+    role: AdminRole; 
 }
-
-
 
 export class AdminLoginDTO {
     @IsNotEmpty()

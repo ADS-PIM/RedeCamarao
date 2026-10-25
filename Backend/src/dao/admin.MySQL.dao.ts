@@ -1,10 +1,10 @@
 import { connection } from '../util/connection';
 import { Admin } from '../dominio/model/admin';
-import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from '../dto/AdminCreateInputDTO';
+import { AdminSearchByIdDTO, AdminSearchDTO } from '../dto/AdminInputDTO';
 import { AdminDAOInterface } from '../dominio/interfaces/AdminDAOInterface';
 import { AdminUpdateData } from '../dominio/interfaces/AdminDAOInterface';
 
-export class AdminDAO implements AdminDAOInterface{
+export class AdminDAOMySQL implements AdminDAOInterface{
     public async register(admin: Admin): Promise<void> {
         try {
             const [result]: any = await connection.query(
