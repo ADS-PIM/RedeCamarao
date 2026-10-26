@@ -1,25 +1,48 @@
 import { Router } from "express";
 import { AdminController } from "../controller/admin.controller";
-import { CreateAdmin, SearchByEmailAdmin } from "../usecase/AdminUseCases";
+import { CreateAdmin, DeleteAdmin, SearchAllAdmins, SearchByEmailAdmin, SearchByIdAdmin, SearchPublicById, UpdateAdmin } from "../usecase/AdminUseCases";
 import { AdminDAOMySQL } from "../dao/admin.MySQL.dao";
 import authToken, { isSuperAdmin } from "../../authMiddleware";
 import { authenticatedRateLimit, loginRateLimit, passwordRateLimit, passwordRecoveryRateLimit, passwordResetRateLimit, sessionRateLimit } from '../rateLimit/middleware';
 import { PasswordResetController } from '../controller/passwordReset.controller';
+import { RefreshTokenDAOMySQL } from "../dao/refreshToken.MySQL.dao";
+import { CreateRefreshToken, DeleteByToken, FindByToken } from "../usecase/RefreshTokenCases";
 
 const adminRoutes = Router();
 const adminDAO = new AdminDAOMySQL();
+const refreshTokenDAO = new RefreshTokenDAOMySQL();
 
 const createAdmin = new CreateAdmin(adminDAO);
 const searchByEmailAdmin = new SearchByEmailAdmin(adminDAO);
+const searchByIdAdmin = new SearchByIdAdmin(adminDAO);
+const updateAdmin = new UpdateAdmin(adminDAO);
+const deleteAdmin = new DeleteAdmin(adminDAO);
+const searchAllAdmins = new SearchAllAdmins(adminDAO);
+const searchPublicById = new SearchPublicById(adminDAO);
 
-const adminController = new AdminController(createAdmin, searchByEmailAdmin);
+const createRefreshToken = new CreateRefreshToken(refreshTokenDAO);
+const findByToken = new FindByToken(refreshTokenDAO);
+const deleteByToken = new DeleteByToken(refreshTokenDAO);
+
+const adminController = new AdminController(
+    createAdmin,
+    searchByEmailAdmin,
+    searchByIdAdmin,
+    searchPublicById,
+    createRefreshToken,
+    findByToken,
+    deleteByToken,
+    updateAdmin,
+    deleteAdmin,
+    searchAllAdmins
+);
 const passwordResetController = new PasswordResetController();
 
 adminRoutes
-.post('/forgot-password', ...passwordRecoveryRateLimit, (req, res) => passwordResetController.request(req, res));
+    .post('/forgot-password', ...passwordRecoveryRateLimit, (req, res) => passwordResetController.request(req, res));
 
 adminRoutes
-.post('/reset-password', passwordResetRateLimit, (req, res) => passwordResetController.reset(req, res));
+    .post('/reset-password', passwordResetRateLimit, (req, res) => passwordResetController.reset(req, res));
 
 adminRoutes
     .route('/')

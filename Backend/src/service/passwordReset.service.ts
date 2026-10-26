@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { PasswordResetDAO } from '../dao/passwordReset.dao';
+import { PasswordResetDAOMySQL } from '../dao/passwordReset.MySQL.dao';
 import { PasswordCrypto } from './passwordCrypto';
 import { readRecoveryEmailConfig, sendPasswordResetEmail } from './passwordResetEmail';
 
@@ -7,7 +7,7 @@ export const hashResetToken = (token: string) => createHash('sha256').update(tok
 
 export class PasswordResetService {
     constructor(
-        private dao: Pick<PasswordResetDAO, 'issue' | 'consume' | 'discard'> = new PasswordResetDAO(),
+        private dao: Pick<PasswordResetDAOMySQL, 'issue' | 'consume' | 'discard'> = new PasswordResetDAOMySQL(),
         private sendEmail = sendPasswordResetEmail,
         private readConfig = readRecoveryEmailConfig,
     ) {}

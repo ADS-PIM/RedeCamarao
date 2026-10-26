@@ -1,11 +1,8 @@
+import { RefreshTokenInterface } from '../dominio/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../util/connection';
 import type { RowDataPacket } from 'mysql2';
-
-export type RefreshTokenRow = {
-    id: string;
-}
-
-export class RefreshTokenDAO {
+import { RefreshTokenRow } from '../dominio/interfaces/RefreshTokenDAOInterface';
+export class RefreshTokenDAOMySQL implements RefreshTokenInterface {
     async create(id: string, token: string, adminId: string, expiresAt: Date): Promise<void> {
         try {
             await connection.query(
