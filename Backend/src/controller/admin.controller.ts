@@ -2,13 +2,12 @@ import { Request, Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PasswordCrypto } from '../service/passwordCrypto'
-import { AdminCreateDTO, AdminLoginDTO } from '../dto/AdminInputDTO';
-import { AdminService } from '../service/admin.service';
-import { RefreshTokenDAO } from '../dao/refreshToken.dao';
+import { AdminCreateDTO, AdminLoginDTO, AdminUpdateDTO } from '../dto/AdminInputDTO';
 import jwt from 'jsonwebtoken';
 import { AdminRole } from '../dominio/model/admin';
 import { AuthRequest } from '../../authMiddleware';
-import { CreateAdmin, SearchByEmailAdmin } from '../usecase/AdminUseCases';
+import { CreateAdmin, DeleteAdmin, SearchAllAdmins, SearchByEmailAdmin, SearchByIdAdmin, SearchPublicById, UpdateAdmin } from '../usecase/AdminUseCases';
+import { CreateRefreshToken, DeleteByToken, FindByToken } from '../usecase/RefreshTokenCases';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
@@ -21,9 +20,19 @@ const refreshCookieOptions = {
 };
 
 export class AdminController {
-    private adminService: AdminService;
 
-    constructor(private createAdmin: CreateAdmin, private searchByEmailAdmin: SearchByEmailAdmin) {}
+    constructor(
+        private createAdmin: CreateAdmin,
+        private searchByEmailAdmin: SearchByEmailAdmin,
+        private searchByIdAdmin: SearchByIdAdmin,
+        private searchPublicById: SearchPublicById,
+        private createRefreshToken: CreateRefreshToken,
+        private findByToken: FindByToken,
+        private deleteByToken: DeleteByToken,
+        private updateAdmin: UpdateAdmin,
+        private deleteAdmin: DeleteAdmin,
+        private searchAllAdmins: SearchAllAdmins
+    ) {}
 
     public async register(req: Request, res: Response ) {
         try {
@@ -50,7 +59,7 @@ export class AdminController {
                 return res.status(400).json({errors});
             }
 
-            const admin = await this.adminService.searchByEmail(adminLoginDTO.email);
+            const admin = await this.searchByEmailAdmin.execute(adminLoginDTO.email);
 
             if (!admin  || !admin.password  || !(await PasswordCrypto.verifyPassword(adminLoginDTO.password, admin.password))) {
                 return res.status(401).json({error: 'Invalid email or password'});
@@ -69,9 +78,8 @@ export class AdminController {
             const refreshTokenId = crypto.randomUUID();
             const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
 
-            const refreshTokenDAO = new RefreshTokenDAO();
             const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-            await refreshTokenDAO.create(refreshTokenId, refreshToken, admin.id, refreshExpiresAt);
+            await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, adminId: admin.id, expiresAt: refreshExpiresAt });
             res.cookie('refreshToken', refreshToken, refreshCookieOptions);
             res.status(200).json({ accessToken, userId: admin.id });
         }catch (error: any) {
@@ -89,15 +97,14 @@ export class AdminController {
                 throw new Error('JWT refresh secret is not configured');
             }
 
-            const refreshTokenDAO = new RefreshTokenDAO();
-            const storedToken = await refreshTokenDAO.findByToken(refreshToken);
+            const storedToken = await this.findByToken.execute(refreshToken);
             if (!storedToken) return res.status(401).json({ message: 'Invalid refresh token' });
 
             let payload: any;
             try {
                 payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
             } catch (error) {
-                await refreshTokenDAO.deleteByToken(refreshToken).catch(() => {});
+                await this.deleteByToken.execute(refreshToken).catch(() => {});
                 return res.status(401).json({ message: 'Invalid or expired refresh token' });
             }
 
@@ -109,12 +116,12 @@ export class AdminController {
             if (!process.env.JWT_ACCESS_SECRET) throw new Error('JWT access secret is not configured');
             const newAccessToken = jwt.sign({ adminId, role: payload.role }, process.env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
 
-            await refreshTokenDAO.deleteByToken(refreshToken);
+            await this.deleteByToken.execute(refreshToken);
             const newRefreshTokenId = crypto.randomUUID();
             const newRefreshToken = jwt.sign({ adminId, role: payload.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d', jwtid: newRefreshTokenId });
             const newRefreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-            await refreshTokenDAO.create(newRefreshTokenId, newRefreshToken, adminId, newRefreshExpiresAt);
-        
+            await this.createRefreshToken.execute({ id: newRefreshTokenId, token: newRefreshToken, adminId, expiresAt: newRefreshExpiresAt });
+
             res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
             res.status(200).json({ accessToken: newAccessToken, userId: adminId });
         } catch (error: any) {
@@ -128,8 +135,7 @@ export class AdminController {
             const refreshToken = (req as Request & { cookies?: Record<string, string> }).cookies?.refreshToken;
             if (!refreshToken) return res.status(400).json({ message: 'refreshToken is required' });
 
-            const refreshTokenDAO = new RefreshTokenDAO();
-            await refreshTokenDAO.deleteByToken(refreshToken);
+            await this.deleteByToken.execute(refreshToken);
 
             res.clearCookie('refreshToken', { ...refreshCookieOptions, maxAge: undefined });
             res.status(200).json({ message: 'Logged out successfully' });
@@ -173,7 +179,7 @@ export class AdminController {
                 });
             }
 
-            const targetAdmin = await this.adminService.searchById(targetAdminId);
+            const targetAdmin = await this.searchByIdAdmin.execute(targetAdminId);
             if (!targetAdmin) {
                 return res.status(404).json({ error: 'Admin not found' });
             }
@@ -181,7 +187,7 @@ export class AdminController {
             const updateData = Object.fromEntries(
                 requestedFields.map((field) => [field, adminUpdateDTO[field as keyof AdminUpdateDTO]])
             );
-            await this.adminService.update(targetAdminId, updateData);
+            await this.updateAdmin.execute({id: targetAdminId, data: updateData});
 
             return res.status(200).json({ message: 'Admin updated successfully' });
         } catch (error: any) {
@@ -199,7 +205,7 @@ export class AdminController {
             if (typeof targetAdminId !== 'string') {
                 return res.status(400).json({ error: 'Invalid admin id' });
             }
-            await this.adminService.delete(targetAdminId);
+            await this.deleteAdmin.execute(targetAdminId);
             return res.status(200).json({ message: 'Admin deleted successfully' });
         } catch (error: any) {
             console.error('Error deleting admin:', error);
@@ -214,7 +220,7 @@ export class AdminController {
 
     public async searchAll(req: AuthRequest, res: Response) {
         try {
-            const admins = await this.adminService.searchAll()
+            const admins = await this.searchAllAdmins.execute();
             return res.status(200).json(admins);
         } catch (error: any) {
             console.error('Error searching admin:', error);
@@ -225,7 +231,7 @@ export class AdminController {
     public async searchById(req: Request, res: Response) {
         try {
             const adminId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-            const admin = await this.adminService.searchPublicById(adminId);
+            const admin = await this.searchPublicById.execute(adminId);
             if (!admin) {
                 return res.status(404).json({ error: 'Admin not found' });
             }

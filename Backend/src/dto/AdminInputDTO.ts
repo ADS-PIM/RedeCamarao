@@ -56,7 +56,7 @@ export class AdminUpdateDTO {
     profile_picture?: string | null;
 }
 
-export class AdminSearchDTO {//Não tem necessidade de validação pq vai ser usado so para pesquisa
+export class AdminSearchDTO {
     name: string;
     email: string;
     role: AdminRole;

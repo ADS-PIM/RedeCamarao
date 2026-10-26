@@ -1,7 +1,8 @@
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 import { connection } from '../util/connection';
+import { PasswordResetDAOInterface } from '../dominio/interfaces/PasswordResetDAOInterface';
 
-export class PasswordResetDAO {
+export class PasswordResetDAOMySQL implements PasswordResetDAOInterface {
     constructor(private pool: Pool = connection) {}
 
     async issue(email: string, tokenHash: string): Promise<{ email: string } | null> {
