@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'node:path';
-import routes from './routes/index';
+import routes from './infra/web/express/routes/index';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 

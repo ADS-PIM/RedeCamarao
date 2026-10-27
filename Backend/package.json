@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --require tsx/cjs --test tests/http.test.cjs",
     "dev": "tsx watch src/server.ts",
     "build": "tsc --noEmit --project ./tsconfig.json",
     "db:init": "npx sequelize-cli db:create && npx sequelize-cli db:migrate",
     "db:migrate": "npx sequelize-cli db:migrate",
     "db:migrate:undo:all": "npx sequelize-cli db:migrate:undo:all"
-  },"repository": {
+  },
+  "repository": {
     "type": "git",
     "url": "git+https://github.com/ADS-PIM/RedeCamarao.git"
   },
@@ -27,7 +28,7 @@
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.24.4",
     "node": "^26.9.0",
-    "sequelize": "^6.37.7",
+    "sequelize": "^3.30.0",
     "tsx": "^4.23.15"
   },
   "devDependencies": {

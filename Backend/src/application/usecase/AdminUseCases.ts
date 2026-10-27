@@ -1,8 +1,8 @@
-import { Admin } from "../dominio/model/admin";
-import { AdminDAOInterface } from "../dominio/interfaces/AdminDAOInterface";
+import { Admin } from "../../domain/model/admin";
+import { AdminDAOInterface } from "../../domain/interfaces/AdminDAOInterface";
 import { AdminCreateDTO, AdminSearchByIdDTO, AdminSearchDTO } from "../dto/AdminInputDTO";
 import { UseCase } from "./useCase";
-import { PasswordCrypto } from "../service/passwordCrypto";
+import { PasswordCrypto } from "../../service/passwordCrypto";
 
 export class CreateAdmin implements UseCase<AdminCreateDTO, null>{
     constructor(private readonly adminDAO: AdminDAOInterface){}
