@@ -1,13 +1,13 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { PasswordResetDAOMySQL } from '../dao/passwordReset.MySQL.dao';
 import { PasswordCrypto } from './passwordCrypto';
 import { readRecoveryEmailConfig, sendPasswordResetEmail } from './passwordResetEmail';
+import { PasswordResetDAOInterface } from '../dominio/interfaces/PasswordResetDAOInterface';
 
 export const hashResetToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
 export class PasswordResetService {
     constructor(
-        private dao: Pick<PasswordResetDAOMySQL, 'issue' | 'consume' | 'discard'> = new PasswordResetDAOMySQL(),
+        private readonly dao: PasswordResetDAOInterface,
         private sendEmail = sendPasswordResetEmail,
         private readConfig = readRecoveryEmailConfig,
     ) {}

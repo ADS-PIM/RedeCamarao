@@ -5,7 +5,7 @@ import { PasswordResetService } from '../service/passwordReset.service';
 export const recoveryMessage = 'Se este e-mail estiver associado a uma conta ativa, você receberá um link para redefinir sua senha. Confira também a pasta de spam.';
 
 export class PasswordResetController {
-    constructor(private service = new PasswordResetService()) {}
+    constructor(private service: PasswordResetService) {}
 
     async request(req: Request, res: Response) {
         res.setHeader('Cache-Control', 'no-store');
