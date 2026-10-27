@@ -5,12 +5,15 @@ import { AdminDAOMySQL } from "../dao/admin.MySQL.dao";
 import authToken, { isSuperAdmin } from "../../authMiddleware";
 import { authenticatedRateLimit, loginRateLimit, passwordRateLimit, passwordRecoveryRateLimit, passwordResetRateLimit, sessionRateLimit } from '../rateLimit/middleware';
 import { PasswordResetController } from '../controller/passwordReset.controller';
+import { PasswordResetService } from '../service/passwordReset.service';
+import { PasswordResetDAOMySQL } from '../dao/passwordReset.MySQL.dao';
 import { RefreshTokenDAOMySQL } from "../dao/refreshToken.MySQL.dao";
 import { CreateRefreshToken, DeleteByToken, FindByToken } from "../usecase/RefreshTokenCases";
 
 const adminRoutes = Router();
 const adminDAO = new AdminDAOMySQL();
 const refreshTokenDAO = new RefreshTokenDAOMySQL();
+const passwordResetDAO = new PasswordResetDAOMySQL();
 
 const createAdmin = new CreateAdmin(adminDAO);
 const searchByEmailAdmin = new SearchByEmailAdmin(adminDAO);
@@ -36,7 +39,9 @@ const adminController = new AdminController(
     deleteAdmin,
     searchAllAdmins
 );
-const passwordResetController = new PasswordResetController();
+
+const passwordResetService = new PasswordResetService(passwordResetDAO);
+const passwordResetController = new PasswordResetController(passwordResetService);
 
 adminRoutes
     .post('/forgot-password', ...passwordRecoveryRateLimit, (req, res) => passwordResetController.request(req, res));
