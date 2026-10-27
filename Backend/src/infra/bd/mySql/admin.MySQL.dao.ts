@@ -1,8 +1,8 @@
-import { connection } from '../util/connection';
-import { Admin } from '../dominio/model/admin';
-import { AdminSearchByIdDTO, AdminSearchDTO } from '../dto/AdminInputDTO';
-import { AdminDAOInterface } from '../dominio/interfaces/AdminDAOInterface';
-import { AdminUpdateData } from '../dominio/interfaces/AdminDAOInterface';
+import { connection } from '../../../util/connection';
+import { Admin } from '../../../domain/model/admin';
+import { AdminSearchByIdDTO, AdminSearchDTO } from '../../../application/dto/AdminInputDTO';
+import { AdminDAOInterface } from '../../../domain/interfaces/AdminDAOInterface';
+import { AdminUpdateData } from '../../../domain/interfaces/AdminDAOInterface';
 
 export class AdminDAOMySQL implements AdminDAOInterface{
     public async register(admin: Admin): Promise<void> {

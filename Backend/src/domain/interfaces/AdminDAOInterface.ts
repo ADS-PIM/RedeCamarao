@@ -1,4 +1,4 @@
-import { AdminSearchByIdDTO, AdminSearchDTO } from '../../dto/AdminInputDTO';
+import { AdminSearchByIdDTO, AdminSearchDTO } from '../../application/dto/AdminInputDTO';
 import { Admin } from '../model/admin'
 
 export type AdminUpdateData = {

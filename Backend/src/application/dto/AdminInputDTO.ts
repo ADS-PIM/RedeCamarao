@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, IsEmail, IsEnum, IsOptional, IsBoolean } from 'class-validator';
-import { AdminRole } from '../dominio/model/admin';
+import { AdminRole } from '../../domain/model/admin';
 
 export class AdminCreateDTO {
     @IsNotEmpty()

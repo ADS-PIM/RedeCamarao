@@ -1,6 +1,6 @@
 import type { Pool, RowDataPacket } from 'mysql2/promise';
-import { connection } from '../util/connection';
-import { PasswordResetDAOInterface } from '../dominio/interfaces/PasswordResetDAOInterface';
+import { connection } from '../../../util/connection';
+import { PasswordResetDAOInterface } from '../../../domain/interfaces/PasswordResetDAOInterface';
 
 export class PasswordResetDAOMySQL implements PasswordResetDAOInterface {
     constructor(private pool: Pool = connection) {}

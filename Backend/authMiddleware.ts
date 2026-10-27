@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { AdminRole } from './src/dominio/model/admin';
+import { AdminRole } from './src/domain/model/admin';
 
 
 export interface AuthRequest extends Request {

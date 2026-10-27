@@ -1,7 +1,7 @@
-import { RefreshTokenInterface } from '../dominio/interfaces/RefreshTokenDAOInterface';
-import { connection } from '../util/connection';
+import { RefreshTokenInterface } from '../../../domain/interfaces/RefreshTokenDAOInterface';
+import { connection } from '../../../util/connection';
 import type { RowDataPacket } from 'mysql2';
-import { RefreshTokenRow } from '../dominio/interfaces/RefreshTokenDAOInterface';
+import { RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 export class RefreshTokenDAOMySQL implements RefreshTokenInterface {
     async create(id: string, token: string, adminId: string, expiresAt: Date): Promise<void> {
         try {
