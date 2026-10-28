@@ -1,7 +1,15 @@
 import { expressControllerAdapter } from '../adapters/expressControllerAdapter';
 import { Router } from "express";
 import { AdminController } from "../../../../presentation/controllers/admin.controller";
-import { CreateAdmin, DeleteAdmin, SearchAllAdmins, SearchByEmailAdmin, SearchByIdAdmin, SearchPublicById, UpdateAdmin } from "../../../../application/usecase/AdminUseCases";
+// 
+import { CreateAdmin } from "../../../../application/usecase/admin/CreateAdminUseCase";
+import { SearchByEmailAdmin } from "../../../../application/usecase/admin/SearchAdminByEmailUseCase";
+import { SearchByIdAdmin } from "../../../../application/usecase/admin/SearchAdminByIdUseCase";
+import { UpdateAdmin } from "../../../../application/usecase/admin/UpdateAdminUseCase";
+import { DeleteAdmin } from "../../../../application/usecase/admin/DeleteAdminUseCase";
+import { SearchAllAdmins } from "../../../../application/usecase/admin/SearchAllAdmins";
+import { SearchPublicById } from "../../../../application/usecase/admin/PublicSearchAdminById";
+
 import { AdminDAOMySQL } from "../../../bd/mySql/admin.MySQL.dao";
 import authToken, { isSuperAdmin } from "../../../../../authMiddleware";
 import { authenticatedRateLimit, loginRateLimit, passwordRateLimit, passwordRecoveryRateLimit, passwordResetRateLimit, sessionRateLimit } from '../../../../rateLimit/middleware';
@@ -9,7 +17,9 @@ import { PasswordResetController } from '../../../../presentation/controllers/pa
 import { PasswordResetService } from '../../../../service/passwordReset.service';
 import { PasswordResetDAOMySQL } from '../../../bd/mySql/passwordReset.MySQL.dao';
 import { RefreshTokenDAOMySQL } from "../../../bd/mySql/refreshToken.MySQL.dao";
-import { CreateRefreshToken, DeleteByToken, FindByToken } from "../../../../application/usecase/RefreshTokenCases";
+import { CreateRefreshToken } from "../../../../application/usecase/refresh_token/CreateRefreshTokenUseCase";
+import { DeleteByToken } from "../../../../application/usecase/refresh_token/DeleteByTokenUseCase";
+import { FindByToken } from "../../../../application/usecase/refresh_token/FindByTokenUseCase";
 
 const adminRoutes = Router();
 const adminDAO = new AdminDAOMySQL();
