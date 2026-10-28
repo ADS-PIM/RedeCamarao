@@ -1,6 +1,7 @@
 import { connection } from '../../../util/connection';
 import { Admin } from '../../../domain/model/admin';
-import { AdminSearchByIdDTO, AdminSearchDTO } from '../../../application/dto/AdminInputDTO';
+import { AdminSearchByIdDTO } from '../../../application/dto/adminDTO/AdminSearchByIdDTO';
+import { AdminSearchDTO } from '../../../application/dto/adminDTO/AdminSearchDTO';
 import { AdminDAOInterface } from '../../../domain/interfaces/AdminDAOInterface';
 import { AdminUpdateData } from '../../../domain/interfaces/AdminDAOInterface';
 

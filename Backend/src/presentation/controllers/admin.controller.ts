@@ -2,12 +2,24 @@ import { jsonResponse, type HttpRequest, type HttpResponse } from '../http/Http'
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PasswordCrypto } from '../../service/passwordCrypto'
-import { AdminCreateDTO, AdminLoginDTO, AdminUpdateDTO } from '../../application/dto/AdminInputDTO';
 import jwt from 'jsonwebtoken';
 import { AdminRole } from '../../domain/model/admin';
 
-import { CreateAdmin, DeleteAdmin, SearchAllAdmins, SearchByEmailAdmin, SearchByIdAdmin, SearchPublicById, UpdateAdmin } from '../../application/usecase/AdminUseCases';
-import { CreateRefreshToken, DeleteByToken, FindByToken } from '../../application/usecase/RefreshTokenCases';
+import { AdminCreateDTO } from '../../application/dto/adminDTO/AdminCreateDTO';
+import { AdminLoginDTO } from '../../application/dto/adminDTO/AdminLoginDTO';
+import { AdminUpdateDTO } from '../../application/dto/adminDTO/AdminUpdateDTO';
+
+import { CreateAdmin } from '../../application/usecase/admin/CreateAdminUseCase';
+import { DeleteAdmin } from '../../application/usecase/admin/DeleteAdminUseCase';
+import { SearchAllAdmins } from '../../application/usecase/admin/SearchAllAdmins';
+import { SearchByEmailAdmin } from '../../application/usecase/admin/SearchAdminByEmailUseCase';
+import { SearchByIdAdmin } from '../../application/usecase/admin/SearchAdminByIdUseCase';
+import { SearchPublicById } from '../../application/usecase/admin/PublicSearchAdminById';
+import { UpdateAdmin } from '../../application/usecase/admin/UpdateAdminUseCase';
+
+import { CreateRefreshToken } from '../../application/usecase/refresh_token/CreateRefreshTokenUseCase';
+import { DeleteByToken } from '../../application/usecase/refresh_token/DeleteByTokenUseCase';
+import { FindByToken } from '../../application/usecase/refresh_token/FindByTokenUseCase';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
