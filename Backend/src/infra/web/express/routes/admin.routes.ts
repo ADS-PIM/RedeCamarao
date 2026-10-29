@@ -1,94 +1,35 @@
-import { expressControllerAdapter } from '../adapters/expressControllerAdapter';
-import { Router } from "express";
-import { AdminController } from "../../../../presentation/controllers/admin.controller";
-// 
-import { CreateAdmin } from "../../../../application/usecase/admin/CreateAdminUseCase";
-import { SearchByEmailAdmin } from "../../../../application/usecase/admin/SearchAdminByEmailUseCase";
-import { SearchByIdAdmin } from "../../../../application/usecase/admin/SearchAdminByIdUseCase";
-import { UpdateAdmin } from "../../../../application/usecase/admin/UpdateAdminUseCase";
-import { DeleteAdmin } from "../../../../application/usecase/admin/DeleteAdminUseCase";
-import { SearchAllAdmins } from "../../../../application/usecase/admin/SearchAllAdmins";
-import { SearchPublicById } from "../../../../application/usecase/admin/PublicSearchAdminById";
+import { Router } from 'express';
+import { controllers } from '../../../../config/composition_root';
+import authToken, { isSuperAdmin } from '../../../../../authMiddleware';
+import {
+    authenticatedRateLimit,
+    loginRateLimit,
+    passwordRateLimit,
+    passwordRecoveryRateLimit,
+    passwordResetRateLimit,
+    sessionRateLimit,
+} from '../../../../rateLimit/middleware';
 
-import { AdminDAOMySQL } from "../../../bd/mySql/admin.MySQL.dao";
-import authToken, { isSuperAdmin } from "../../../../../authMiddleware";
-import { authenticatedRateLimit, loginRateLimit, passwordRateLimit, passwordRecoveryRateLimit, passwordResetRateLimit, sessionRateLimit } from '../../../../rateLimit/middleware';
-import { PasswordResetController } from '../../../../presentation/controllers/passwordReset.controller';
-import { PasswordResetService } from '../../../../service/passwordReset.service';
-import { PasswordResetDAOMySQL } from '../../../bd/mySql/passwordReset.MySQL.dao';
-import { RefreshTokenDAOMySQL } from "../../../bd/mySql/refreshToken.MySQL.dao";
-import { CreateRefreshToken } from "../../../../application/usecase/refresh_token/CreateRefreshTokenUseCase";
-import { DeleteByToken } from "../../../../application/usecase/refresh_token/DeleteByTokenUseCase";
-import { FindByToken } from "../../../../application/usecase/refresh_token/FindByTokenUseCase";
+const router = Router();
 
-const adminRoutes = Router();
-const adminDAO = new AdminDAOMySQL();
-const refreshTokenDAO = new RefreshTokenDAOMySQL();
-const passwordResetDAO = new PasswordResetDAOMySQL();
+router.post('/forgot-password', ...passwordRecoveryRateLimit, (req, res) => controllers.passwordResetController.request(req, res));
 
-const createAdmin = new CreateAdmin(adminDAO);
-const searchByEmailAdmin = new SearchByEmailAdmin(adminDAO);
-const searchByIdAdmin = new SearchByIdAdmin(adminDAO);
-const updateAdmin = new UpdateAdmin(adminDAO);
-const deleteAdmin = new DeleteAdmin(adminDAO);
-const searchAllAdmins = new SearchAllAdmins(adminDAO);
-const searchPublicById = new SearchPublicById(adminDAO);
+router.post('/reset-password', passwordResetRateLimit, (req, res) => controllers.passwordResetController.reset(req, res));
 
-const createRefreshToken = new CreateRefreshToken(refreshTokenDAO);
-const findByToken = new FindByToken(refreshTokenDAO);
-const deleteByToken = new DeleteByToken(refreshTokenDAO);
-
-const adminController = new AdminController(
-    createAdmin,
-    searchByEmailAdmin,
-    searchByIdAdmin,
-    searchPublicById,
-    createRefreshToken,
-    findByToken,
-    deleteByToken,
-    updateAdmin,
-    deleteAdmin,
-    searchAllAdmins
-);
-
-const passwordResetService = new PasswordResetService(passwordResetDAO);
-const passwordResetController = new PasswordResetController(passwordResetService);
-
-adminRoutes
-    .post('/forgot-password', ...passwordRecoveryRateLimit, expressControllerAdapter(passwordResetController.request.bind(passwordResetController)));
-
-adminRoutes
-    .post('/reset-password', passwordResetRateLimit, expressControllerAdapter(passwordResetController.reset.bind(passwordResetController)));
-
-adminRoutes
-    .route('/')
-    .get(authToken, authenticatedRateLimit, expressControllerAdapter(adminController.searchAll.bind(adminController)))
-
-adminRoutes
-    .route('/register')
-    .post(authToken, authenticatedRateLimit, isSuperAdmin, expressControllerAdapter(adminController.register.bind(adminController)))
+router.get('/', authToken, authenticatedRateLimit, (req, res) => controllers.adminController.searchAll(req, res));
+router.post('/register', authToken, authenticatedRateLimit, isSuperAdmin, (req, res) => controllers.adminController.register(req, res));
 
 //Rota usada para cadastrar o Root. Mantida desativada por permitir cadastro sem autenticação.
-adminRoutes
-    .route('/register/force')
-    .post(expressControllerAdapter(adminController.register.bind(adminController)))
+router.post('/register/force', (req, res) => controllers.adminController.register(req, res));
 
-adminRoutes
-    .route('/login')
-    .post(...loginRateLimit, expressControllerAdapter(adminController.login.bind(adminController)))
+router.post('/login', ...loginRateLimit, (req, res) => controllers.adminController.login(req, res));
+router.post('/logout', sessionRateLimit, (req, res) => controllers.adminController.logout(req, res));
+router.post('/refresh', sessionRateLimit, (req, res) => controllers.adminController.refresh(req, res));
 
-adminRoutes
-    .route('/logout')
-    .post(sessionRateLimit, expressControllerAdapter(adminController.logout.bind(adminController)))
-
-adminRoutes
-    .route('/refresh')
-    .post(sessionRateLimit, expressControllerAdapter(adminController.refresh.bind(adminController)))
-
-adminRoutes
+router
     .route('/:id')
-    .get(authToken, authenticatedRateLimit, expressControllerAdapter(adminController.searchById.bind(adminController)))
-    .patch(authToken, authenticatedRateLimit, passwordRateLimit, expressControllerAdapter(adminController.update.bind(adminController)))
-    .delete(authToken, authenticatedRateLimit, isSuperAdmin, expressControllerAdapter(adminController.delete.bind(adminController)))
+    .get(authToken, authenticatedRateLimit, (req, res) => controllers.adminController.searchById(req, res))
+    .patch(authToken, authenticatedRateLimit, passwordRateLimit, (req, res) => controllers.adminController.update(req, res))
+    .delete(authToken, authenticatedRateLimit, isSuperAdmin, (req, res) => controllers.adminController.delete(req, res));
 
-export default adminRoutes;
+export default router;
