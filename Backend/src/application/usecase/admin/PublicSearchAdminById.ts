@@ -1,5 +1,5 @@
 import { AdminDAOInterface } from "../../../domain/interfaces/AdminDAOInterface";
-import { AdminSearchByIdDTO} from "../../dto/AdminInputDTO";
+import { AdminSearchByIdDTO} from "../../dto/adminDTO/AdminSearchByIdDTO";
 import { UseCase } from "../useCase";
 
 export class SearchPublicById implements UseCase<string, AdminSearchByIdDTO | null> {
