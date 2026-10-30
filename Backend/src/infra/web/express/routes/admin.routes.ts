@@ -20,7 +20,7 @@ router.get('/', authToken, authenticatedRateLimit, (req, res) => controllers.adm
 router.post('/register', authToken, authenticatedRateLimit, isSuperAdmin, (req, res) => controllers.adminController.register(req, res));
 
 //Rota usada para cadastrar o Root. Mantida desativada por permitir cadastro sem autenticação.
-router.post('/register/force', (req, res) => controllers.adminController.register(req, res));
+// router.post('/register/force', (req, res) => controllers.adminController.register(req, res));
 
 router.post('/login', ...loginRateLimit, (req, res) => controllers.adminController.login(req, res));
 router.post('/logout', sessionRateLimit, (req, res) => controllers.adminController.logout(req, res));

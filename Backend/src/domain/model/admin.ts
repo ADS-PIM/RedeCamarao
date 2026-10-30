@@ -1,5 +1,3 @@
-// import { AdminCreateDTO } from "../dto/admin.dto";
-
 export enum AdminRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
     ADMIN = 'ADMIN'
@@ -18,20 +16,6 @@ export type propsAdmin = {
 
 export class Admin {
     constructor(private props: propsAdmin) {}
-
-    // public static construct({name, email, password, role}: AdminCreateDTO) {
-    //     const props: propsAdmin = {
-    //         id: crypto.randomUUID(),
-    //         name,
-    //         email,
-    //         password,
-    //         role: role as AdminRole,
-    //         active: true,
-    //         createdAt: new Date(),
-    //         profile_picture: null
-    //     }
-    //     return new Admin(props);
-    // }
 
     public static construct({name, email, password, role}: { name: string; email: string; password: string; role: AdminRole}): Admin{
 
