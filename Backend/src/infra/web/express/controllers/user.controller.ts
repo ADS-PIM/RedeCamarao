@@ -17,6 +17,7 @@ import { CreateUser } from '../../../../application/usecase/user/CreateUserCase'
 import { SearchByEmailUser } from '../../../../application/usecase/user/SearchUserByEmailUseCase';
 import { SearchByIdUser } from '../../../../application/usecase/user/SearchUserByIdUseCase';
 import { UpdateUser } from '../../../../application/usecase/user/UpdateUserUseCase';
+import { DeleteUser } from '../../../../application/usecase/user/DeleteUserUseCase';
 
 import { CreateUserRefreshToken } from '../../../../application/usecase/user_refresh_token/CreateUserRefreshtokenUseCase';
 import { ConsumeUserRefreshToken } from '../../../../application/usecase/user_refresh_token/ConsumeUserRefreshTokenUseCase';
@@ -62,6 +63,7 @@ export class UserController {
         private searchByEmailUser: SearchByEmailUser,
         private searchByIdUser: SearchByIdUser,
         private updateUser: UpdateUser,
+        private deleteUser: DeleteUser,
 
         private createUserRefreshToken: CreateUserRefreshToken,
         private consumeUserRefreshToken: ConsumeUserRefreshToken,
@@ -174,7 +176,7 @@ export class UserController {
                 }
             );
 
-            // Geração do Refresh Token
+            
             const refreshToken = randomBytes(32).toString('hex');
 
             const expiresAt = new Date(
@@ -273,7 +275,7 @@ export class UserController {
                 Date.now() + 7 * 24 * 60 * 60 * 1000
             );
 
-            // Armazena o novo Refresh Token
+            
             await this.createUserRefreshToken.execute({
                 userId: user.id,
                 tokenHash: hashToken(newRefreshToken),
@@ -342,11 +344,7 @@ export class UserController {
 
 
 
-    public async searchById(
-        req: UserAuthRequest,
-        res: Response
-    ): Promise<Response> {
-
+    public async searchById(req: UserAuthRequest,res: Response): Promise<Response> {
         try {
 
             const userId = req.user?.userId;
@@ -385,11 +383,7 @@ export class UserController {
 
 
   
-    public async update(
-        req: UserAuthRequest,
-        res: Response
-    ): Promise<Response> {
-
+    public async update(req: UserAuthRequest, res: Response): Promise<Response> {
         try {
 
             const userId = req.user?.userId;
@@ -473,4 +467,53 @@ export class UserController {
             });
         }
     }
+
+    public async delete(req: UserAuthRequest, res: Response): Promise<Response> {
+
+    try {
+
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                error: 'Unauthorized'
+            });
+        }
+
+        await this.deleteUser.execute(userId);
+
+        const { maxAge, ...clearCookieOptions } = refreshCookieOptions;
+
+        res.clearCookie(
+            'userRefreshToken',
+            clearCookieOptions
+        );
+
+        return res.status(204).send();
+
+    } catch (error: any) {
+
+        if (error.message === 'User not found') {
+            return res.status(404).json({
+                error: 'User not found'
+            });
+        }
+
+        if (
+            error.message === 'User has related records' ||
+            error.code === 'ER_ROW_IS_REFERENCED_2' ||
+            error.code === 'ER_ROW_IS_REFERENCED'
+        ) {
+            return res.status(409).json({
+                error: 'User has related records and cannot be deleted'
+            });
+        }
+
+        console.error('Error deleting user:', error);
+
+        return res.status(500).json({
+            error: 'Error deleting user'
+        });
+    }
+}
 }

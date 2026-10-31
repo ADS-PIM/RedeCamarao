@@ -100,10 +100,7 @@ export class UserDAOMySQL implements UserDAOInterface {
 
     public async delete(id: string): Promise<void> {
         try {
-            await connection.execute(
-                'DELETE FROM users WHERE id = ?',
-                [id]
-            );
+            await connection.execute('DELETE FROM users WHERE id = ?', [id]);
         } catch (error: any) {
             throw new Error('Error deleting user: ' + error.message);
         }
