@@ -11,27 +11,23 @@ import {
 const router = Router();
 
 router.post(
-    '/register', ...registrationRateLimit, (req, res) => controllers.userController.register(req, res)
-);
+    '/register', ...registrationRateLimit, (req, res) => controllers.userController.register(req, res));
 
 router.post(
-    '/login', ...loginRateLimit, (req, res) => controllers.userController.login(req, res)
-);
+    '/login', ...loginRateLimit, (req, res) => controllers.userController.login(req, res));
 
 router.post(
-    '/refresh', (req, res) => controllers.userController.refresh(req, res)
-);
+    '/refresh', (req, res) => controllers.userController.refresh(req, res));
 
 router.post(
-    '/logout', (req, res) => controllers.userController.logout(req, res)
-);
+    '/logout', (req, res) => controllers.userController.logout(req, res));
 
 router.get(
-    '/me', authUser, (req, res) => controllers.userController.searchById(req, res)
-);
+    '/me', authUser, (req, res) => controllers.userController.searchById(req, res));
 
 router.patch(
-    '/me', authUser, (req, res) => controllers.userController.update(req, res)
-);
+    '/me', authUser, (req, res) => controllers.userController.update(req, res));
+
+router.delete('/me', authUser, (req, res) => controllers.userController.delete(req, res));
 
 export default router;

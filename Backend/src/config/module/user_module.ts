@@ -9,7 +9,7 @@ import { CreateUser } from '../../application/usecase/user/CreateUserCase';
 import { SearchByEmailUser } from '../../application/usecase/user/SearchUserByEmailUseCase';
 import { SearchByIdUser } from '../../application/usecase/user/SearchUserByIdUseCase';
 import { UpdateUser } from '../../application/usecase/user/UpdateUserUseCase';
-
+import { DeleteUser } from '../../application/usecase/user/DeleteUserUseCase'
 
 import { CreateUserRefreshToken } from '../../application/usecase/user_refresh_token/CreateUserRefreshtokenUseCase';
 import { ConsumeUserRefreshToken } from '../../application/usecase/user_refresh_token/ConsumeUserRefreshTokenUseCase';
@@ -25,13 +25,10 @@ const userRefreshTokenDAO = new UserRefreshTokenDAOMySQL();
 
 
 const createUser = new CreateUser(userDAO);
-
 const searchByEmailUser = new SearchByEmailUser(userDAO);
-
 const searchByIdUser = new SearchByIdUser(userDAO);
-
 const updateUser = new UpdateUser(userDAO);
-
+const deleteUser = new DeleteUser(userDAO)
 
 
 const createUserRefreshToken = new CreateUserRefreshToken(
@@ -57,6 +54,7 @@ export const userController = new UserController(
     searchByEmailUser,
     searchByIdUser,
     updateUser,
+    deleteUser,
     createUserRefreshToken,
     consumeUserRefreshToken,
     revokeUserRefreshToken,
