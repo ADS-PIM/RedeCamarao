@@ -1,5 +1,5 @@
 import { Admin } from "../../../domain/model/admin";
-import { AdminDAOInterface } from "../../../domain/interfaces/AdminDAOInterface";
+import { AdminDAOInterface } from "../../../domain/interfaces/admin/AdminDAOInterface";
 import { AdminCreateDTO} from "../../dto/adminDTO/AdminCreateDTO";
 import { UseCase } from "../useCase";
 import { PasswordCrypto } from "../../../service/passwordCrypto";

@@ -3,12 +3,27 @@ create table `users` (
     `name` varchar(255) not null,
     `email` varchar(320) not null,
     `hashPassword` varchar(255) not null,
-    `user_type` enum('PRODUTOR', 'REVENDEDOR', 'COMPRADOR') not null,
+    `user_type` enum('PRODUCER, BUYER') not null,
+    `cpf_cnpj` varchar(18) not null
     `createdAt` timestamp not null default current_timestamp,
     `updatedAt` timestamp not null default current_timestamp on update current_timestamp,
     primary key (`id`),
     unique key `users_unique` (`email`)
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
+
+CREATE TABLE user_refresh_tokens (
+    id char(36) not null,
+    userId char(36) not null,
+    tokenHash char(64) not null,
+    createdAt timestamp not null default current_timestamp,
+    expiresAt datetime not null,
+    revokedAt datetime default NULL,
+    primary key (id),
+    unique key user_refresh_tokens_hash_unique (tokenHash),
+    key user_refresh_tokens_user_FK (userId),
+    constraint user_refresh_tokens_user_FK foreign key (userId) references users(id)
+    on delete cascade
+) ENGINE = InnoDB default charSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `profiles` (
     `id` char(36) not null,

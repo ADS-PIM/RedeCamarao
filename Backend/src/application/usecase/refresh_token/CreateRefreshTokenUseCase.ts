@@ -1,5 +1,5 @@
 import { UseCase } from '../useCase';
-import { RefreshTokenInterface } from '../../../domain/interfaces/RefreshTokenDAOInterface';
+import { RefreshTokenInterface } from '../../../domain/interfaces/admin/RefreshTokenDAOInterface';
 
 export class CreateRefreshToken implements UseCase<{ id: string, token: string, adminId: string, expiresAt: Date }, null> {
     constructor(private readonly refreshTokenDAO: RefreshTokenInterface) {}
