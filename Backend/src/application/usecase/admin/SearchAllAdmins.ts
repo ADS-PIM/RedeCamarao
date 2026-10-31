@@ -1,4 +1,4 @@
-import { AdminDAOInterface } from "../../../domain/interfaces/AdminDAOInterface";
+import { AdminDAOInterface } from "../../../domain/interfaces/admin/AdminDAOInterface";
 import { AdminSearchDTO} from "../../dto/adminDTO/AdminSearchDTO";
 import { UseCase } from "../useCase";
 

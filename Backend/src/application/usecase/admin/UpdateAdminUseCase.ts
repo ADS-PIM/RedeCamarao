@@ -1,4 +1,4 @@
-import { AdminDAOInterface } from "../../../domain/interfaces/AdminDAOInterface";
+import { AdminDAOInterface } from "../../../domain/interfaces/admin/AdminDAOInterface";
 import { UseCase } from "../useCase";
 import { PasswordCrypto } from "../../../service/passwordCrypto";
 import { SearchByEmailAdmin } from "../admin/SearchAdminByEmailUseCase";

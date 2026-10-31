@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { PasswordCrypto } from './passwordCrypto';
 import { readRecoveryEmailConfig, sendPasswordResetEmail } from './passwordResetEmail';
-import { PasswordResetDAOInterface } from '../domain/interfaces/PasswordResetDAOInterface';
+import { PasswordResetDAOInterface } from '../domain/interfaces/admin/PasswordResetDAOInterface';
 
 export const hashResetToken = (token: string) => createHash('sha256').update(token).digest('hex');
 

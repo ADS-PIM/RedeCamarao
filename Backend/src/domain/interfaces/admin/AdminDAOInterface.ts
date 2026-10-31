@@ -1,6 +1,6 @@
-import { AdminSearchByIdDTO } from '../../application/dto/adminDTO/AdminSearchByIdDTO';
-import { AdminSearchDTO } from '../../application/dto/adminDTO/AdminSearchDTO';
-import { Admin } from '../model/admin'
+import { AdminSearchByIdDTO } from '../../../application/dto/adminDTO/AdminSearchByIdDTO';
+import { AdminSearchDTO } from '../../../application/dto/adminDTO/AdminSearchDTO';
+import { Admin } from '../../model/admin'
 
 export type AdminUpdateData = {
     name?: string;
