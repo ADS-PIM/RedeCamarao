@@ -1,15 +1,24 @@
 import { connection } from '../../../util/connection';
-import { User } from '../../../domain/model/user';
+import { User, UserType } from '../../../domain/model/user';
 import type { propsUser } from '../../../domain/model/user';
 import { UserDAOInterface, UserUpdateData } from '../../../domain/interfaces/user/UserDAOInterface';
 import type { RowDataPacket } from 'mysql2';
+
+// Keep the HTTP contract in English while the database follows the diagram.
+const databaseUserTypes: Record<UserType, string> = {
+    [UserType.PRODUCER]: 'PRODUTOR',
+    [UserType.BUYER]: 'COMPRADOR'
+};
+const userColumns = `id, name, email, hashPassword AS password,
+    CASE user_type WHEN 'PRODUTOR' THEN 'PRODUCER' WHEN 'COMPRADOR' THEN 'BUYER' END AS userType,
+    CPF_CNPJ AS cpf_cnpj, createdAt`;
 
 export class UserDAOMySQL implements UserDAOInterface {
     public async register(user: User): Promise<void> {
         try {
             await connection.query(
-                'INSERT INTO users (id, name, email, hashPassword, user_type, cpf_cnpj, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [user.id, user.name, user.email, user.password, user.userType, user.cpf_cnpj, user.createdAt]
+                'INSERT INTO users (id, name, email, hashPassword, user_type, CPF_CNPJ, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [user.id, user.name, user.email, user.password, databaseUserTypes[user.userType], user.cpf_cnpj, user.createdAt]
             );
         } catch (error: any) {
             throw new Error('Error registering user: ' + error.message);
@@ -19,7 +28,7 @@ export class UserDAOMySQL implements UserDAOInterface {
     async searchByEmail(email: string): Promise<User | null> {
         try {
             const [users] = await connection.query<(RowDataPacket & propsUser)[]>(
-                'SELECT id, name, email, hashPassword AS password, user_type AS userType, cpf_cnpj, createdAt FROM users WHERE email = ?',
+                `SELECT ${userColumns} FROM users WHERE email = ?`,
                 [email]
             );
             return users.length === 0 ? null : User.reconstruct(users[0]);
@@ -31,7 +40,7 @@ export class UserDAOMySQL implements UserDAOInterface {
     async searchById(id: string): Promise<User | null> {
         try {
             const [users] = await connection.query<(RowDataPacket & propsUser)[]>(
-                'SELECT id, name, email, hashPassword AS password, user_type AS userType, cpf_cnpj, createdAt FROM users WHERE id = ?',
+                `SELECT ${userColumns} FROM users WHERE id = ?`,
                 [id]
             );
             return users.length === 0 ? null : User.reconstruct(users[0]);

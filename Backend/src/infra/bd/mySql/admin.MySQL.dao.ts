@@ -20,7 +20,7 @@ export class AdminDAOMySQL implements AdminDAOInterface{
     async searchByEmail(email: string): Promise<Admin | null> {
         try {
             const [admin]: any = await connection.query(
-                'SELECT id, name, email, hashPassword AS password, role, active, createdAt, profile_picture FROM administrators WHERE email = ?',
+                'SELECT id, name, email, hashPassword AS password, role, active, createdAt, profilePicture AS profile_picture FROM administrators WHERE email = ?',
                 [email]
             );
             if (admin.length == 0) {
@@ -35,7 +35,7 @@ export class AdminDAOMySQL implements AdminDAOInterface{
     async searchById(id: string): Promise<Admin | null> {
         try {
             const [admins]: any = await connection.query(
-                'SELECT id, name, email, hashPassword AS password, role, active, createdAt, profile_picture FROM administrators WHERE id = ?',
+                'SELECT id, name, email, hashPassword AS password, role, active, createdAt, profilePicture AS profile_picture FROM administrators WHERE id = ?',
                 [id]
             );
             return admins.length === 0 ? null : admins[0];
@@ -47,7 +47,7 @@ export class AdminDAOMySQL implements AdminDAOInterface{
     async searchPublicById(id: string): Promise<AdminSearchByIdDTO | null> {
         try {
             const [admins]: any = await connection.query(
-                'SELECT id, name, email, role, active, createdAt, profile_picture FROM administrators WHERE id = ?',
+                'SELECT id, name, email, role, active, createdAt, profilePicture AS profile_picture FROM administrators WHERE id = ?',
                 [id]
             );
             return admins.length === 0 ? null : admins[0];
@@ -59,7 +59,7 @@ export class AdminDAOMySQL implements AdminDAOInterface{
     async searchAll(): Promise<AdminSearchDTO[] | null> {
         try {
             const [admins]: any = await connection.query(
-                'SELECT id, name, email, role, active, profile_picture, createdAt FROM administrators ORDER BY createdAt DESC'
+                'SELECT id, name, email, role, active, profilePicture AS profile_picture, createdAt FROM administrators ORDER BY createdAt DESC'
             );
             return admins.length === 0 ? [] : admins;
         } catch (error: any) {
@@ -92,7 +92,7 @@ export class AdminDAOMySQL implements AdminDAOInterface{
             values.push(data.active);
         }
         if (data.profile_picture !== undefined) {
-            fields.push('profile_picture = ?');
+            fields.push('profilePicture = ?');
             values.push(data.profile_picture);
         }
 

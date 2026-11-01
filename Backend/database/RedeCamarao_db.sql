@@ -3,10 +3,14 @@ create table `users` (
     `name` varchar(255) not null,
     `email` varchar(320) not null,
     `hashPassword` varchar(255) not null,
-    `user_type` enum('PRODUCER, BUYER') not null,
-    `cpf_cnpj` varchar(18) not null
+    `CPF_CNPJ` char(14) not null default '',
+    `user_type` enum('PRODUTOR', 'COMPRADOR') not null,
     `createdAt` timestamp not null default current_timestamp,
     `updatedAt` timestamp not null default current_timestamp on update current_timestamp,
+    `description` varchar(2000) not null default '',
+    `location` varchar(255) not null default '',
+    `WhatsApp` varchar(20) not null default '',
+    `businessHours` varchar(255) not null default '',
     primary key (`id`),
     unique key `users_unique` (`email`)
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
@@ -22,47 +26,38 @@ CREATE TABLE user_refresh_tokens (
     unique key user_refresh_tokens_hash_unique (tokenHash),
     key user_refresh_tokens_user_FK (userId),
     constraint user_refresh_tokens_user_FK foreign key (userId) references users(id)
-    on delete cascade
+    on update cascade on delete cascade
 ) ENGINE = InnoDB default charSET = utf8mb4 collate = utf8mb4_general_ci;
-
-create table `profiles` (
-    `id` char(36) not null,
-    `userId` char(36) not null,
-    `name` varchar(255) not null,
-    `location` varchar(255) not null,
-    `phone` varchar(20) not null,
-    `whatsapp` varchar(20) default null,
-    primary key (`id`),
-    unique key `profiles_users_unique` (`userId`),
-    constraint `profiles_users_FK` foreign key (`userId`) references `users` (`id`)
-)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `offers` (
     `id` char(36) not null,
     `userId` char(36) not null,
     `title` varchar(255) not null,
-    `description` varchar(1000) default null,
-    `type` varchar(255) not null,
+    `description` varchar(1000) not null default '',
     `size` varchar(255) not null,
     `price` decimal(10,2) not null,
-    `quantity` decimal(10,2) not null,
+    `weight` decimal(10,2) not null default 0,
+    `max_quantity` decimal(10,2) not null,
+    `min_quantity` decimal(10,2) not null default 0,
     `location` varchar(255) not null,
-    `availability_date` date not null,
+    `start_availability_date` date not null,
+    `end_availability_date` date not null,
     `status` enum('ATIVO', 'PAUSADO', 'VENDIDO', 'CANCELADO') not null,
     `createdAt` timestamp not null default current_timestamp,
     `updatedAt` timestamp not null default current_timestamp on update current_timestamp,
     primary key (`id`),
     key `offers_users_FK` (`userId`),
-    constraint `offers_users_FK` foreign key (`userId`) references `users` (`id`)
+    constraint `offers_users_FK` foreign key (`userId`) references `users` (`id`) on update cascade
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `offerPhotos` (
     `id` char(36) not null,
     `offerId` char(36) not null,
     `imageUrl` varchar(2048) not null,
+    `description` varchar(500) not null default '',
     primary key (`id`),
     key `offerPhotos_offers_FK` (`offerId`),
-    constraint `offerPhotos_offers_FK` foreign key (`offerId`) references `offers` (`id`) on delete cascade
+    constraint `offerPhotos_offers_FK` foreign key (`offerId`) references `offers` (`id`) on update cascade on delete cascade
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `conversations` (
@@ -70,14 +65,14 @@ create table `conversations` (
     `offerId` char(36) not null,
     `buyerId` char(36) not null,
     `advertiserId` char(36) not null,
-    `createdAt` timestamp not null default current_timestamp,
+    `createdAt` datetime not null default current_timestamp,
     primary key (`id`),
     key `conversations_offers_FK` (`offerId`),
     key `conversations_buyer_FK` (`buyerId`),
     key `conversations_advertiser_FK` (`advertiserId`),
-    constraint `conversations_offers_FK` foreign key (`offerId`) references `offers` (`id`),
-    constraint `conversations_buyer_FK` foreign key (`buyerId`) references `users` (`id`),
-    constraint `conversations_advertiser_FK` foreign key (`advertiserId`) references `users` (`id`)
+    constraint `conversations_offers_FK` foreign key (`offerId`) references `offers` (`id`) on update cascade,
+    constraint `conversations_buyer_FK` foreign key (`buyerId`) references `users` (`id`) on update cascade,
+    constraint `conversations_advertiser_FK` foreign key (`advertiserId`) references `users` (`id`) on update cascade
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `messages` (
@@ -85,13 +80,13 @@ create table `messages` (
     `conversationId` char(36) not null,
     `senderId` char(36) not null,
     `message` varchar(1500) not null,
-    `sentAt` timestamp not null default current_timestamp,
+    `sentAt` datetime not null default current_timestamp,
     `read` boolean not null default false,
     primary key (`id`),
     key `messages_conversations_FK` (`conversationId`),
     key `messages_users_FK` (`senderId`),
-    constraint `messages_conversations_FK` foreign key (`conversationId`) references `conversations` (`id`) on delete cascade,
-    constraint `messages_users_FK` foreign key (`senderId`) references `users` (`id`)
+    constraint `messages_conversations_FK` foreign key (`conversationId`) references `conversations` (`id`) on update cascade on delete cascade,
+    constraint `messages_users_FK` foreign key (`senderId`) references `users` (`id`) on update cascade
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `administrators` (
@@ -99,10 +94,10 @@ create table `administrators` (
     `name` varchar(255) not null,
     `email` varchar(320) not null,
     `hashPassword` varchar(255) not null,
-    `role` enum('ADMIN', 'SUPER_ADMIN') not null,
+    `role` varchar(50) not null,
     `active` boolean not null default true,
     `createdAt` timestamp not null default current_timestamp,
-    `profile_picture` varchar(2048) default null,
+    `profilePicture` varchar(2048) default null,
     primary key (`id`),
     unique key `administrators_unique` (`email`)
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
@@ -116,5 +111,26 @@ create table `refresh_tokens` (
     `revokedAt` datetime default null,
     primary key (`id`),
     key `refreshTokens_administrators_FK` (`adminId`),
-    constraint `refreshTokens_administrators_FK` foreign key (`adminId`) references `administrators` (`id`)
+    constraint `refreshTokens_administrators_FK` foreign key (`adminId`) references `administrators` (`id`) on update cascade
+)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
+
+create table `password_reset_tokens` (
+    `adminId` char(36) not null,
+    `tokenHash` char(64) not null,
+    `passwordHashAtRequest` varchar(255) not null,
+    `emailAtRequest` varchar(320) not null,
+    `createdAt` datetime not null default current_timestamp,
+    `expiresAt` datetime not null,
+    primary key (`adminId`),
+    unique key `password_reset_tokens_hash_unique` (`tokenHash`),
+    constraint `password_reset_tokens_admin_FK` foreign key (`adminId`) references `administrators` (`id`) on update cascade on delete cascade
+)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
+
+create table `rate_limit_buckets` (
+    `bucket_key` char(64) not null,
+    `tokens` double not null,
+    `updated_at_ms` bigint not null,
+    `expires_at_ms` bigint not null,
+    primary key (`bucket_key`),
+    key `rate_limit_buckets_expires_at_ms_idx` (`expires_at_ms`)
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
