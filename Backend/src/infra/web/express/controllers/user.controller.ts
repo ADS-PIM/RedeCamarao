@@ -5,7 +5,7 @@ import { validate } from 'class-validator';
 
 import jwt from 'jsonwebtoken';
 
-import { randomBytes, createHash } from 'node:crypto';
+import { randomBytes, randomUUID, createHash } from 'node:crypto';
 
 import { PasswordCrypto } from '../../../../service/passwordCrypto';
 
@@ -19,12 +19,11 @@ import { SearchByIdUser } from '../../../../application/usecase/user/SearchUserB
 import { UpdateUser } from '../../../../application/usecase/user/UpdateUserUseCase';
 import { DeleteUser } from '../../../../application/usecase/user/DeleteUserUseCase';
 
-import { CreateUserRefreshToken } from '../../../../application/usecase/user_refresh_token/CreateUserRefreshtokenUseCase';
-import { ConsumeUserRefreshToken } from '../../../../application/usecase/user_refresh_token/ConsumeUserRefreshTokenUseCase';
-import { RevokeUserRefreshToken } from '../../../../application/usecase/user_refresh_token/RevokeUserRefreshTokenUseCase';
-import { RevokeAllUserRefreshTokens } from '../../../../application/usecase/user_refresh_token/RevokeAllUserRefreshTokensUseCase';  
+import { CreateRefreshToken } from '../../../../application/usecase/refresh_token/CreateRefreshTokenUseCase';
+import { ConsumeRefreshToken } from '../../../../application/usecase/refresh_token/ConsumeRefreshTokenUseCase';
+import { DeleteByToken } from '../../../../application/usecase/refresh_token/DeleteByTokenUseCase';
+import { DeleteByUserId } from '../../../../application/usecase/refresh_token/DeleteByUserIdUseCase';
 
-import { UserRefreshTokenDAOInterface } from '../../../../domain/interfaces/user/UserRefreshTokenDAOInterface';
 
 import type { UserAuthRequest } from '../../../../../userAuthMiddleware';
 
@@ -65,10 +64,10 @@ export class UserController {
         private updateUser: UpdateUser,
         private deleteUser: DeleteUser,
 
-        private createUserRefreshToken: CreateUserRefreshToken,
-        private consumeUserRefreshToken: ConsumeUserRefreshToken,
-        private revokeUserRefreshToken: RevokeUserRefreshToken,
-        private revokeAllUserRefreshTokens: RevokeAllUserRefreshTokens
+        private createRefreshToken: CreateRefreshToken,
+        private consumeRefreshToken: ConsumeRefreshToken,
+        private deleteByToken: DeleteByToken,
+        private deleteByUserId: DeleteByUserId
     ) {}
 
 
@@ -184,9 +183,10 @@ export class UserController {
             );
 
             // Chama o caso de uso
-            await this.createUserRefreshToken.execute({
+            await this.createRefreshToken.execute({
+                id: randomUUID(),
                 userId: user.id,
-                tokenHash: hashToken(refreshToken),
+                token: hashToken(refreshToken),
                 expiresAt
             });
 
@@ -230,17 +230,17 @@ export class UserController {
             }
 
             
-            const userId = await this.consumeUserRefreshToken.execute(
+            const storedToken = await this.consumeRefreshToken.execute(
                 hashToken(refreshToken)
             );
 
-            if (!userId) {
+            if (!storedToken?.userId) {
                 return res.status(401).json({
                     error: 'Invalid or expired refresh token'
                 });
             }
 
-            const user = await this.searchByIdUser.execute(userId);
+            const user = await this.searchByIdUser.execute(storedToken.userId);
 
             if (!user) {
                 return res.status(401).json({
@@ -276,9 +276,10 @@ export class UserController {
             );
 
             
-            await this.createUserRefreshToken.execute({
+            await this.createRefreshToken.execute({
+                id: randomUUID(),
                 userId: user.id,
-                tokenHash: hashToken(newRefreshToken),
+                token: hashToken(newRefreshToken),
                 expiresAt
             });
 
@@ -315,7 +316,7 @@ export class UserController {
             if (refreshToken) {
 
                 // Revoga o Refresh Token
-                await this.revokeUserRefreshToken.execute(
+                await this.deleteByToken.execute(
                     hashToken(refreshToken)
                 );
             }
@@ -363,13 +364,7 @@ export class UserController {
                 });
             }
 
-            return res.status(200).json({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                userType: user.userType,
-                createdAt: user.createdAt
-            });
+            return res.status(200).json(user);
 
         } catch (error: any) {
 
@@ -429,7 +424,7 @@ export class UserController {
            
             if (userUpdateDTO.password !== undefined) {
 
-                await this.revokeAllUserRefreshTokens.execute(userId);
+                await this.deleteByUserId.execute(userId);
 
                 const { maxAge, ...clearCookieOptions } = refreshCookieOptions;
 

@@ -1,11 +1,18 @@
 import { UseCase } from '../useCase';
-import { RefreshTokenInterface } from '../../../domain/interfaces/admin/RefreshTokenDAOInterface';
+import { RefreshTokenInterface } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 
-export class CreateRefreshToken implements UseCase<{ id: string, token: string, adminId: string, expiresAt: Date }, null> {
+type CreateRefreshTokenInput = {
+    id: string;
+    token: string;
+    userId: string;
+    expiresAt: Date;
+};
+
+export class CreateRefreshToken implements UseCase<CreateRefreshTokenInput, null> {
     constructor(private readonly refreshTokenDAO: RefreshTokenInterface) {}
 
-    public async execute(data: { id: string, token: string, adminId: string, expiresAt: Date }): Promise<null> {
-        await this.refreshTokenDAO.create(data.id, data.token, data.adminId, data.expiresAt);
+    public async execute(data: CreateRefreshTokenInput): Promise<null> {
+        await this.refreshTokenDAO.create(data.id, data.token, data.userId, data.expiresAt);
         return null;
     }
 }

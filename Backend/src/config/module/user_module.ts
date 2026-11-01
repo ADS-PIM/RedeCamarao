@@ -2,7 +2,7 @@ import { UserController } from '../../infra/web/express/controllers/user.control
 
 import { UserDAOMySQL } from '../../infra/bd/mySql/user.MySQL.dao';
 
-import { UserRefreshTokenDAOMySQL } from '../../infra/bd/mySql/UserRefreshToken.MySQL.dao';
+import { UserRefreshTokenDAOMySQL } from '../../infra/bd/mySql/userRefreshToken.MySQL.dao';
 
 
 import { CreateUser } from '../../application/usecase/user/CreateUserCase';
@@ -11,10 +11,10 @@ import { SearchByIdUser } from '../../application/usecase/user/SearchUserByIdUse
 import { UpdateUser } from '../../application/usecase/user/UpdateUserUseCase';
 import { DeleteUser } from '../../application/usecase/user/DeleteUserUseCase'
 
-import { CreateUserRefreshToken } from '../../application/usecase/user_refresh_token/CreateUserRefreshtokenUseCase';
-import { ConsumeUserRefreshToken } from '../../application/usecase/user_refresh_token/ConsumeUserRefreshTokenUseCase';
-import { RevokeUserRefreshToken } from '../../application/usecase/user_refresh_token/RevokeUserRefreshTokenUseCase';
-import { RevokeAllUserRefreshTokens } from '../../application/usecase/user_refresh_token/RevokeAllUserRefreshTokensUseCase';
+import { CreateRefreshToken } from '../../application/usecase/refresh_token/CreateRefreshTokenUseCase';
+import { ConsumeRefreshToken } from '../../application/usecase/refresh_token/ConsumeRefreshTokenUseCase';
+import { DeleteByToken } from '../../application/usecase/refresh_token/DeleteByTokenUseCase';
+import { DeleteByUserId } from '../../application/usecase/refresh_token/DeleteByUserIdUseCase';
 
 
 
@@ -31,19 +31,19 @@ const updateUser = new UpdateUser(userDAO);
 const deleteUser = new DeleteUser(userDAO)
 
 
-const createUserRefreshToken = new CreateUserRefreshToken(
+const createRefreshToken = new CreateRefreshToken(
     userRefreshTokenDAO
 );
 
-const consumeUserRefreshToken = new ConsumeUserRefreshToken(
+const consumeRefreshToken = new ConsumeRefreshToken(
     userRefreshTokenDAO
 );
 
-const revokeUserRefreshToken = new RevokeUserRefreshToken(
+const deleteByToken = new DeleteByToken(
     userRefreshTokenDAO
 );
 
-const revokeAllUserRefreshTokens = new RevokeAllUserRefreshTokens(
+const deleteByUserId = new DeleteByUserId(
     userRefreshTokenDAO
 );
 
@@ -55,8 +55,8 @@ export const userController = new UserController(
     searchByIdUser,
     updateUser,
     deleteUser,
-    createUserRefreshToken,
-    consumeUserRefreshToken,
-    revokeUserRefreshToken,
-    revokeAllUserRefreshTokens
+    createRefreshToken,
+    consumeRefreshToken,
+    deleteByToken,
+    deleteByUserId
 );

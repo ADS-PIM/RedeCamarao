@@ -1,10 +1,10 @@
 import { UseCase } from '../useCase';
-import { RefreshTokenInterface } from '../../../domain/interfaces/admin/RefreshTokenDAOInterface';
+import { RefreshTokenInterface, RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 
-export class FindByToken implements UseCase<string, any> {
+export class FindByToken implements UseCase<string, RefreshTokenRow | null> {
     constructor(private readonly refreshTokenDAO: RefreshTokenInterface) {}
 
-    public async execute(token: string): Promise<any> {
+    public async execute(token: string): Promise<RefreshTokenRow | null> {
         return await this.refreshTokenDAO.findByToken(token);
     }
 }

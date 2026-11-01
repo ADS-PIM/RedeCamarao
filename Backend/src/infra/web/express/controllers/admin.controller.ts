@@ -92,7 +92,7 @@ export class AdminController {
             const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
 
             const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-            await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, adminId: admin.id, expiresAt: refreshExpiresAt });
+            await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, userId: admin.id, expiresAt: refreshExpiresAt });
 
             res.cookie('refreshToken', refreshToken, refreshCookieOptions);
             return res.status(200).json({ accessToken, userId: admin.id });
@@ -134,7 +134,7 @@ export class AdminController {
             const newRefreshTokenId = crypto.randomUUID();
             const newRefreshToken = jwt.sign({ adminId, role: payload.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d', jwtid: newRefreshTokenId });
             const newRefreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-            await this.createRefreshToken.execute({ id: newRefreshTokenId, token: newRefreshToken, adminId, expiresAt: newRefreshExpiresAt });
+            await this.createRefreshToken.execute({ id: newRefreshTokenId, token: newRefreshToken, userId: adminId, expiresAt: newRefreshExpiresAt });
 
 
             res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
