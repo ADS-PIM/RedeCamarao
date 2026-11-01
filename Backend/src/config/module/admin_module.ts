@@ -4,7 +4,7 @@ import { AdminController } from "../../infra/web/express/controllers/admin.contr
 // 
 import { AdminDAOMySQL } from "../../infra/bd/mySql/admin.MySQL.dao";
 import { PasswordResetDAOMySQL } from '../../infra/bd/mySql/passwordReset.MySQL.dao';
-import { RefreshTokenDAOMySQL } from "../../infra/bd/mySql/refreshToken.MySQL.dao";
+import { RefreshTokenDAOMySQL } from "../../infra/bd/mySql/adminRefreshToken.MySQL.dao";
 
 import { CreateRefreshToken } from "../../application/usecase/refresh_token/CreateRefreshTokenUseCase";
 import { DeleteByToken } from "../../application/usecase/refresh_token/DeleteByTokenUseCase";

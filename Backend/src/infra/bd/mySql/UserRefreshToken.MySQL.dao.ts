@@ -1,95 +1,88 @@
-import { randomUUID } from 'node:crypto';
-
-import { RowDataPacket } from 'mysql2/promise';
-
+import { ConsumableRefreshTokenInterface, RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../../../util/connection';
+import type { RowDataPacket } from 'mysql2';
 
-import { UserRefreshTokenDAOInterface } from '../../../domain/interfaces/user/UserRefreshTokenDAOInterface';
-
-export class UserRefreshTokenDAOMySQL implements UserRefreshTokenDAOInterface {
-
-    public async create(
-        userId: string,
-        tokenHash: string,
-        expiresAt: Date
-    ): Promise<void> {
-
-        await connection.execute(
-            `INSERT INTO user_refresh_tokens
-            (id, userId, tokenHash, expiresAt)
-            VALUES (?, ?, ?, ?)`,
-            [
-                randomUUID(),
-                userId,
-                tokenHash,
-                expiresAt
-            ]
-        );
+export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface {
+    async create(id: string, token: string, userId: string, expiresAt: Date): Promise<void> {
+        try {
+            await connection.query(
+                'INSERT INTO user_refresh_tokens (id, tokenHash, userId, expiresAt) VALUES (?, ?, ?, ?)',
+                [id, token, userId, expiresAt]
+            );
+        } catch (error) {
+            console.error('Error creating user refresh token:', error);
+            throw new Error('Failed to create user refresh token');
+        }
     }
 
-    public async consume(tokenHash: string): Promise<string | null> {
+    async findByToken(token: string): Promise<RefreshTokenRow | null> {
+        try {
+            const [rows] = await connection.query<RowDataPacket[]>(
+                'SELECT id, userId FROM user_refresh_tokens WHERE tokenHash = ? AND revokedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP',
+                [token]
+            );
+            if (rows.length === 0) return null;
+            return { id: String(rows[0].id), userId: String(rows[0].userId) };
+        } catch (error) {
+            console.error('Error finding user refresh token:', error);
+            throw new Error('Failed to find user refresh token');
+        }
+    }
 
+    async consume(token: string): Promise<RefreshTokenRow | null> {
         const db = await connection.getConnection();
 
         try {
             await db.beginTransaction();
 
-            const [tokens] = await db.execute<RowDataPacket[]>(
-                `SELECT id, userId
-                FROM user_refresh_tokens
-                WHERE tokenHash = ?
-                AND revokedAt IS NULL
-                AND expiresAt > CURRENT_TIMESTAMP
-                FOR UPDATE`,
-                [tokenHash]
+            const [rows] = await db.query<RowDataPacket[]>(
+                'SELECT id, userId FROM user_refresh_tokens WHERE tokenHash = ? AND revokedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP FOR UPDATE',
+                [token]
             );
 
-            if (tokens.length === 0) {
+            if (rows.length === 0) {
                 await db.rollback();
                 return null;
             }
 
-            await db.execute(
-                `UPDATE user_refresh_tokens
-                SET revokedAt = CURRENT_TIMESTAMP
-                WHERE id = ?`,
-                [tokens[0].id]
+            await db.query(
+                'UPDATE user_refresh_tokens SET revokedAt = CURRENT_TIMESTAMP WHERE id = ?',
+                [rows[0].id]
             );
 
             await db.commit();
 
-            return tokens[0].userId;
-
+            return { id: String(rows[0].id), userId: String(rows[0].userId) };
         } catch (error) {
-
             await db.rollback();
-            throw error;
-
+            console.error('Error consuming user refresh token:', error);
+            throw new Error('Failed to consume user refresh token');
         } finally {
-
             db.release();
         }
     }
 
-    public async revoke(tokenHash: string): Promise<void> {
-
-        await connection.execute(
-            `UPDATE user_refresh_tokens
-            SET revokedAt = CURRENT_TIMESTAMP
-            WHERE tokenHash = ?
-            AND revokedAt IS NULL`,
-            [tokenHash]
-        );
+    async deleteByToken(token: string): Promise<void> {
+        try {
+            await connection.query(
+                'UPDATE user_refresh_tokens SET revokedAt = CURRENT_TIMESTAMP WHERE tokenHash = ? AND revokedAt IS NULL',
+                [token]
+            );
+        } catch (error) {
+            console.error('Error deleting user refresh token:', error);
+            throw new Error('Failed to delete user refresh token');
+        }
     }
 
-    public async revokeAll(userId: string): Promise<void> {
-
-        await connection.execute(
-            `UPDATE user_refresh_tokens
-            SET revokedAt = CURRENT_TIMESTAMP
-            WHERE userId = ?
-            AND revokedAt IS NULL`,
-            [userId]
-        );
+    async deleteByUserId(userId: string): Promise<void> {
+        try {
+            await connection.query(
+                'UPDATE user_refresh_tokens SET revokedAt = CURRENT_TIMESTAMP WHERE userId = ? AND revokedAt IS NULL',
+                [userId]
+            );
+        } catch (error) {
+            console.error('Error deleting refresh tokens for user:', error);
+            throw new Error('Failed to delete refresh tokens for user');
+        }
     }
 }
