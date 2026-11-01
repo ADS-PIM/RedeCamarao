@@ -60,35 +60,6 @@ create table `offerPhotos` (
     constraint `offerPhotos_offers_FK` foreign key (`offerId`) references `offers` (`id`) on update cascade on delete cascade
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
-create table `conversations` (
-    `id` char(36) not null,
-    `offerId` char(36) not null,
-    `buyerId` char(36) not null,
-    `advertiserId` char(36) not null,
-    `createdAt` datetime not null default current_timestamp,
-    primary key (`id`),
-    key `conversations_offers_FK` (`offerId`),
-    key `conversations_buyer_FK` (`buyerId`),
-    key `conversations_advertiser_FK` (`advertiserId`),
-    constraint `conversations_offers_FK` foreign key (`offerId`) references `offers` (`id`) on update cascade,
-    constraint `conversations_buyer_FK` foreign key (`buyerId`) references `users` (`id`) on update cascade,
-    constraint `conversations_advertiser_FK` foreign key (`advertiserId`) references `users` (`id`) on update cascade
-)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
-
-create table `messages` (
-    `id` char(36) not null,
-    `conversationId` char(36) not null,
-    `senderId` char(36) not null,
-    `message` varchar(1500) not null,
-    `sentAt` datetime not null default current_timestamp,
-    `read` boolean not null default false,
-    primary key (`id`),
-    key `messages_conversations_FK` (`conversationId`),
-    key `messages_users_FK` (`senderId`),
-    constraint `messages_conversations_FK` foreign key (`conversationId`) references `conversations` (`id`) on update cascade on delete cascade,
-    constraint `messages_users_FK` foreign key (`senderId`) references `users` (`id`) on update cascade
-)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
-
 create table `administrators` (
     `id` char(36) not null,
     `name` varchar(255) not null,

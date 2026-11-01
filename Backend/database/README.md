@@ -44,7 +44,19 @@ Pare as escritas da aplicação e faça backup antes de aplicar: DDL de MySQL/Ma
 tem commit implícito. A migration admite nova execução de `up` após interrupção,
 mas não promete rollback transacional de alterações de estrutura.
 
+## Remoção de conversas e mensagens
+
+A migration `20261101130000-remove-conversations-and-messages.js` remove
+`messages` antes de `conversations`, respeitando a chave estrangeira entre elas.
+Ela é aplicada pelo mesmo comando `npm.cmd run db:migrate` e exclui os dados
+dessas duas tabelas. Seu `down` recria as estruturas e os relacionamentos vazios;
+os registros excluídos só podem ser recuperados de um backup.
+
 ## Reversão
+
+Cada execução desfaz apenas a última migration. Se a remoção de conversas e
+mensagens já foi aplicada, a primeira execução recria essas duas tabelas vazias.
+A execução seguinte reverte o alinhamento do marketplace descrito abaixo.
 
 ```powershell
 npx.cmd sequelize-cli db:migrate:undo
