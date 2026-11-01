@@ -11,6 +11,7 @@ const ts = require('typescript');
 
 const migrationPath = path.join(__dirname, '../migrations');
 const migration = require('../migrations/20261101120000-align-marketplace-schema');
+const removeConversations = require('../migrations/20261101130000-remove-conversations-and-messages');
 const previous = fs.readdirSync(migrationPath).filter((name) => name < '20261101').sort().map((name) => require(path.join(migrationPath, name)));
 const enabled = process.env.MIGRATION_TEST_MYSQL === '1';
 const config = {
@@ -145,6 +146,30 @@ test('populated database: upgrade, DAO compatibility, token isolation and rollba
     assert.equal((await rows(db, 'SELECT * FROM user_refresh_tokens')).length, 0);
     assert.equal((await rows(db, 'SELECT * FROM refresh_tokens')).length, 1);
 
+    const conversationSchema = await qi.describeTable('conversations');
+    const messageSchema = await qi.describeTable('messages');
+    await removeConversations.up(qi);
+    const remainingTables = await qi.showAllTables();
+    assert.ok(!remainingTables.includes('messages'));
+    assert.ok(!remainingTables.includes('conversations'));
+    assert.equal((await rows(db, 'SELECT * FROM users')).length, 2);
+    assert.equal((await rows(db, 'SELECT * FROM offers')).length, 1);
+    // A retry after interrupted MySQL DDL must tolerate already removed tables.
+    await removeConversations.up(qi);
+    await removeConversations.down(qi, Sequelize);
+    assert.deepEqual(await qi.describeTable('conversations'), conversationSchema);
+    assert.deepEqual(await qi.describeTable('messages'), messageSchema);
+    assert.equal((await rows(db, 'SELECT * FROM conversations')).length, 0);
+    assert.equal((await rows(db, 'SELECT * FROM messages')).length, 0);
+    await assert.rejects(db.query(`INSERT INTO messages (id, conversationId, senderId, message)
+      VALUES ('orphan', 'missing', 'reseller', 'Invalid')`));
+    await db.query(`INSERT INTO conversations (id, offerId, buyerId, advertiserId)
+      VALUES ('restored', 'offer', 'reseller', 'producer')`);
+    await db.query(`INSERT INTO messages (id, conversationId, senderId, message)
+      VALUES ('restored-message', 'restored', 'reseller', 'Test')`);
+    await db.query("DELETE FROM conversations WHERE id = 'restored'");
+    assert.equal((await rows(db, 'SELECT * FROM messages')).length, 0);
+
     // Retrying the upgrade cannot overwrite migrated data or lose old tokens.
     await migration.up(qi, Sequelize);
     assert.equal((await rows(db, 'SELECT tokenHash FROM refresh_tokens'))[0].tokenHash, adminToken);
@@ -195,6 +220,7 @@ test('SQL reference creates the same active columns as the migration chain', { s
   await withDatabase(async (db, qi) => {
     await initialize(qi);
     await migration.up(qi, Sequelize);
+    await removeConversations.up(qi);
     const activeTables = (await qi.showAllTables()).filter((name) => !name.endsWith('_legacy_20261101')).sort();
     const schema = {};
     for (const table of activeTables) schema[table] = await qi.describeTable(table);
