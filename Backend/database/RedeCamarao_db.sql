@@ -5,12 +5,12 @@ create table `users` (
     `hashPassword` varchar(255) not null,
     `CPF_CNPJ` char(14) not null default '',
     `user_type` enum('PRODUTOR', 'COMPRADOR') not null,
-    `createdAt` timestamp not null default current_timestamp,
-    `updatedAt` timestamp not null default current_timestamp on update current_timestamp,
-    `description` varchar(2000) not null default '',
-    `location` varchar(255) not null default '',
-    `WhatsApp` varchar(20) not null default '',
-    `businessHours` varchar(255) not null default '',
+    `createdAt` timestamp null default current_timestamp,
+    `updatedAt` timestamp null default current_timestamp on update current_timestamp,
+    `description` varchar(2000) null default null,
+    `location` varchar(255) null default null,
+    `WhatsApp` varchar(20) null default null,
+    `businessHours` varchar(255) null default null,
     primary key (`id`),
     unique key `users_unique` (`email`)
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
