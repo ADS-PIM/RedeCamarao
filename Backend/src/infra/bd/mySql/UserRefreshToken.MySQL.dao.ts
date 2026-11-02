@@ -1,13 +1,16 @@
 import { ConsumableRefreshTokenInterface, RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../../../util/connection';
 import type { RowDataPacket } from 'mysql2';
+import { createHash } from 'node:crypto';
+
+const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
 
 export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface {
     async create(id: string, token: string, userId: string, expiresAt: Date): Promise<void> {
         try {
             await connection.query(
                 'INSERT INTO user_refresh_tokens (id, tokenHash, userId, expiresAt) VALUES (?, ?, ?, ?)',
-                [id, token, userId, expiresAt]
+                [id, hashToken(token), userId, expiresAt]
             );
         } catch (error) {
             console.error('Error creating user refresh token:', error);
@@ -19,7 +22,7 @@ export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface
         try {
             const [rows] = await connection.query<RowDataPacket[]>(
                 'SELECT id, userId FROM user_refresh_tokens WHERE tokenHash = ? AND revokedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP',
-                [token]
+                [hashToken(token)]
             );
             if (rows.length === 0) return null;
             return { id: String(rows[0].id), userId: String(rows[0].userId) };
@@ -37,7 +40,7 @@ export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface
 
             const [rows] = await db.query<RowDataPacket[]>(
                 'SELECT id, userId FROM user_refresh_tokens WHERE tokenHash = ? AND revokedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP FOR UPDATE',
-                [token]
+                [hashToken(token)]
             );
 
             if (rows.length === 0) {
@@ -66,7 +69,7 @@ export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface
         try {
             await connection.query(
                 'UPDATE user_refresh_tokens SET revokedAt = CURRENT_TIMESTAMP WHERE tokenHash = ? AND revokedAt IS NULL',
-                [token]
+                [hashToken(token)]
             );
         } catch (error) {
             console.error('Error deleting user refresh token:', error);

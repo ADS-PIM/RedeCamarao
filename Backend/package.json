@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node --require tsx/cjs --test tests/http.test.cjs",
+    "test:user-auth": "node --require tsx/cjs --test test/user-auth.test.cjs",
     "test:migration": "node --test database/tests/marketplace-schema.test.cjs",
     "dev": "tsx watch src/server.ts",
     "build": "tsc --noEmit --project ./tsconfig.json",

@@ -25,25 +25,24 @@ export const authUser = (
 
     const token = authorization.split(' ')[1];
 
-    const secret = process.env.JWT_USER_ACCESS_SECRET;
+    const secret = process.env.JWT_ACCESS_SECRET;
 
     if (!secret) {
         res.status(500).json({
-            error: 'JWT user secret is not configured'
+            error: 'JWT access secret is not configured'
         });
         return;
     }
 
     try {
 
-        const decoded = jwt.verify(token, secret, {
-            issuer: 'rede-camarao-users',
-            audience: 'rede-camarao-web'
-        });
+        const decoded = jwt.verify(token, secret);
 
         if (
             typeof decoded === 'string' ||
-            typeof decoded.userId !== 'string'
+            typeof decoded.userId !== 'string' ||
+            !decoded.userId ||
+            decoded.jti !== undefined
         ) {
             res.status(401).json({
                 error: 'Invalid access token'
