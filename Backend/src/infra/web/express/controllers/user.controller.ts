@@ -5,7 +5,7 @@ import { validate } from 'class-validator';
 
 import jwt from 'jsonwebtoken';
 
-import { randomBytes, randomUUID, createHash } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 import { PasswordCrypto } from '../../../../service/passwordCrypto';
 
@@ -28,7 +28,7 @@ import { DeleteByUserId } from '../../../../application/usecase/refresh_token/De
 import type { UserAuthRequest } from '../../../../../userAuthMiddleware';
 
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
 const refreshCookieOptions = {
     httpOnly: true,
@@ -36,15 +36,6 @@ const refreshCookieOptions = {
     secure: isProduction,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/users'
-};
-
-
-
-const hashToken = (token: string): string => {
-
-    return createHash('sha256')
-        .update(token)
-        .digest('hex');
 };
 
 
@@ -117,191 +108,100 @@ export class UserController {
         }
     }
 
-
-  
     public async login(req: Request, res: Response): Promise<Response> {
-
         try {
-
-            const userLoginDTO = plainToInstance(
-                UserLoginDTO,
-                req.body
-            );
-
-            const errors = await validate(userLoginDTO, {
-                whitelist: true,
-                forbidNonWhitelisted: true
-            });
+            const userLoginDTO = plainToInstance(UserLoginDTO, req.body);
+            const errors = await validate(userLoginDTO);
 
             if (errors.length > 0) {
-                return res.status(400).json({
-                    errors
-                });
+                return res.status(400).json({ errors });
             }
 
-            const user = await this.searchByEmailUser.execute(
-                userLoginDTO.email
-            );
+            const user = await this.searchByEmailUser.execute(userLoginDTO.email);
 
-            if (
-                !user ||
-                !(await PasswordCrypto.verifyPassword(
-                    userLoginDTO.password,
-                    user.password
-                ))
-            ) {
-                return res.status(401).json({
-                    error: 'Invalid email or password'
-                });
+            if (!user || !user.password || !(await PasswordCrypto.verifyPassword(userLoginDTO.password, user.password))) {
+                return res.status(401).json({ error: 'Invalid email or password' });
             }
 
-            const accessSecret = process.env.JWT_USER_ACCESS_SECRET;
+            const accessSecret = process.env.JWT_ACCESS_SECRET;
+            const refreshSecret = process.env.JWT_REFRESH_SECRET;
 
-            if (!accessSecret) {
-                throw new Error('JWT user secret is not configured');
+            if (!accessSecret || !refreshSecret) {
+                return res.status(500).json({ error: 'JWT secrets are not configured' });
             }
 
-            
             const accessToken = jwt.sign(
-                {
-                    userId: user.id,
-                    userType: user.userType
-                },
-                accessSecret,
-                {
-                    expiresIn: '15m',
-                    issuer: 'rede-camarao-users',
-                    audience: 'rede-camarao-web'
-                }
+                { userId: user.id, userType: user.userType }, accessSecret, { expiresIn: '5m' }
             );
 
-            
-            const refreshToken = randomBytes(32).toString('hex');
+            const refreshTokenId = randomUUID();
+            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-            const expiresAt = new Date(
-                Date.now() + 7 * 24 * 60 * 60 * 1000
-            );
+            const refreshToken = jwt.sign({ userId: user.id, userType: user.userType }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
 
-            // Chama o caso de uso
-            await this.createRefreshToken.execute({
-                id: randomUUID(),
-                userId: user.id,
-                token: hashToken(refreshToken),
-                expiresAt
-            });
+            await this.createRefreshToken.execute({ id: refreshTokenId, userId: user.id, token: refreshToken, expiresAt });
 
-           
-            res.cookie(
-                'userRefreshToken',
-                refreshToken,
-                refreshCookieOptions
-            );
-
-            return res.status(200).json({
-                accessToken,
-                userId: user.id,
-                userType: user.userType
-            });
-
+            res.cookie('userRefreshToken', refreshToken, refreshCookieOptions);
+            return res.status(200).json({ accessToken, userId: user.id, userType: user.userType });
         } catch (error: any) {
-
             console.error('Error during login:', error);
-
-            return res.status(500).json({
-                error: 'Error during login'
-            });
+            return res.status(500).json({ error: 'Error during login' });
         }
     }
 
-
     public async refresh(req: Request, res: Response): Promise<Response> {
-
         try {
-
             const refreshToken = getRefreshToken(req);
-
-            if (
-                !refreshToken ||
-                !/^[a-f0-9]{64}$/.test(refreshToken)
-            ) {
-                return res.status(401).json({
-                    error: 'Invalid refresh token'
-                });
+            if (!refreshToken || typeof refreshToken !== 'string') {
+                return res.status(401).json({ error: 'Invalid refresh token' });
             }
 
-            
-            const storedToken = await this.consumeRefreshToken.execute(
-                hashToken(refreshToken)
-            );
+            const accessSecret = process.env.JWT_ACCESS_SECRET;
+            const refreshSecret = process.env.JWT_REFRESH_SECRET;
 
-            if (!storedToken?.userId) {
-                return res.status(401).json({
-                    error: 'Invalid or expired refresh token'
-                });
+            if (!accessSecret || !refreshSecret) {
+                return res.status(500).json({ error: 'JWT secrets are not configured' });
             }
 
-            const user = await this.searchByIdUser.execute(storedToken.userId);
+            let payload: jwt.JwtPayload | string;
+            try {
+                payload = jwt.verify(refreshToken, refreshSecret);
+            } catch {
+                await this.deleteByToken.execute(refreshToken).catch(() => {});
+                return res.status(401).json({ error: 'Invalid or expired refresh token' });
+            }
 
+            if (typeof payload === 'string' || typeof payload.userId !== 'string' || !payload.userId || !payload.jti) {
+                return res.status(401).json({ error: 'Invalid refresh token' });
+            }
+
+            const storedToken = await this.consumeRefreshToken.execute(refreshToken);
+            if (!storedToken || storedToken.id !== payload.jti || storedToken.userId !== payload.userId) {
+                return res.status(401).json({ error: 'Invalid refresh token' });
+            }
+
+            const user = await this.searchByIdUser.execute(payload.userId);
             if (!user) {
-                return res.status(401).json({
-                    error: 'Invalid session'
-                });
+                return res.status(401).json({ error: 'Invalid session' });
             }
 
-            const accessSecret = process.env.JWT_USER_ACCESS_SECRET;
-
-            if (!accessSecret) {
-                throw new Error('JWT user secret is not configured');
-            }
-
-          
             const accessToken = jwt.sign(
-                {
-                    userId: user.id,
-                    userType: user.userType
-                },
-                accessSecret,
-                {
-                    expiresIn: '15m',
-                    issuer: 'rede-camarao-users',
-                    audience: 'rede-camarao-web'
-                }
+                { userId: user.id, userType: user.userType }, accessSecret, { expiresIn: '5m' }
             );
 
-          
-            const newRefreshToken = randomBytes(32).toString('hex');
-
-            const expiresAt = new Date(
-                Date.now() + 7 * 24 * 60 * 60 * 1000
+            const newRefreshTokenId = randomUUID();
+            const newRefreshToken = jwt.sign(
+                { userId: user.id, userType: user.userType }, refreshSecret, { expiresIn: '7d', jwtid: newRefreshTokenId }
             );
+            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-            
-            await this.createRefreshToken.execute({
-                id: randomUUID(),
-                userId: user.id,
-                token: hashToken(newRefreshToken),
-                expiresAt
-            });
+            await this.createRefreshToken.execute({ id: newRefreshTokenId, userId: user.id, token: newRefreshToken, expiresAt });
 
-            res.cookie(
-                'userRefreshToken',
-                newRefreshToken,
-                refreshCookieOptions
-            );
-
-            return res.status(200).json({
-                accessToken,
-                userId: user.id,
-                userType: user.userType
-            });
-
+            res.cookie('userRefreshToken', newRefreshToken, refreshCookieOptions);
+            return res.status(200).json({ accessToken, userId: user.id, userType: user.userType });
         } catch (error: any) {
-
             console.error('Error refreshing token:', error);
-
-            return res.status(500).json({
-                error: 'Error refreshing token'
-            });
+            return res.status(500).json({ error: 'Error refreshing token' });
         }
     }
 
@@ -316,9 +216,7 @@ export class UserController {
             if (refreshToken) {
 
                 // Revoga o Refresh Token
-                await this.deleteByToken.execute(
-                    hashToken(refreshToken)
-                );
+                await this.deleteByToken.execute(refreshToken);
             }
 
             const { maxAge, ...clearCookieOptions } = refreshCookieOptions;
@@ -345,16 +243,36 @@ export class UserController {
 
 
 
-    public async searchById(req: UserAuthRequest,res: Response): Promise<Response> {
+    public async searchPublicById(req: Request, res: Response): Promise<Response> {
         try {
+            const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            const user = await this.searchByIdUser.execute(userId);
 
-            const userId = req.user?.userId;
-
-            if (!userId) {
-                return res.status(401).json({
-                    error: 'Unauthorized'
+            if (!user) {
+                return res.status(404).json({
+                    error: 'User not found'
                 });
             }
+
+            return res.status(200).json({
+                id: user.id,
+                name: user.name,
+                userType: user.userType,
+                createdAt: user.createdAt
+            });
+        } catch (error: any) {
+            console.error('Error searching public user:', error);
+
+            return res.status(500).json({
+                error: 'Error searching user'
+            });
+        }
+    }
+
+    public async searchById(req: Request, res: Response): Promise<Response> {
+        try {
+
+            const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
             const user = await this.searchByIdUser.execute(userId);
 

@@ -73,7 +73,7 @@ module.exports = {
       WHEN user_type IN ('BUYER', 'REVENDEDOR') THEN 'COMPRADOR'
       ELSE user_type END, updatedAt = updatedAt`);
     await queryInterface.changeColumn('users', 'user_type', {
-      type: Sequelize.ENUM('PRODUTOR', 'COMPRADOR'), allowNull: false
+      type: Sequelize.ENUM('PRODUCER', 'BUYER'), allowNull: false
     });
 
     if (await hasTable(queryInterface, 'profiles')) {
