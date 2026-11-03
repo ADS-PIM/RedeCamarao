@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 export enum OfferStatus {
     ACTIVE = 'ACTIVE',
     INACTIVE = 'INACTIVE',
@@ -10,7 +12,8 @@ export type propsOffer = {
     userId: string;
     title: string;
     description: string;
-    type: string;//FAZER ENUM
+    type: string;
+    size: string;
     price: number;
     weight: number;
     maximumQuantity: number;
@@ -25,16 +28,16 @@ export type propsOffer = {
 export class Offer {
     constructor(private props: propsOffer) {}
 
-    public static construct({userId, title, description, type, price, weight, maximumQuantity, minimumQuantity, location, startDate, endDate}: { userId: string; title: string; description: string; type: string; price: number; weight: number; maximumQuantity: number; minimumQuantity: number; location: string; startDate: Date; endDate: Date}): Offer{
-        if (!userId || !title || !description || !type || !price || !weight || !maximumQuantity || !minimumQuantity || !location || !startDate || !endDate) {
+    public static construct({userId, title, description, type, size, price, weight, maximumQuantity, minimumQuantity, location, startDate, endDate}: { userId: string; title: string; description: string; type: string; size: string; price: number; weight: number; maximumQuantity: number; minimumQuantity: number; location: string; startDate: Date; endDate: Date}): Offer{
+        if (!userId || !title || !description || !type || !size || !price || !weight || !maximumQuantity || !minimumQuantity || !location || !startDate || !endDate) {
             throw new Error('All fields are required');
         }
 
-        const id = crypto.randomUUID().toString();
+        const id = randomUUID();
         const status = OfferStatus.INACTIVE;
         const createdAt = new Date();
 
-        return new Offer({id, userId, title, description, type, price, weight, maximumQuantity, minimumQuantity, location, startDate, endDate, status, createdAt});
+        return new Offer({id, userId, title, description, type, size, price, weight, maximumQuantity, minimumQuantity, location, startDate, endDate, status, createdAt});
     }
 
     public static reconstruct(props: propsOffer) {
@@ -59,6 +62,10 @@ export class Offer {
 
     public get type () {
         return this.props.type;
+    }
+
+    public get size () {
+        return this.props.size;
     }
 
     public get price () {
