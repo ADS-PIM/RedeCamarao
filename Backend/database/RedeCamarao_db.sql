@@ -34,6 +34,7 @@ create table `offers` (
     `userId` char(36) not null,
     `title` varchar(255) not null,
     `description` varchar(1000) not null default '',
+    `type` varchar(255) default null,
     `size` varchar(255) not null,
     `price` decimal(10,2) not null,
     `weight` decimal(10,2) not null default 0,
