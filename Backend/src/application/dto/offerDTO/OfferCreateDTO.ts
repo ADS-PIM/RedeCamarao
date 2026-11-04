@@ -1,4 +1,4 @@
-import { IsDateString, IsNotEmpty, IsNumber, IsPositive, IsString, Matches, Max, MaxLength } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsPositive, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class OfferCreateDTO {
     @IsNotEmpty()
@@ -11,7 +11,6 @@ export class OfferCreateDTO {
 
     @IsNotEmpty()
     @IsString()
-
     type!: string;
 
     @IsNotEmpty()
@@ -31,8 +30,6 @@ export class OfferCreateDTO {
     maximumQuantity!: number;
 
     @IsNumber({ maxDecimalPlaces: 2 })
-    @IsPositive()
-    @Max(99999999.99)
     minimumQuantity!: number;
 
     @IsNotEmpty()
@@ -40,10 +37,10 @@ export class OfferCreateDTO {
     location!: string;
 
     @IsNotEmpty()
-    @IsDateString({ strict: true })
+    @IsDateString()
     startDate!: string;
 
     @IsNotEmpty()
-    @IsDateString({ strict: true })
+    @IsDateString()
     endDate!: string;
 }

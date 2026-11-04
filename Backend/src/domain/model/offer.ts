@@ -4,7 +4,8 @@ export enum OfferStatus {
     ACTIVE = 'ACTIVE',
     INACTIVE = 'INACTIVE',
     EXPIRED = 'EXPIRED',
-    SOLD_OUT = 'SOLD_OUT'
+    SOLD_OUT = 'SOLD_OUT',
+    CANCELLED = 'CANCELLED'
 }
 
 export type propsOffer = {
@@ -12,7 +13,7 @@ export type propsOffer = {
     userId: string;
     title: string;
     description: string;
-    type: string;
+    type: string | null;
     size: string;
     price: number;
     weight: number;
@@ -29,7 +30,8 @@ export class Offer {
     constructor(private props: propsOffer) {}
 
     public static construct({userId, title, description, type, size, price, weight, maximumQuantity, minimumQuantity, location, startDate, endDate}: { userId: string; title: string; description: string; type: string; size: string; price: number; weight: number; maximumQuantity: number; minimumQuantity: number; location: string; startDate: Date; endDate: Date}): Offer{
-        if (!userId || !title || !description || !type || !size || !price || !weight || !maximumQuantity || !minimumQuantity || !location || !startDate || !endDate) {
+        if ([userId, title, description, type, size, price, weight, maximumQuantity, minimumQuantity, location, startDate, endDate]
+            .some(value => value === undefined || value === null || value === '')) {
             throw new Error('All fields are required');
         }
 

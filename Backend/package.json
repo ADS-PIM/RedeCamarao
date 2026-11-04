@@ -6,7 +6,10 @@
   "scripts": {
     "test": "node --require tsx/cjs --test tests/http.test.cjs",
     "test:user-auth": "node --require tsx/cjs --test test/user-auth.test.cjs",
-    "test:offer": "node --require tsx/cjs --test test/offer-create.test.cjs test/offer-type-migration.test.cjs",
+    "test:offer": "node --require tsx/cjs --test test/offer-create.test.cjs test/offer-list.test.cjs test/offer-update.test.cjs test/offer-status-migration.test.cjs",
+    "test:application-errors": "node --require tsx/cjs --test test/application-errors.test.cjs",
+    "test:offer-list": "node --require tsx/cjs --test test/offer-list.test.cjs",
+    "test:offer-update": "node --require tsx/cjs --test test/offer-update.test.cjs",
     "test:migration": "node --test database/tests/marketplace-schema.test.cjs",
     "dev": "tsx watch src/server.ts",
     "build": "tsc --noEmit --project ./tsconfig.json",

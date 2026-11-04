@@ -1,3 +1,4 @@
+import { ApplicationError } from '../../errors/ApplicationError';
 import { UserDAOInterface } from '../../../domain/interfaces/user/UserDAOInterface'
 import { UseCase } from '../useCase'
 import { SearchByIdUser } from './SearchUserByIdUseCase'
@@ -10,7 +11,7 @@ export class DeleteUser implements UseCase<string, void> {
         const existingUser = await searchByIdUser.execute(id)
 
         if (!existingUser) {
-            throw new Error('User not found')
+            throw new ApplicationError('USER_NOT_FOUND', 'Usuário não encontrado')
         }
 
         await this.userDAO.delete(id)
