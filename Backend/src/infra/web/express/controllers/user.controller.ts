@@ -1,3 +1,4 @@
+import { applicationErrorResponse } from '../applicationErrorResponse';
 import type { Request, Response } from 'express';
 
 import { plainToInstance } from 'class-transformer';
@@ -90,6 +91,8 @@ export class UserController {
             });
 
         } catch (error: any) {
+            const response = applicationErrorResponse(error, res);
+            if (response) return response;
 
             if (
                 error.message === 'Email already registered' ||
@@ -357,6 +360,8 @@ export class UserController {
             });
 
         } catch (error: any) {
+            const response = applicationErrorResponse(error, res);
+            if (response) return response;
 
             if (error.message === 'User not found') {
                 return res.status(404).json({
@@ -405,6 +410,8 @@ export class UserController {
         return res.status(204).send();
 
     } catch (error: any) {
+            const response = applicationErrorResponse(error, res);
+            if (response) return response;
 
         if (error.message === 'User not found') {
             return res.status(404).json({

@@ -1,3 +1,4 @@
+import { ApplicationError } from '../../errors/ApplicationError';
 import { UserDAOInterface, UserUpdateData } from "../../../domain/interfaces/user/UserDAOInterface";
 import { UseCase } from "../useCase";
 import { PasswordCrypto } from "../../../service/passwordCrypto";
@@ -11,14 +12,14 @@ export class UpdateUser implements UseCase<{ id: string; data: UserUpdateData },
         const searchByIdUser = new SearchByIdUser(this.userDAO);
         const existingUser = await searchByIdUser.execute(id);
         if (!existingUser) {
-            throw new Error('User not found');
+            throw new ApplicationError('USER_NOT_FOUND', 'Usuário não encontrado');
         }
 
         if (data.email !== undefined) {
             const searchByEmailUser = new SearchByEmailUser(this.userDAO);
             const userWithEmail = await searchByEmailUser.execute(data.email);
             if (userWithEmail && userWithEmail.id !== id) {
-                throw new Error('Email already in use');
+                throw new ApplicationError('EMAIL_ALREADY_EXISTS', 'Email já está em uso');
             }
         }
 

@@ -21,7 +21,7 @@ export class UserDAOMySQL implements UserDAOInterface {
                 [user.id, user.name, user.email, user.password, databaseUserTypes[user.userType], user.cpf_cnpj, user.createdAt]
             );
         } catch (error: any) {
-            throw new Error('Error registering user: ' + error.message);
+            throw error;
         }
     }
 
@@ -76,7 +76,7 @@ export class UserDAOMySQL implements UserDAOInterface {
                 [...values, id]
             );
         } catch (error: any) {
-            throw new Error('Error updating user: ' + error.message);
+            throw error;
         }
     }
 
@@ -84,7 +84,7 @@ export class UserDAOMySQL implements UserDAOInterface {
         try {
             await connection.query('DELETE FROM users WHERE id = ?', [id]);
         } catch (error: any) {
-            throw new Error('Error deleting user: ' + error.message);
+            throw error;
         }
     }
 }
