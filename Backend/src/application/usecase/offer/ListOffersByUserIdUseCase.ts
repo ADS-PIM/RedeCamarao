@@ -18,7 +18,6 @@ export class ListOffersByUserId implements UseCase<string, OfferSearchByUserIdDT
         const offers = await this.offerDAO.listByUserId(userId);
         return offers.map((offer): OfferSearchByUserIdDTO => ({
             id: offer.id,
-            userId: offer.userId,
             title: offer.title,
             type: offer.type,
             size: offer.size,

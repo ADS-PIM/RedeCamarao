@@ -25,6 +25,14 @@ const reconstructOffer = (row: RowDataPacket & propsOffer): Offer => Offer.recon
 });
 
 export class OfferDAOMySQL implements OfferDAOInterface {
+    public async search(): Promise<Offer[]> {
+        const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
+            `SELECT ${offerColumns} FROM offers ORDER BY createdAt DESC, id DESC`
+        );
+
+        return rows.map(reconstructOffer);
+    }
+
     public async listByUserId(userId: string): Promise<Offer[]> {
         const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
             `SELECT ${offerColumns}

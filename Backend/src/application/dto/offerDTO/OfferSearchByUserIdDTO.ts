@@ -2,7 +2,6 @@ import { OfferStatus } from '../../../domain/model/offer';
 
 export class OfferSearchByUserIdDTO {
     id: string;
-    userId: string;
     title: string;
     type: string | null;
     size: string;

@@ -8,13 +8,32 @@ import { CreateOffer } from '../../../../application/usecase/offer/CreateOfferUs
 import { ListOffersByUserId } from '../../../../application/usecase/offer/ListOffersByUserIdUseCase';
 import { OfferUpdateDTO } from '../../../../application/dto/offerDTO/OfferUpdateDTO';
 import { UpdateOffer } from '../../../../application/usecase/offer/UpdateOfferUseCase';
+import { SearchOffer } from '../../../../application/usecase/offer/SearchOfferUseCase';
 
 export class OfferController {
     constructor(
         private readonly createOffer: CreateOffer,
         private readonly listOffersByUserId: ListOffersByUserId,
-        private readonly updateOffer: UpdateOffer
+        private readonly updateOffer: UpdateOffer,
+        private readonly searchOffer: SearchOffer
     ) {}
+
+    public async search(req: UserAuthRequest, res: Response): Promise<Response> {
+        try {
+            if (!req.user?.userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const offers = await this.searchOffer.execute();
+            return res.status(200).json(offers);
+        } catch (error: unknown) {
+            const response = applicationErrorResponse(error, res);
+            if (response) return response;
+
+            console.error('Error searching offers:', error);
+            return res.status(500).json({ error: 'Error searching offers' });
+        }
+    }
 
     public async update(req: UserAuthRequest, res: Response): Promise<Response> {
         try {

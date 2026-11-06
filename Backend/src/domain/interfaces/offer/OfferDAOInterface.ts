@@ -11,6 +11,7 @@ export type OfferUpdateData = Partial<Pick<propsOffer,
 
 export interface OfferDAOInterface {
     create(offer: Offer): Promise<void>;
+    search(): Promise<Offer[]>;
     listByUserId(userId: string): Promise<Offer[]>;
     searchById(id: string): Promise<Offer | null>;
     update(id: string, userId: string, data: OfferUpdateData): Promise<boolean>;
