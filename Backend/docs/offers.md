@@ -1,4 +1,28 @@
-# Listar ofertas por usuário
+# Ofertas
+
+## Buscar ofertas (SearchOffer)
+
+`GET /offer/search`
+
+Requer `Authorization: Bearer <accessToken>`. Retorna ofertas de todos os usuários
+e de todos os status, da mais recente para a mais antiga (`createdAt DESC`,
+desempate por `id DESC`). Não requer parâmetros nem corpo na requisição.
+
+```http
+GET /offer/search
+Authorization: Bearer <accessToken>
+```
+
+O retorno `200` é um array de `OfferSearchDTO`, com os mesmos campos de
+`OfferSearchByUserIdDTO`, acrescidos de `userId`: `id`, `userId`, `title`, `type`,
+`size`, `price`, `weight`, `location`, `startDate`, `endDate` e `status`.
+Decimais, datas e status seguem as conversões descritas abaixo.
+
+- `200 []`: nenhuma oferta cadastrada.
+- `401`: token ausente, inválido ou expirado.
+- `500`: erro interno, sem detalhes do banco na resposta.
+
+## Listar ofertas por usuário
 
 `GET /offer/user/:userId`
 
@@ -15,7 +39,7 @@ Authorization: Bearer <accessToken>
 ```
 
 O retorno `200` é um array de objetos no formato `OfferSearchByUserIdDTO`, com
-`id`, `userId`, `title`, `type`, `size`, `price`, `weight`, `location`,
+`id`, `title`, `type`, `size`, `price`, `weight`, `location`,
 `startDate`, `endDate` e `status`. Valores decimais são números JSON;
 datas são serializadas em ISO 8601. `type` e `size` são atributos separados;
 `type` pode ser `null` em registros legados.

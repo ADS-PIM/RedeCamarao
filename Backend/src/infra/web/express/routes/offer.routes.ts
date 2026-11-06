@@ -5,6 +5,7 @@ import { authUser } from '../../../../../userAuthMiddleware';
 const router = Router();
 
 router.post('/create', authUser, (req, res) => controllers.offerController.create(req, res));
+router.get('/search', authUser, (req, res) => controllers.offerController.search(req, res));
 router.get('/user/:userId', authUser, (req, res) => controllers.offerController.listByUserId(req, res));
 router.patch('/:id', authUser, (req, res) => controllers.offerController.update(req, res));
 
