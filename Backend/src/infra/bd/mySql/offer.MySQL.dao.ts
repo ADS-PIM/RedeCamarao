@@ -78,6 +78,14 @@ export class OfferDAOMySQL implements OfferDAOInterface {
         return result.affectedRows > 0;
     }
 
+    public async delete(id: string, userId: string): Promise<boolean> {
+        // Ownership is checked again in the write; the FK removes the offer's photos.
+        const [result] = await connection.query<ResultSetHeader>(
+            'DELETE FROM offers WHERE id = ? AND userId = ?', [id, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
     public async create(offer: Offer): Promise<void> {
         await connection.query(
             `INSERT INTO offers (

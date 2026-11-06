@@ -1,5 +1,7 @@
 # Ofertas
 
+O CRUD das fotos vinculadas às ofertas está documentado em [Fotos das ofertas](offer-photos.md).
+
 ## Buscar ofertas (SearchOffer)
 
 `GET /offer/search`
@@ -130,3 +132,56 @@ Erros inesperados continuam retornando `500` com mensagem genérica.
 
 Testes: `npm.cmd run test:offer` e `npm.cmd run test:application-errors`.
 As consultas MySQL e operações da migration são simuladas.
+
+## Excluir oferta e permissões de escrita
+
+`DELETE /offer/:id`
+
+Requer `Authorization: Bearer <accessToken>`. Assim como no `PATCH /offer/:id`,
+somente o dono da oferta pode excluí-la. O ID do usuário vem exclusivamente do
+token; enviar `userId` na URL ou no corpo não concede permissão sobre outra oferta.
+A propriedade é verificada no caso de uso e novamente no `WHERE` da escrita SQL.
+
+```http
+DELETE /offer/c58d2304-f74f-42db-8e57-4ca50b1c642e
+Authorization: Bearer <accessToken>
+```
+
+- `200 { "message": "Oferta excluída com sucesso" }`: oferta excluída.
+- `400`: ID vazio ou maior que 36 caracteres.
+- `401`: token ausente, inválido ou expirado.
+- `403`: oferta pertence a outro usuário.
+- `404`: oferta não encontrada.
+- `409`: oferta removida ou dono alterado entre a leitura e a exclusão.
+- `500`: falha inesperada, sem detalhes do banco.
+
+## Exclusões em cascata
+
+As regras são garantidas por chaves estrangeiras do MySQL, inclusive quando
+a exclusão é feita diretamente no banco:
+
+- Excluir uma oferta exclui todos os seus registros em `offerPhotos`.
+- Excluir um usuário exclui todas as suas ofertas e, consequentemente, todas
+  as fotos dessas ofertas. Os tokens de refresh do usuário também são removidos
+  pela cascata já existente.
+- Ofertas, fotos e usuários que não pertencem ao registro excluído são preservados.
+
+`DELETE /users/me` continua excluindo a conta identificada pelo token, retorna
+`204` e limpa o cookie de refresh. A cascata permite excluir a conta mesmo
+quando ela possui ofertas. A exclusão remove os registros de fotos; URLs externas
+não dão ao backend acesso para excluir os arquivos no provedor de imagens.
+
+Para habilitar a cascata entre usuários e ofertas em bancos existentes, aplique
+`20261106120000-cascade-user-offer-deletion.js` executando, em `Backend`:
+
+```powershell
+npm.cmd run db:migrate
+```
+
+O SQL de referência já inclui `ON DELETE CASCADE` nas duas relações. A migration
+preserva os registros atuais; seu `down` restaura `RESTRICT` entre usuários e
+ofertas, sem recuperar dados que tenham sido excluídos depois da aplicação.
+
+Validação das permissões, exclusão e migration: `npm.cmd run test:offer-delete`.
+Os testes MySQL reais são opcionais e usam bancos temporários; consulte
+[as instruções do banco](../database/README.md#testes-das-exclusões-em-cascata).

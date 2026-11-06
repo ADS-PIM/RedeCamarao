@@ -54,9 +54,11 @@ os registros excluídos só podem ser recuperados de um backup.
 
 ## Reversão
 
-Cada execução desfaz apenas a última migration. Se a remoção de conversas e
-mensagens já foi aplicada, a primeira execução recria essas duas tabelas vazias.
-A execução seguinte reverte o alinhamento do marketplace descrito abaixo.
+Cada execução desfaz apenas a última migration aplicada. A reversão da cascata
+de usuários para ofertas restaura `ON DELETE RESTRICT`, sem recuperar registros
+excluídos. Ao chegar à migration de remoção de conversas e mensagens, a reversão
+recria essas duas tabelas vazias. A execução seguinte reverte o alinhamento do
+marketplace descrito abaixo.
 
 ```powershell
 npx.cmd sequelize-cli db:migrate:undo
@@ -90,3 +92,51 @@ teste, configure `MIGRATION_TEST_HOST`, `MIGRATION_TEST_PORT`,
 A suíte verifica dados antigos, documentos formatados, compatibilidade dos DAOs,
 FKs, collations distintas e separação dos tokens, reaplicação, reversão e equivalência entre o SQL de
 referência e o histórico completo de migrations.
+
+## Exclusão de usuários, ofertas e fotos
+
+A migration `20261106120000-cascade-user-offer-deletion.js` altera a FK
+`offers.userId -> users.id` para `ON DELETE CASCADE`, mantendo `ON UPDATE CASCADE`.
+A FK `offerPhotos.offerId -> offers.id` já possui as mesmas cascatas.
+
+Com isso, excluir uma oferta remove suas fotos; excluir um usuário remove todas
+as suas ofertas e fotos, inclusive em exclusões SQL diretas. A FK de
+`user_refresh_tokens` também remove os tokens do usuário. A aplicação autoriza
+edição e exclusão de ofertas somente para seu dono; `DELETE /users/me` usa a
+identidade do token.
+
+A migration descobre o nome real da FK, pois ele pode variar entre o histórico
+Sequelize e o SQL de referência. Ela substitui a FK em um único `ALTER TABLE`,
+preserva registros existentes e pode ser reaplicada quando a cascata já estiver
+configurada. Uma relação ausente ou ambígua interrompe a migration antes do DDL.
+O `down` restaura a restrição de exclusão de usuários com ofertas, sem recuperar
+dados excluídos. Os arquivos de imagens em provedores externos não fazem parte
+das cascatas; somente os registros do banco são excluídos.
+
+Em `Backend`, com a conexão do ambiente configurada, aplique com:
+
+```powershell
+npm.cmd run db:migrate
+```
+
+## Testes das exclusões em cascata
+
+`npm.cmd run test:offer-delete` executa os testes HTTP de autorização/exclusão
+e os testes unitários da migration. Para incluir a integração com MySQL real,
+configure um servidor de teste e execute:
+
+```powershell
+$env:MIGRATION_TEST_MYSQL = '1'
+$env:MIGRATION_TEST_HOST = '127.0.0.1'
+$env:MIGRATION_TEST_PORT = '3306'
+$env:MIGRATION_TEST_USER = 'root'
+$env:MIGRATION_TEST_PASSWORD = ''
+npm.cmd run test:offer-delete
+```
+
+Esses testes criam e removem apenas bancos com nomes aleatórios
+`redecamarao_cascade_test_*`, sem usar `DB_NAME` nem acessar o banco configurado
+na aplicação. O servidor de teste precisa permitir criar/remover esses bancos.
+A integração aplica o histórico de migrations, valida `up`/`down`, preservação
+de registros, exclusões SQL e HTTP, permissões, isolamento entre usuários e as
+cascatas do SQL de referência. Sem a flag, a integração é pulada.

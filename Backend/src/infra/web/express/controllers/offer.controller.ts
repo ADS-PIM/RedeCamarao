@@ -9,13 +9,15 @@ import { ListOffersByUserId } from '../../../../application/usecase/offer/ListOf
 import { OfferUpdateDTO } from '../../../../application/dto/offerDTO/OfferUpdateDTO';
 import { UpdateOffer } from '../../../../application/usecase/offer/UpdateOfferUseCase';
 import { SearchOffer } from '../../../../application/usecase/offer/SearchOfferUseCase';
+import { DeleteOffer } from '../../../../application/usecase/offer/DeleteOfferUseCase';
 
 export class OfferController {
     constructor(
         private readonly createOffer: CreateOffer,
         private readonly listOffersByUserId: ListOffersByUserId,
         private readonly updateOffer: UpdateOffer,
-        private readonly searchOffer: SearchOffer
+        private readonly searchOffer: SearchOffer,
+        private readonly deleteOffer: DeleteOffer
     ) {}
 
     public async search(req: UserAuthRequest, res: Response): Promise<Response> {
@@ -32,6 +34,27 @@ export class OfferController {
 
             console.error('Error searching offers:', error);
             return res.status(500).json({ error: 'Error searching offers' });
+        }
+    }
+
+    public async delete(req: UserAuthRequest, res: Response): Promise<Response> {
+        try {
+            const userId = req.user?.userId;
+            if (!userId) return res.status(401).json({ error: 'Não autorizado' });
+
+            const id = req.params.id;
+            if (typeof id !== 'string' || !id.trim() || id.length > 36) {
+                return res.status(400).json({ error: 'ID da oferta inválido' });
+            }
+
+            await this.deleteOffer.execute({ id, userId });
+            return res.status(200).json({ message: 'Oferta excluída com sucesso' });
+        } catch (error: unknown) {
+            const response = applicationErrorResponse(error, res);
+            if (response) return response;
+
+            console.error('Erro ao excluir oferta:', error);
+            return res.status(500).json({ error: 'Erro ao excluir oferta' });
         }
     }
 

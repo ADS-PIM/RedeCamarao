@@ -48,7 +48,7 @@ create table `offers` (
     `updatedAt` timestamp not null default current_timestamp on update current_timestamp,
     primary key (`id`),
     key `offers_users_FK` (`userId`),
-    constraint `offers_users_FK` foreign key (`userId`) references `users` (`id`) on update cascade
+    constraint `offers_users_FK` foreign key (`userId`) references `users` (`id`) on update cascade on delete cascade
 )engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `offerPhotos` (

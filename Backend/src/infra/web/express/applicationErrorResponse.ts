@@ -7,9 +7,12 @@ const statusByCode: Record<ApplicationErrorCode, number> = {
     INVALID_DATE_RANGE: 400,
     USER_NOT_FOUND: 404,
     OFFER_NOT_FOUND: 404,
+    OFFER_PHOTO_NOT_FOUND: 404,
+    OFFER_PHOTO_WRITE_CONFLICT: 409,
     FORBIDDEN: 403,
     EMAIL_ALREADY_EXISTS: 409,
-    OFFER_UPDATE_CONFLICT: 409
+    OFFER_UPDATE_CONFLICT: 409,
+    OFFER_DELETE_CONFLICT: 409
 };
 
 export function applicationErrorResponse(error: unknown, res: Response): Response | undefined {
