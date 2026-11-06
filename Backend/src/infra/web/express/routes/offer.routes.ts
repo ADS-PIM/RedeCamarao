@@ -8,5 +8,6 @@ router.post('/create', authUser, (req, res) => controllers.offerController.creat
 router.get('/search', authUser, (req, res) => controllers.offerController.search(req, res));
 router.get('/user/:userId', authUser, (req, res) => controllers.offerController.listByUserId(req, res));
 router.patch('/:id', authUser, (req, res) => controllers.offerController.update(req, res));
+router.delete('/:id', authUser, (req, res) => controllers.offerController.delete(req, res));
 
 export default router;

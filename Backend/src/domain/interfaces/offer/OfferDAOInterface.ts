@@ -15,4 +15,5 @@ export interface OfferDAOInterface {
     listByUserId(userId: string): Promise<Offer[]>;
     searchById(id: string): Promise<Offer | null>;
     update(id: string, userId: string, data: OfferUpdateData): Promise<boolean>;
+    delete(id: string, userId: string): Promise<boolean>;
 }

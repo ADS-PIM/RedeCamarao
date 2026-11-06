@@ -1,5 +1,8 @@
 node_modules
 .env
 /tests
-/test
+/test/*
+!/test/offer-photos.test.cjs
+!/test/offer-delete.test.cjs
+!/test/offer-cascade-migration.test.cjs
 /database/tests
