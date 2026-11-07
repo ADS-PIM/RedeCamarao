@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 export enum UserType {
     PRODUCER = 'PRODUCER',
     BUYER = 'BUYER'
@@ -10,19 +12,32 @@ export type propsUser = {
     password: string;
     userType: UserType;
     cpf_cnpj: string;
+    location: string;
+    phone: string;
+    whatsapp: string | null;
     createdAt: Date;
 }
 
 export class User {
     constructor(private props: propsUser) {}
 
-    public static construct({name, email, password, userType, cpf_cnpj}: { name: string; email: string; password: string; userType: UserType; cpf_cnpj: string}): User{
+    public static construct({name, email, password, userType, cpf_cnpj, location, phone, whatsapp}: { name: string; email: string; password: string; userType: UserType; cpf_cnpj: string; location: string; phone: string; whatsapp: string | null }): User{
 
-        if (!name || !email || !password || !userType || !cpf_cnpj) {
+        if (!name || !email || !password || !userType || !cpf_cnpj || !location || !phone) {
             throw new Error('All fields are required');
         }
 
-        return new User({ id: crypto.randomUUID().toString(), name, email, password, userType, cpf_cnpj, createdAt: new Date() });
+        return new User({ 
+            id: crypto.randomUUID(), 
+            name: name.trim(), 
+            email: email.trim().toLowerCase(), 
+            password, 
+            userType, 
+            cpf_cnpj, 
+            location: location.trim(), 
+            phone: phone.trim(),
+            whatsapp: whatsapp ? whatsapp.trim() : null, 
+            createdAt: new Date() });
     }
 
     public static reconstruct(props: propsUser) {
@@ -51,6 +66,18 @@ export class User {
 
     get cpf_cnpj () {
         return this.props.cpf_cnpj;
+    }
+
+    get location () {
+        return this.props.location;
+    }
+
+    get phone () {
+        return this.props.phone;
+    }
+
+    get whatsapp () {
+        return this.props.whatsapp;
     }
 
     get createdAt () {

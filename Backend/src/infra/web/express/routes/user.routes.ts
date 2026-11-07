@@ -20,13 +20,14 @@ router.post('/logout', (req, res) => controllers.userController.logout(req, res)
 
 router
     .route('/me')
+    .get(authUser, (req, res) => controllers.userController.searchById(req, res))
     .patch(authUser, (req, res) => controllers.userController.update(req, res))
     .delete(authUser, (req, res) => controllers.userController.delete(req, res));
 
 
 //Consulta informações públicas do usuário
 router.get('/public/:id', (req, res) => controllers.userController.searchPublicById(req, res));
-//Consultar a própria conta
-router.get('/me', authUser, (req, res) => controllers.userController.searchById(req, res));
+
+
 
 export default router;

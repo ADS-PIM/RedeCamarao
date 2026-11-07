@@ -4,7 +4,7 @@ create table `users` (
     `email` varchar(320) not null,
     `hashPassword` varchar(255) not null,
     `CPF_CNPJ` char(14) not null default '',
-    `user_type` enum('PRODUTOR', 'COMPRADOR') not null,
+    `user_type` enum('PRODUCER', 'BUYER') not null,
     `createdAt` timestamp null default current_timestamp,
     `updatedAt` timestamp null default current_timestamp on update current_timestamp,
     `description` varchar(2000) null default null,

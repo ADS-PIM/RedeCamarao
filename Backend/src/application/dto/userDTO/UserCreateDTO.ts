@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEmail, IsEnum, Matches} from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsEnum, IsOptional, Matches, MinLength, MaxLength} from 'class-validator';
 import { UserType } from '../../../domain/model/user';
 
 export class UserCreateDTO {
@@ -11,7 +11,9 @@ export class UserCreateDTO {
     email!: string;
 
     @IsNotEmpty()
-    @IsString()     
+    @IsString()
+    @MinLength(8)
+    @MaxLength(72)
     password!: string;
 
     @IsNotEmpty()
@@ -24,4 +26,22 @@ export class UserCreateDTO {
         message: 'CPF/CNPJ must have 11 or 14 digits'
     })
     cpf_cnpj!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    location!: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @Matches(/^\+?[\d()\s-]{10,20}$/, {
+        message: 'Invalid phone number'
+    })
+    phone!: string;
+
+    @IsOptional()
+    @IsString()
+    @Matches(/^\+?[\d()\s-]{10,20}$/, {
+        message: 'Invalid WhatsApp number'
+    })
+    whatsapp?: string;
 }
