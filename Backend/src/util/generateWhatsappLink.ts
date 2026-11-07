@@ -5,7 +5,7 @@ export const generateWhatsAppLink = (
 
     const number = phone.replace(/\D/g, '');
 
-    if (!/^\d{12,15}$/.test(number)) {
+    if (!/^55\d{10,11}$/.test(number)) {
         return null;
     }
 

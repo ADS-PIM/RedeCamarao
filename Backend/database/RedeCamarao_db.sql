@@ -1,19 +1,20 @@
-create table `users` (
-    `id` char(36) not null,
-    `name` varchar(255) not null,
-    `email` varchar(320) not null,
-    `hashPassword` varchar(255) not null,
-    `CPF_CNPJ` char(14) not null default '',
-    `user_type` enum('PRODUCER', 'BUYER') not null,
-    `createdAt` timestamp null default current_timestamp,
-    `updatedAt` timestamp null default current_timestamp on update current_timestamp,
-    `description` varchar(2000) null default null,
-    `location` varchar(255) null default null,
-    `WhatsApp` varchar(20) null default null,
-    `businessHours` varchar(255) null default null,
-    primary key (`id`),
-    unique key `users_unique` (`email`)
-)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
+CREATE TABLE `users` (
+    `id` CHAR(36) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(320) NOT NULL,
+    `hashPassword` VARCHAR(255) NOT NULL,
+    `CPF_CNPJ` CHAR(14) NOT NULL,
+    `user_type` ENUM('PRODUCER', 'BUYER') NOT NULL,
+    `description` VARCHAR(2000) DEFAULT NULL,
+    `location` VARCHAR(255) DEFAULT NULL,
+    `phone` VARCHAR(20) DEFAULT NULL,
+    `WhatsApp` VARCHAR(20) DEFAULT NULL,
+    `businessHours` VARCHAR(255) DEFAULT NULL,
+    `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `users_unique` (`email`)
+) engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 CREATE TABLE user_refresh_tokens (
     id char(36) not null,
@@ -27,7 +28,7 @@ CREATE TABLE user_refresh_tokens (
     key user_refresh_tokens_user_FK (userId),
     constraint user_refresh_tokens_user_FK foreign key (userId) references users(id)
     on update cascade on delete cascade
-) ENGINE = InnoDB default charSET = utf8mb4 collate = utf8mb4_general_ci;
+) engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `offers` (
     `id` char(36) not null,
@@ -49,7 +50,7 @@ create table `offers` (
     primary key (`id`),
     key `offers_users_FK` (`userId`),
     constraint `offers_users_FK` foreign key (`userId`) references `users` (`id`) on update cascade on delete cascade
-)engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
+) engine = InnoDB default CHARSET = utf8mb4 collate = utf8mb4_general_ci;
 
 create table `offerPhotos` (
     `id` char(36) not null,

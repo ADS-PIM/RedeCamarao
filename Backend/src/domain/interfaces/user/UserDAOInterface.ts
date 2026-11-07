@@ -1,12 +1,14 @@
 import { User } from "../../model/user";
 
 export type UserUpdateData = {
-    name? : string;
-    email? : string;
-    password? : string;
-    location? : string;
-    phone? : string;
-    whatsapp? : string;
+    name?: string;
+    email?: string;
+    password?: string;
+    description?: string | null;
+    location?: string | null;
+    phone?: string | null;
+    whatsapp?: string | null;
+    businessHours?: string | null;
 }
 
 export interface UserDAOInterface {

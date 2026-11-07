@@ -4,6 +4,7 @@ import type { propsUser } from '../../../domain/model/user';
 import {UserDAOInterface,UserUpdateData} from '../../../domain/interfaces/user/UserDAOInterface';
 import type { RowDataPacket } from 'mysql2';
 
+
 const userColumns = `
     id,
     name,
@@ -11,11 +12,14 @@ const userColumns = `
     hashPassword AS password,
     user_type AS userType,
     CPF_CNPJ AS cpf_cnpj,
+    description,
     location,
     phone,
-    whatsapp,
+    WhatsApp AS whatsapp,
+    businessHours,
     createdAt
 `;
+
 
 export class UserDAOMySQL implements UserDAOInterface {
 
@@ -27,32 +31,38 @@ export class UserDAOMySQL implements UserDAOInterface {
                 name,
                 email,
                 hashPassword,
-                user_type,
                 CPF_CNPJ,
+                user_type,
+                description,
                 location,
                 phone,
-                whatsapp,
+                WhatsApp,
+                businessHours,
                 createdAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user.id,
                 user.name,
                 user.email,
                 user.password,
-                user.userType,
                 user.cpf_cnpj,
+                user.userType,
+                user.description,
                 user.location,
                 user.phone,
                 user.whatsapp,
+                user.businessHours,
                 user.createdAt
             ]
         );
     }
 
+
     public async searchByEmail(email: string): Promise<User | null> {
 
         const [users] = await connection.query<
-            (RowDataPacket & propsUser)[]>(
+            (RowDataPacket & propsUser)[]
+        >(
             `SELECT ${userColumns}
              FROM users
              WHERE email = ?`,
@@ -65,6 +75,7 @@ export class UserDAOMySQL implements UserDAOInterface {
 
         return User.reconstruct(users[0]);
     }
+
 
     public async searchById(id: string): Promise<User | null> {
 
@@ -84,6 +95,7 @@ export class UserDAOMySQL implements UserDAOInterface {
         return User.reconstruct(users[0]);
     }
 
+
     public async update(
         id: string,
         data: UserUpdateData
@@ -91,7 +103,7 @@ export class UserDAOMySQL implements UserDAOInterface {
 
         const fields: string[] = [];
 
-        const values: string[] = [];
+        const values: (string | null)[] = [];
 
         if (data.name !== undefined) {
             fields.push('name = ?');
@@ -108,6 +120,11 @@ export class UserDAOMySQL implements UserDAOInterface {
             values.push(data.password);
         }
 
+        if (data.description !== undefined) {
+            fields.push('description = ?');
+            values.push(data.description);
+        }
+
         if (data.location !== undefined) {
             fields.push('location = ?');
             values.push(data.location);
@@ -119,8 +136,13 @@ export class UserDAOMySQL implements UserDAOInterface {
         }
 
         if (data.whatsapp !== undefined) {
-            fields.push('whatsapp = ?');
+            fields.push('WhatsApp = ?');
             values.push(data.whatsapp);
+        }
+
+        if (data.businessHours !== undefined) {
+            fields.push('businessHours = ?');
+            values.push(data.businessHours);
         }
 
         if (fields.length === 0) {
@@ -134,6 +156,7 @@ export class UserDAOMySQL implements UserDAOInterface {
             [...values, id]
         );
     }
+
 
     public async delete(id: string): Promise<void> {
 
