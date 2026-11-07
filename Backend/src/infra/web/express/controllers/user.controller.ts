@@ -272,10 +272,17 @@ export class UserController {
         }
     }
 
-    public async searchById(req: Request, res: Response): Promise<Response> {
+    public async searchById(req: UserAuthRequest, res: Response): Promise<Response> {
         try {
 
-            const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            const userId = req.user?.userId
+
+
+            if (!userId) {
+                return res.status(401).json({
+                    error: 'Unauthorized'
+                });
+            }
 
             const user = await this.searchByIdUser.execute(userId);
 
@@ -285,7 +292,13 @@ export class UserController {
                 });
             }
 
-            return res.status(200).json(user);
+            return res.status(200).json({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                userType: user.userType,
+                createdAt: user.createdAt
+            });
 
         } catch (error: any) {
 

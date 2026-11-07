@@ -1,10 +1,10 @@
 import { ApplicationError } from '../../errors/ApplicationError';
 import { OfferDAOInterface } from '../../../domain/interfaces/offer/OfferDAOInterface';
 import { UserDAOInterface } from '../../../domain/interfaces/user/UserDAOInterface';
+import { UserType } from '../../../domain/model/user';
 import { Offer } from '../../../domain/model/offer';
 import { OfferCreateDTO } from '../../dto/offerDTO/OfferCreateDTO';
 import { UseCase } from '../useCase';
-import { SearchByIdUser } from '../user/SearchUserByIdUseCase';
 import { offerDate } from './offerDate';
 
 export class CreateOffer implements UseCase<{ userId: string; data: OfferCreateDTO }, void> {
@@ -14,21 +14,25 @@ export class CreateOffer implements UseCase<{ userId: string; data: OfferCreateD
     ) {}
 
     public async execute({ userId, data }: { userId: string; data: OfferCreateDTO }): Promise<void> {
-        const startDate = offerDate(data.startDate);
-        const endDate = offerDate(data.endDate);
-        if (data.minimumQuantity > data.maximumQuantity) {
-            throw new ApplicationError('INVALID_QUANTITY_RANGE', 'A quantidade mínima não pode exceder a quantidade máxima');
+        const user = await this.userDAO.searchById(userId);
+        if (!user) {
+            throw new ApplicationError('USER_NOT_FOUND', 'User not found');
         }
 
-        if (endDate < startDate) {
-            throw new ApplicationError('INVALID_DATE_RANGE', 'A data de término não pode preceder a data de início');
-        }
+       if (user.userType !== UserType.PRODUCER) {
+            throw new ApplicationError('FORBIDDEN', 'Only producers can post offers');
+       }
 
-        const searchByIdUser = new SearchByIdUser(this.userDAO);
-        if (!(await searchByIdUser.execute(userId))) {
-            throw new ApplicationError('USER_NOT_FOUND', 'Usuário não encontrado');
-        }
+       const startDate = offerDate(data.startDate);
+       const endDate = offerDate(data.endDate);
 
+       if (data.minimumQuantity > data.maximumQuantity) {
+            throw new ApplicationError('INVALID_QUANTITY_RANGE', 'The minimum quantity cannot exceed the maximum quantity')
+       }
+
+       if (endDate < startDate) {
+            throw new ApplicationError('INVALID_DATE_RANGE', 'The end date cannot precede the start date')
+       }
         const offer = Offer.construct({
             ...data,
             userId,
