@@ -2,12 +2,15 @@ import { IsNotEmpty, IsString, IsEmail, IsEnum, IsOptional, Matches, MinLength, 
 import { UserType } from '../../../domain/model/user';
 
 export class UserCreateDTO {
+
     @IsNotEmpty()
     @IsString()
+    @MaxLength(255)
     name!: string;
 
     @IsNotEmpty()
     @IsEmail()
+    @MaxLength(320)
     email!: string;
 
     @IsNotEmpty()
@@ -27,21 +30,30 @@ export class UserCreateDTO {
     })
     cpf_cnpj!: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    location!: string;
-
-    @IsNotEmpty()
-    @IsString()
-    @Matches(/^\+?[\d()\s-]{10,20}$/, {
-        message: 'Invalid phone number'
-    })
-    phone!: string;
+    @MaxLength(2000)
+    description?: string;
 
     @IsOptional()
     @IsString()
-    @Matches(/^\+?[\d()\s-]{10,20}$/, {
-        message: 'Invalid WhatsApp number'
-    })
+    @MaxLength(255)
+    location?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(20)
+    @Matches(/^\+?[\d()\s-]{10,20}$/)
+    phone?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(20)
+    @Matches(/^\+?[\d()\s-]{10,20}$/)
     whatsapp?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(255)
+    businessHours?: string;
 }

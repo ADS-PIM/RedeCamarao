@@ -1,7 +1,19 @@
 import {IsOptional, IsString, IsEmail, IsNotEmpty, Matches, MinLength, MaxLength} from 'class-validator';
 
 export class UserUpdateDTO {
-     @IsOptional()
+
+    @IsOptional()
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(255)
+    name?: string;
+
+    @IsOptional()
+    @IsEmail()
+    @MaxLength(320)
+    email?: string;
+
+    @IsOptional()
     @IsNotEmpty()
     @IsString()
     @MinLength(8)
@@ -9,21 +21,29 @@ export class UserUpdateDTO {
     password?: string;
 
     @IsOptional()
-    @IsNotEmpty()
     @IsString()
-    location?: string;
-
-    @IsOptional()
-    @IsNotEmpty()
-    @Matches(/^\+?[\d()\s-]{10,20}$/, {
-        message: 'Invalid phone number'
-    })
-    phone?: string;
+    @MaxLength(2000)
+    description?: string | null;
 
     @IsOptional()
     @IsString()
-    @Matches(/^\+?[\d()\s-]{10,20}$/, {
-        message: 'Invalid WhatsApp number'
-    })
-    whatsapp?: string;
+    @MaxLength(255)
+    location?: string | null;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(20)
+    @Matches(/^\+?[\d()\s-]{10,20}$/)
+    phone?: string | null;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(20)
+    @Matches(/^\+?[\d()\s-]{10,20}$/)
+    whatsapp?: string | null;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(255)
+    businessHours?: string | null;
 }

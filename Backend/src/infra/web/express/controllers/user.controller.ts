@@ -273,13 +273,17 @@ export class UserController {
         }
 
             return res.status(200).json({
-                id: user.id,
-                name: user.name,
-                location: user.location,
-                whatsapp: user.whatsapp,
-                whatsappLink: user.whatsapp
-                    ? generateWhatsAppLink(user.whatsapp, user.name) : null
-            });
+            id: user.id,
+            name: user.name,
+            description: user.description,
+            location: user.location,
+            phone: user.phone,
+            whatsapp: user.whatsapp,
+            businessHours: user.businessHours,
+            whatsappLink: user.whatsapp
+                ? generateWhatsAppLink(user.whatsapp, user.name)
+                : null
+        });
         } catch (error: any) {
             console.error('Error searching public user:', error);
 
@@ -309,16 +313,7 @@ export class UserController {
                 });
             }
 
-            return res.status(200).json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            userType: user.userType,
-            location: user.location,
-            phone: user.phone,
-            whatsapp: user.whatsapp,
-            createdAt: user.createdAt
-        });
+            return res.status(200).json(user);
 
         } catch (error: any) {
 

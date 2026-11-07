@@ -18,9 +18,7 @@ export class CreateUser implements UseCase<UserCreateDTO, null>{
             !userCreateDTO.email ||
             !userCreateDTO.password ||
             !userCreateDTO.userType ||
-            !userCreateDTO.cpf_cnpj ||
-            !userCreateDTO.location ||
-            !userCreateDTO.phone
+            !userCreateDTO.cpf_cnpj
         ) {
             throw new ApplicationError('INVALID_DATA', 'Invalid user data');
         }
@@ -32,16 +30,18 @@ export class CreateUser implements UseCase<UserCreateDTO, null>{
         }
 
         const hashedPassword = await PasswordCrypto.hashPassword(userCreateDTO.password);
-        const user = User.construct({ 
-            name: userCreateDTO.name,
-            email,
-            password: hashedPassword,
-            userType: userCreateDTO.userType,
-            cpf_cnpj: userCreateDTO.cpf_cnpj,
-            location: userCreateDTO.location,
-            phone: userCreateDTO.phone,
-            whatsapp: userCreateDTO.whatsapp ?? null
-         })
+        const user = User.construct({
+        name: userCreateDTO.name,
+        email,
+        password: hashedPassword,
+        userType: userCreateDTO.userType,
+        cpf_cnpj: userCreateDTO.cpf_cnpj,
+        description: userCreateDTO.description,
+        location: userCreateDTO.location,
+        phone: userCreateDTO.phone,
+        whatsapp: userCreateDTO.whatsapp,
+        businessHours: userCreateDTO.businessHours
+});
 
         await this.userDAO.register(user)
         } catch (error: any) {
