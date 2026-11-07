@@ -1,14 +1,9 @@
 import { connection } from '../../../util/connection';
-import { User, UserType } from '../../../domain/model/user';
+import { User } from '../../../domain/model/user';
 import type { propsUser } from '../../../domain/model/user';
-import { UserDAOInterface, UserUpdateData } from '../../../domain/interfaces/user/UserDAOInterface';
+import {UserDAOInterface,UserUpdateData} from '../../../domain/interfaces/user/UserDAOInterface';
 import type { RowDataPacket } from 'mysql2';
 
-// Keep the HTTP contract in English while the database follows the diagram.
-const databaseUserTypes: Record<UserType, string> = {
-    [UserType.PRODUCER]: 'PRODUCER',
-    [UserType.BUYER]: 'BUYER'
-};
 const userColumns = `
     id,
     name,
@@ -16,81 +11,135 @@ const userColumns = `
     hashPassword AS password,
     user_type AS userType,
     CPF_CNPJ AS cpf_cnpj,
+    location,
+    phone,
+    whatsapp,
     createdAt
 `;
 
 export class UserDAOMySQL implements UserDAOInterface {
+
     public async register(user: User): Promise<void> {
-        try {
-            await connection.query(
-                'INSERT INTO users (id, name, email, hashPassword, user_type, CPF_CNPJ, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [user.id, user.name, user.email, user.password, databaseUserTypes[user.userType], user.cpf_cnpj, user.createdAt]
-            );
-        } catch (error: any) {
-            throw error;
-        }
+
+        await connection.query(
+            `INSERT INTO users (
+                id,
+                name,
+                email,
+                hashPassword,
+                user_type,
+                CPF_CNPJ,
+                location,
+                phone,
+                whatsapp,
+                createdAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                user.id,
+                user.name,
+                user.email,
+                user.password,
+                user.userType,
+                user.cpf_cnpj,
+                user.location,
+                user.phone,
+                user.whatsapp,
+                user.createdAt
+            ]
+        );
     }
 
-    async searchByEmail(email: string): Promise<User | null> {
-        try {
-            const [users] = await connection.query<(RowDataPacket & propsUser)[]>(
-                `SELECT ${userColumns} FROM users WHERE email = ?`,
-                [email]
-            );
-            return users.length === 0 ? null : User.reconstruct(users[0]);
-        } catch (error: any) {
-            throw new Error('Error searching user by email: ' + error.message);
+    public async searchByEmail(email: string): Promise<User | null> {
+
+        const [users] = await connection.query<
+            (RowDataPacket & propsUser)[]>(
+            `SELECT ${userColumns}
+             FROM users
+             WHERE email = ?`,
+            [email]
+        );
+
+        if (users.length === 0) {
+            return null;
         }
+
+        return User.reconstruct(users[0]);
     }
 
-    async searchById(id: string): Promise<User | null> {
-        try {
-            const [users] = await connection.query<(RowDataPacket & propsUser)[]>(
-                `SELECT ${userColumns} FROM users WHERE id = ?`,
-                [id]
-            );
-            return users.length === 0 ? null : User.reconstruct(users[0]);
-        } catch (error: any) {
-            throw new Error('Error searching user by id: ' + error.message);
+    public async searchById(id: string): Promise<User | null> {
+
+        const [users] = await connection.query<
+            (RowDataPacket & propsUser)[]
+        >(
+            `SELECT ${userColumns}
+             FROM users
+             WHERE id = ?`,
+            [id]
+        );
+
+        if (users.length === 0) {
+            return null;
         }
+
+        return User.reconstruct(users[0]);
     }
 
-    async update(id: string, data: UserUpdateData): Promise<void> {
+    public async update(
+        id: string,
+        data: UserUpdateData
+    ): Promise<void> {
+
         const fields: string[] = [];
+
         const values: string[] = [];
 
         if (data.name !== undefined) {
             fields.push('name = ?');
             values.push(data.name);
         }
+
         if (data.email !== undefined) {
             fields.push('email = ?');
-            values.push(data.email);
+            values.push(data.email.trim().toLowerCase());
         }
+
         if (data.password !== undefined) {
             fields.push('hashPassword = ?');
             values.push(data.password);
+        }
+
+        if (data.location !== undefined) {
+            fields.push('location = ?');
+            values.push(data.location);
+        }
+
+        if (data.phone !== undefined) {
+            fields.push('phone = ?');
+            values.push(data.phone);
+        }
+
+        if (data.whatsapp !== undefined) {
+            fields.push('whatsapp = ?');
+            values.push(data.whatsapp);
         }
 
         if (fields.length === 0) {
             return;
         }
 
-        try {
-            await connection.query(
-                `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
-                [...values, id]
-            );
-        } catch (error: any) {
-            throw error;
-        }
+        await connection.query(
+            `UPDATE users
+             SET ${fields.join(', ')}
+             WHERE id = ?`,
+            [...values, id]
+        );
     }
 
-    async delete(id: string): Promise<void> {
-        try {
-            await connection.query('DELETE FROM users WHERE id = ?', [id]);
-        } catch (error: any) {
-            throw error;
-        }
+    public async delete(id: string): Promise<void> {
+
+        await connection.query(
+            'DELETE FROM users WHERE id = ?',
+            [id]
+        );
     }
 }

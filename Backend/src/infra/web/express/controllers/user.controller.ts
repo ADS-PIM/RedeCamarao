@@ -27,6 +27,8 @@ import { DeleteByUserId } from '../../../../application/usecase/refresh_token/De
 
 
 import type { UserAuthRequest } from '../../../../../userAuthMiddleware';
+import { UserType } from '../../../../domain/model/user';
+import { generateWhatsAppLink } from '../../../../util/generateWhatsappLink';
 
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
@@ -249,19 +251,34 @@ export class UserController {
     public async searchPublicById(req: Request, res: Response): Promise<Response> {
         try {
             const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-            const user = await this.searchByIdUser.execute(userId);
 
-            if (!user) {
+            if (!userId) {
                 return res.status(404).json({
                     error: 'User not found'
                 });
             }
 
+            const user = await this.searchByIdUser.execute(userId);
+
+            if (!user) {
+            return res.status(404).json({
+                error: 'User not found'
+            });
+        }
+
+            if (user.userType !== UserType.PRODUCER) {
+            return res.status(404).json({
+                error: 'Producer not found'
+            });
+        }
+
             return res.status(200).json({
                 id: user.id,
                 name: user.name,
-                userType: user.userType,
-                createdAt: user.createdAt
+                location: user.location,
+                whatsapp: user.whatsapp,
+                whatsappLink: user.whatsapp
+                    ? generateWhatsAppLink(user.whatsapp, user.name) : null
             });
         } catch (error: any) {
             console.error('Error searching public user:', error);
@@ -293,12 +310,15 @@ export class UserController {
             }
 
             return res.status(200).json({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                userType: user.userType,
-                createdAt: user.createdAt
-            });
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            userType: user.userType,
+            location: user.location,
+            phone: user.phone,
+            whatsapp: user.whatsapp,
+            createdAt: user.createdAt
+        });
 
         } catch (error: any) {
 

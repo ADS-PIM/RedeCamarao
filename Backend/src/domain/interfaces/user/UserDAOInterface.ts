@@ -4,6 +4,9 @@ export type UserUpdateData = {
     name? : string;
     email? : string;
     password? : string;
+    location? : string;
+    phone? : string;
+    whatsapp? : string;
 }
 
 export interface UserDAOInterface {
