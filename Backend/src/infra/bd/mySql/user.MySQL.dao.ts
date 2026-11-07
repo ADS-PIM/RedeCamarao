@@ -6,12 +6,18 @@ import type { RowDataPacket } from 'mysql2';
 
 // Keep the HTTP contract in English while the database follows the diagram.
 const databaseUserTypes: Record<UserType, string> = {
-    [UserType.PRODUCER]: 'PRODUTOR',
-    [UserType.BUYER]: 'COMPRADOR'
+    [UserType.PRODUCER]: 'PRODUCER',
+    [UserType.BUYER]: 'BUYER'
 };
-const userColumns = `id, name, email, hashPassword AS password,
-    CASE user_type WHEN 'PRODUTOR' THEN 'PRODUCER' WHEN 'COMPRADOR' THEN 'BUYER' END AS userType,
-    CPF_CNPJ AS cpf_cnpj, createdAt`;
+const userColumns = `
+    id,
+    name,
+    email,
+    hashPassword AS password,
+    user_type AS userType,
+    CPF_CNPJ AS cpf_cnpj,
+    createdAt
+`;
 
 export class UserDAOMySQL implements UserDAOInterface {
     public async register(user: User): Promise<void> {
