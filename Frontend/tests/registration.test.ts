@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatDocument, formatPhone, isValidDocument, validateRegistration } from '../src/utils/registration.ts'
+import { formatDocument, formatLocation, formatPhone, isValidDocument, validateRegistration } from '../src/utils/registration.ts'
 
-const validData = { name: 'Marina Souza', document: '529.982.247-25', email: 'marina@example.com', password: 'senha1234', confirmPassword: 'senha1234', terms: true, phone: '', location: '' }
+const validData = { name: 'Marina Souza', document: '529.982.247-25', email: 'marina@example.com', password: 'senha1234', confirmPassword: 'senha1234', terms: true, phone: '', city: '', state: '' }
 
 test('aceita CPF e CNPJ com dígitos verificadores válidos', () => {
   assert.equal(isValidDocument('529.982.247-25'), true)
@@ -17,6 +17,10 @@ test('formata documento e telefone sem ultrapassar seus limites', () => {
   assert.equal(formatPhone('85999991234'), '(85) 99999-1234')
   assert.equal(formatPhone('8533331234'), '(85) 3333-1234')
 })
+test('combina cidade e sigla do estado no formato de localidade da API', () => {
+  assert.equal(formatLocation(' Aracati ', 'CE'), 'Aracati, CE')
+  assert.equal(formatLocation('', ''), '')
+})
 test('contato é opcional e cadastro válido não apresenta erros', () => {
   assert.deepEqual(validateRegistration(validData), {})
 })
@@ -25,4 +29,9 @@ test('exige confirmação, consentimento e contatos válidos quando preenchidos'
   assert.ok(errors.confirmPassword)
   assert.ok(errors.terms)
   assert.ok(errors.phone)
+})
+test('exige cidade e estado quando apenas um dos campos de localidade é preenchido', () => {
+  assert.ok(validateRegistration({ ...validData, city: 'Aracati' }).state)
+  assert.ok(validateRegistration({ ...validData, state: 'CE' }).city)
+  assert.deepEqual(validateRegistration({ ...validData, city: 'Aracati', state: 'CE' }), {})
 })

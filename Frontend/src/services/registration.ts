@@ -1,4 +1,4 @@
-import { digitsOnly } from '../utils/registration'
+import { digitsOnly, formatLocation } from '../utils/registration'
 import type { RegistrationData } from '../utils/registration'
 
 export async function registerUser(data: RegistrationData, userType: 'BUYER' | 'PRODUCER') {
@@ -14,7 +14,7 @@ export async function registerUser(data: RegistrationData, userType: 'BUYER' | '
         name: data.name.trim(), email: data.email.trim().toLowerCase(), password: data.password,
         userType, cpf_cnpj: digitsOnly(data.document),
         ...(data.phone && { phone: digitsOnly(data.phone) }),
-        ...(data.location.trim() && { location: data.location.trim() }),
+        ...(formatLocation(data.city, data.state) && { location: formatLocation(data.city, data.state) }),
       }),
     })
   } catch {

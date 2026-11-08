@@ -37,6 +37,19 @@ export class OfferController {
         }
     }
 
+    public async searchPublic(_req: UserAuthRequest, res: Response): Promise<Response> {
+        try {
+            const offers = await this.searchOffer.executePublic();
+            return res.status(200).json(offers);
+        } catch (error: unknown) {
+            const response = applicationErrorResponse(error, res);
+            if (response) return response;
+
+            console.error('Error searching public offers:', error);
+            return res.status(500).json({ error: 'Error searching offers' });
+        }
+    }
+
     public async delete(req: UserAuthRequest, res: Response): Promise<Response> {
         try {
             const userId = req.user?.userId;

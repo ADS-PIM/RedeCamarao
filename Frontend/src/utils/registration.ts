@@ -6,13 +6,47 @@ export type RegistrationData = {
   confirmPassword: string
   terms: boolean
   phone: string
-  location: string
+  city: string
+  state: string
 }
 export type FieldName = Exclude<keyof RegistrationData, 'terms'>
 export type RegistrationErrors = Partial<Record<keyof RegistrationData, string>>
 export const accessFields: (keyof RegistrationData)[] = ['name', 'document', 'email', 'password', 'confirmPassword', 'terms']
-export const contactFields: (keyof RegistrationData)[] = ['phone', 'location']
+export const contactFields: (keyof RegistrationData)[] = ['phone', 'city', 'state']
+export const brazilianStates = [
+  { code: 'AC', name: 'Acre' },
+  { code: 'AL', name: 'Alagoas' },
+  { code: 'AP', name: 'Amapá' },
+  { code: 'AM', name: 'Amazonas' },
+  { code: 'BA', name: 'Bahia' },
+  { code: 'CE', name: 'Ceará' },
+  { code: 'DF', name: 'Distrito Federal' },
+  { code: 'ES', name: 'Espírito Santo' },
+  { code: 'GO', name: 'Goiás' },
+  { code: 'MA', name: 'Maranhão' },
+  { code: 'MT', name: 'Mato Grosso' },
+  { code: 'MS', name: 'Mato Grosso do Sul' },
+  { code: 'MG', name: 'Minas Gerais' },
+  { code: 'PA', name: 'Pará' },
+  { code: 'PB', name: 'Paraíba' },
+  { code: 'PR', name: 'Paraná' },
+  { code: 'PE', name: 'Pernambuco' },
+  { code: 'PI', name: 'Piauí' },
+  { code: 'RJ', name: 'Rio de Janeiro' },
+  { code: 'RN', name: 'Rio Grande do Norte' },
+  { code: 'RS', name: 'Rio Grande do Sul' },
+  { code: 'RO', name: 'Rondônia' },
+  { code: 'RR', name: 'Roraima' },
+  { code: 'SC', name: 'Santa Catarina' },
+  { code: 'SP', name: 'São Paulo' },
+  { code: 'SE', name: 'Sergipe' },
+  { code: 'TO', name: 'Tocantins' },
+] as const
 export const digitsOnly = (value: string) => value.replace(/\D/g, '')
+
+export function formatLocation(city: string, state: string) {
+  return city.trim() && state ? `${city.trim()}, ${state}` : ''
+}
 
 export function formatDocument(value: string) {
   const digits = digitsOnly(value).slice(0, 14)
@@ -53,5 +87,7 @@ export function validateRegistration(data: RegistrationData): RegistrationErrors
   for (const field of ['phone'] as const) {
     if (data[field] && !/^[1-9]{2}\d{8,9}$/.test(digitsOnly(data[field]))) errors[field] = 'Informe um telefone válido com DDD.'
   }
+  if (data.city.trim() && !data.state) errors.state = 'Selecione o estado da cidade.'
+  if (data.state && !data.city.trim()) errors.city = 'Informe a cidade.'
   return errors
 }

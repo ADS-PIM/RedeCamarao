@@ -2,6 +2,12 @@ import { OfferDAOInterface } from '../../../domain/interfaces/offer/OfferDAOInte
 import { OfferSearchDTO } from '../../dto/offerDTO/OfferSearchDTO';
 import { UseCase } from '../useCase';
 
+export type PublicOfferDTO = Omit<OfferSearchDTO, 'userId' | 'status'> & {
+    description: string;
+    maximumQuantity: number;
+    minimumQuantity: number;
+};
+
 export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
     constructor(private readonly offerDAO: OfferDAOInterface) {}
 
@@ -19,6 +25,24 @@ export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
             startDate: offer.startDate,
             endDate: offer.endDate,
             status: offer.status
+        }));
+    }
+
+    public async executePublic(): Promise<PublicOfferDTO[]> {
+        const offers = await this.offerDAO.searchActive();
+        return offers.map(offer => ({
+            id: offer.id,
+            title: offer.title,
+            description: offer.description,
+            type: offer.type,
+            size: offer.size,
+            price: offer.price,
+            weight: offer.weight,
+            maximumQuantity: offer.maximumQuantity,
+            minimumQuantity: offer.minimumQuantity,
+            location: offer.location,
+            startDate: offer.startDate,
+            endDate: offer.endDate
         }));
     }
 }
