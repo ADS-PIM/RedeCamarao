@@ -3,11 +3,11 @@ import type { FormEvent } from 'react'
 import { FormField } from '../components/FormField'
 import { Icon } from '../components/Icon'
 import { registerUser } from '../services/registration'
-import { accessFields, contactFields, formatDocument, formatPhone, validateRegistration } from '../utils/registration'
+import { accessFields, brazilianStates, contactFields, formatDocument, formatPhone, validateRegistration } from '../utils/registration'
 import type { FieldName, RegistrationData } from '../utils/registration'
 import './RegisterPage.css'
 
-const initialData: RegistrationData = { name: '', document: '', email: '', password: '', confirmPassword: '', terms: false, phone: '', location: '' }
+const initialData: RegistrationData = { name: '', document: '', email: '', password: '', confirmPassword: '', terms: false, phone: '', city: '', state: '' }
 
 export function RegisterPage() {
   const [step, setStep] = useState(1)
@@ -134,7 +134,24 @@ export function RegisterPage() {
                 <p className="contact-description">Como podemos encontrar você? Os campos desta etapa são opcionais.</p>
                 <div className="fields-grid contact-fields">
                   <FormField {...fieldProps('phone')} onChange={value => changeField('phone', formatPhone(value))} label="Telefone" type="tel" autoComplete="tel-national" placeholder="(00) 00000-0000" maxLength={15} wide />
-                  <FormField {...fieldProps('location')} label="Cidade e estado" placeholder="Ex.: Aracati, CE" autoComplete="address-level2" maxLength={255} wide />
+                  <FormField {...fieldProps('city')} label="Cidade" placeholder="Ex.: Aracati" autoComplete="address-level2" maxLength={200} />
+                  <div className="form-field">
+                    <label htmlFor="state">Estado</label>
+                    <select
+                      id="state"
+                      name="state"
+                      className={`state-select${touched.state && errors.state ? ' has-error' : ''}`}
+                      value={data.state}
+                      aria-invalid={Boolean(touched.state && errors.state)}
+                      aria-describedby={touched.state && errors.state ? 'state-error' : undefined}
+                      onBlur={() => setTouched(current => ({ ...current, state: true }))}
+                      onChange={event => changeField('state', event.target.value)}
+                    >
+                      <option value="">Selecione o estado</option>
+                      {brazilianStates.map(state => <option key={state.code} value={state.code}>{state.name} ({state.code})</option>)}
+                    </select>
+                    {touched.state && errors.state && <p className="field-error" id="state-error">{errors.state}</p>}
+                  </div>
                 </div>
                 <div className="contact-note"><Icon name="info" /><p>A plataforma aproxima compradores e produtores. Negociação e pagamento acontecem fora da plataforma.</p></div>
               </>}

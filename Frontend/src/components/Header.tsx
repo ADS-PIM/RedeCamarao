@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Icon } from './Icon'
 import './Header.css'
 
-export function Header({ authenticated = false }: { authenticated?: boolean }) {
+export function Header({ authenticated = false, marketplace = false }: { authenticated?: boolean; marketplace?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   return (
     <header className="site-header">
@@ -13,8 +13,8 @@ export function Header({ authenticated = false }: { authenticated?: boolean }) {
         </button>
         <div id="main-navigation" className={`header-navigation ${menuOpen ? 'is-open' : ''}`}>
           <nav aria-label="Navegação principal">
-            <a href="/marketplace">Marketplace</a><a href="/produtos">Produtos</a>
-            <a href="/produtores">Produtores</a><a href="/como-funciona">Como funciona</a>
+            <a href="/marketplace" aria-current={marketplace ? 'page' : undefined}>Marketplace</a><a href="/marketplace#ofertas" onClick={() => setMenuOpen(false)}>Produtos</a>
+            <a href="/marketplace#produtores" onClick={() => setMenuOpen(false)}>Produtores</a><a href="/marketplace#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a>
           </nav>
           <div className="header-actions">
             {authenticated ? <a className="button button-primary" href="/entrar">Minha conta</a> : <>

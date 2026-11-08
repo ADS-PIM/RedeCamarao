@@ -2,6 +2,20 @@
 
 O CRUD das fotos vinculadas às ofertas está documentado em [Fotos das ofertas](offer-photos.md).
 
+## Ofertas públicas do marketplace
+
+`GET /offer/marketplace`
+
+Não requer autenticação. Retorna somente ofertas com status `ATIVO` cuja data
+de início já chegou e cuja data de término ainda não passou, ordenadas da mais
+recente para a mais antiga. O retorno `200` é um array de objetos com
+`id`, `title`, `description`, `type`, `size`, `price`, `weight`,
+`maximumQuantity`, `minimumQuantity`, `location`, `startDate` e `endDate`.
+O `userId` do anunciante não é exposto.
+
+- `200 []`: nenhuma oferta ativa disponível no período atual.
+- `500`: erro interno, sem detalhes do banco na resposta.
+
 ## Buscar ofertas (SearchOffer)
 
 `GET /offer/search`

@@ -1,0 +1,138 @@
+.marketplace-main { background: #f5f8f9; }
+.marketplace-main h2 { font-size: 30px; line-height: 1.25; letter-spacing: -.5px; }
+.marketplace-main h3 { margin: 0; }
+.marketplace-main .button { min-height: 38px; padding: 8px 12px; border-radius: 8px; font-size: 14px; gap: 8px; }
+.market-eyebrow { color: #007daf; text-transform: uppercase; font-size: 12px; font-weight: 700; line-height: 1.5; }
+.market-hero { background: #093f56; padding-block: 49px; color: white; }
+.market-hero-layout { display: grid; grid-template-columns: 1.14fr 1fr; gap: 4.7%; align-items: center; }
+.market-hero-copy > .market-eyebrow { color: #a4cfd4; margin-bottom: 20px; }
+.market-hero h1 { font-size: clamp(36px, 3.45vw, 62px); line-height: 1.09; letter-spacing: -.7px; font-weight: 700; }
+.market-hero-description { font-size: 18px; line-height: 1.5; color: #b3cdd8; margin-block: 24px 22px; max-width: 650px; }
+.market-search { display: flex; align-items: center; gap: 12px; padding: 5px 5px 5px 15px; min-height: 56px; background: white; border: 1px solid #c8dce5; border-radius: 9px; color: var(--muted); }
+.market-search > svg { width: 20px; height: 20px; flex-shrink: 0; }
+.market-search input { flex: 1; width: 100%; border: 0; background: transparent; color: #193340; font-size: 14px; min-height: 40px; }
+.market-search input::placeholder { color: #8a9daa; opacity: 1; }
+.market-search:focus-within { outline: 3px solid #79bdda; outline-offset: 3px; }
+.market-search input:focus-visible { outline: none; }
+.market-search .button { min-height: 38px; }
+.popular-searches { margin-top: 20px; color: #9bbbc9; font-size: 13px; line-height: 1.6; }
+.popular-searches button { padding: 0; color: inherit; border: 0; background: transparent; font: inherit; }
+.popular-searches button:hover { color: white; text-decoration: underline; }
+.how-card { overflow: hidden; border: 1px solid #d7e6ec; background: white; color: #193340; border-radius: 21px; scroll-margin-top: 24px; }
+.farm-image { display: block; width: 100%; height: 189px; object-fit: cover; object-position: center 52%; }
+.how-card-content { padding: 22px; }
+.how-card h2 { font-size: 16px; line-height: 1.5; letter-spacing: -.2px; }
+.how-steps { display: flex; justify-content: space-between; gap: 16px; list-style: none; margin: 21px 0; padding: 0; }
+.how-steps li { display: flex; align-items: center; gap: 10px; }
+.how-steps svg { color: #0080b7; width: 27px; height: 27px; flex-shrink: 0; }
+.how-steps span { display: block; color: #8c9fac; font-size: 11px; margin-bottom: 3px; }
+.how-steps strong { font-size: 13px; font-weight: 600; }
+.how-card-content > p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.marketplace-content { padding-block: 47px 45px; }
+.section-description { color: var(--muted); margin-top: 8px; font-size: 15px; line-height: 1.5; }
+.category-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+.category-card { display: flex; align-items: center; text-align: left; gap: 13px; padding: 17px; min-height: 78px; background: white; border: 1px solid var(--border); border-radius: 15px; color: #233e4d; transition: border-color .15s, background .15s; }
+.category-card:hover, .category-card.is-selected { border-color: var(--primary); background: #edf7fb; }
+.category-icon { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; background: #e9f5fa; color: #0082b5; border-radius: 11px; }
+.category-card strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.4; }
+.category-card small { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; }
+.region-filter { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 20px; font-size: 14px; }
+.region-filter select { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; color: inherit; }
+.offers-section { padding-top: 44px; scroll-margin-top: 20px; }
+.section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 22px; }
+.section-heading .market-eyebrow { margin-bottom: 10px; }
+.marketplace-main .view-all { min-height: 46px; padding: 10px 16px; flex-shrink: 0; }
+.offer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.offer-card { background: white; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 5px 14px #19334008; display: flex; flex-direction: column; }
+.offer-content { padding: 15px; display: flex; flex-direction: column; flex: 1; }
+.offer-labels { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 10px; font-weight: 700; color: #007eaf; text-transform: uppercase; }
+.offer-labels .offer-availability { color: #11885e; text-transform: none; white-space: nowrap; }
+.offer-card h3 { font-size: 17px; line-height: 1.3; font-weight: 650; margin-top: 12px; min-height: 44px; }
+.offer-description { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 10px; }
+.offer-specs { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; margin-top: 11px; padding-bottom: 11px; }
+.offer-specs span { display: flex; align-items: center; gap: 4px; }
+.offer-specs svg { width: 15px; height: 15px; flex-shrink: 0; }
+.offer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--border); padding-top: 11px; margin-top: auto; }
+.offer-price { color: #0c4862; font-size: clamp(19px, 1.57vw, 28px); font-weight: 750; white-space: nowrap; }
+.offer-price small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.offer-bottom .button { white-space: nowrap; }
+.producers-section { padding-top: 48px; scroll-margin-top: 24px; }
+.producer-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.producer-card { padding: 20px; background: white; border: 1px solid var(--border); border-radius: 15px; }
+.producer-info { display: flex; align-items: center; gap: 15px; }
+.producer-icon { flex-shrink: 0; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: #e9f5fa; color: #0082b5; }
+.producer-icon svg { width: 29px; height: 29px; }
+.producer-info h3 { font-size: 16px; line-height: 1.4; font-weight: 700; }
+.producer-info p { color: var(--muted); font-size: 13px; margin-top: 6px; line-height: 1.5; }
+.producer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.producer-bottom > span { font-size: 13px; font-weight: 600; color: #149566; }
+.empty-offers { grid-column: 1 / -1; display: grid; justify-items: center; gap: 16px; padding: 48px 20px; background: white; border: 1px solid var(--border); border-radius: 16px; text-align: center; }
+.empty-offers p { color: var(--muted); }
+.market-dialog { width: min(560px, calc(100% - 32px)); max-height: calc(100svh - 40px); padding: 0; border: 1px solid var(--border); border-radius: 18px; color: #193340; box-shadow: 0 24px 80px #0003; }
+.market-dialog::backdrop { background: #082e43aa; }
+.dialog-close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 38px; height: 38px; background: white; border: 1px solid var(--border); border-radius: 50%; color: #193340; }
+.detail-image { width: 100%; height: 230px; object-fit: cover; display: block; }
+.detail-content { display: grid; gap: 16px; padding: 32px; }
+.detail-content h2 { font-size: 26px; line-height: 1.2; padding-right: 18px; }
+.detail-content > p { line-height: 1.6; }
+.detail-content .detail-price { color: var(--brand-dark); font-size: 28px; font-weight: 700; }
+.detail-price small { font-size: 14px; font-weight: 400; }
+.detail-note { padding: 14px; background: #edf6fa; border-radius: 8px; color: #526e7c; font-size: 14px; }
+@media (min-width: 1600px) { .market-hero { padding-block: 64px; } .farm-image { height: 245px; } .how-card-content { padding: 28px; } }
+@media (max-width: 1200px) {
+  .market-hero-layout { gap: 4%; }
+  .market-hero h1 { font-size: 40px; }
+  .market-hero-description { font-size: 16px; }
+  .category-card { padding: 13px; gap: 9px; }
+  .category-card strong { font-size: 12px; }
+  .category-icon { width: 36px; height: 36px; }
+  .offer-grid { gap: 14px; }
+  .offer-content { padding: 12px; }
+  .offer-bottom { flex-wrap: wrap; }
+  .producer-card { padding: 16px; }
+}
+@media (max-width: 1000px) {
+  .market-hero-layout { grid-template-columns: 1fr 1fr; }
+  .market-hero h1 { font-size: 34px; }
+  .how-card-content { padding: 18px; }
+  .how-steps { gap: 8px; }
+  .how-steps li { gap: 6px; }
+  .category-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .category-card strong { font-size: 14px; }
+  .offer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .offer-price { font-size: 24px; }
+  .producer-grid { grid-template-columns: 1fr; }
+  .producer-card { padding: 20px; }
+}
+@media (max-width: 760px) {
+  .market-hero { padding-block: 36px; }
+  .market-hero-layout { grid-template-columns: 1fr; gap: 30px; }
+  .market-hero h1 { font-size: clamp(32px, 6vw, 44px); max-width: 600px; }
+  .market-hero-description { max-width: 560px; }
+  .farm-image { height: 200px; }
+  .marketplace-content { padding-block: 32px; }
+  .marketplace-main h2 { font-size: 26px; }
+  .how-card h2 { font-size: 16px; }
+  .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .category-card { padding: 12px; }
+  .section-heading { align-items: flex-start; flex-wrap: wrap; gap: 14px; }
+  .offers-section { padding-top: 34px; }
+}
+@media (max-width: 480px) {
+  .market-hero-copy > .market-eyebrow { margin-bottom: 15px; }
+  .market-hero-description { margin-block: 20px; }
+  .market-search { gap: 7px; padding-left: 10px; }
+  .market-search input { font-size: 12px; }
+  .popular-searches { font-size: 12px; }
+  .category-card { gap: 8px; padding: 11px 9px; }
+  .category-card strong { font-size: 12px; }
+  .category-icon { width: 32px; height: 36px; }
+  .category-icon svg { width: 22px; height: 22px; }
+  .offer-grid { grid-template-columns: 1fr; }
+  .offer-content { padding: 16px; }
+  .offer-card h3 { min-height: 0; font-size: 18px; }
+  .offer-price { font-size: 24px; }
+  .offer-labels { font-size: 11px; }
+  .detail-content { padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .marketplace-main *, .marketplace-main *::before { scroll-behavior: auto !important; transition: none !important; } }

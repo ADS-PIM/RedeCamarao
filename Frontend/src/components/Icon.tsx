@@ -1,4 +1,4 @@
-type IconName = 'bag' | 'store' | 'check' | 'info' | 'arrow' | 'menu' | 'close' | 'eye' | 'eye-off'
+export type IconName = 'bag' | 'store' | 'check' | 'info' | 'arrow' | 'menu' | 'close' | 'eye' | 'eye-off' | 'search' | 'waves' | 'sparkle' | 'ruler' | 'box' | 'pin' | 'chat' | 'handshake'
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {
   return (
@@ -10,6 +10,14 @@ export function Icon({ name, className }: { name: IconName; className?: string }
       {name === 'arrow' && <path d="M3 12h18m-8-8 8 8-8 8" />}
       {name === 'menu' && <path d="M4 6h16M4 12h16M4 18h16" />}
       {name === 'close' && <path d="m6 6 12 12M6 18 18 6" />}
+      {name === 'search' && <><circle cx="10.5" cy="10.5" r="7.5" /><path d="m16 16 5 5" /></>}
+      {name === 'waves' && <path d="M2 5q2.5 4 5 0t5 0 5 0 5 0M2 12q2.5 4 5 0t5 0 5 0 5 0M2 19q2.5 4 5 0t5 0 5 0 5 0" />}
+      {name === 'sparkle' && <><path d="m12 2 2 8 8 2-8 2-2 8-2-8-8-2 8-2Z" /><circle cx="3" cy="21" r="1" /></>}
+      {name === 'ruler' && <><path d="m2 7 5-5 15 15-5 5ZM7 7l2-2m2 6 2-2m2 6 2-2" /></>}
+      {name === 'box' && <><path d="m12 2 10 5v10l-10 5-10-5V7Zm0 10v10M2 7l10 5 10-5M7 4.5l10 5V15" /></>}
+      {name === 'pin' && <><path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" /></>}
+      {name === 'chat' && <path d="M21 11.5a9.5 9.5 0 0 1-14 8.4L2 21l1.1-5A9.5 9.5 0 1 1 21 11.5Z" />}
+      {name === 'handshake' && <><path d="m2 3 4-1 4 3m12-2-4-1-5 2-5 5 2 2 4-3 7 7-5 6-5-1-7-7M2 3 1 13l3 1M22 3l1 10-3 2m-7-1 5 5m-8-2 4 4" /></>}
       {(name === 'eye' || name === 'eye-off') && <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{name === 'eye-off' && <path d="m3 3 18 18" />}</>}
     </svg>
   )

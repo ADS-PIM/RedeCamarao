@@ -33,6 +33,18 @@ export class OfferDAOMySQL implements OfferDAOInterface {
         return rows.map(reconstructOffer);
     }
 
+    public async searchActive(): Promise<Offer[]> {
+        const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
+            `SELECT ${offerColumns} FROM offers
+            WHERE status = 'ATIVO'
+                AND start_availability_date <= CURRENT_DATE
+                AND end_availability_date >= CURRENT_DATE
+            ORDER BY createdAt DESC, id DESC`
+        );
+
+        return rows.map(reconstructOffer);
+    }
+
     public async listByUserId(userId: string): Promise<Offer[]> {
         const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
             `SELECT ${offerColumns}

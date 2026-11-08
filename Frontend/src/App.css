@@ -2,3 +2,14 @@
 .app-shell > main { flex: 1; }
 .unavailable-page { padding-block: 80px; }
 .unavailable-page p { margin-block: 20px; color: var(--muted); }
+.marketplace-shell .brand { font-size: 24px; }
+.marketplace-shell .header-navigation nav { gap: 29px; }
+.marketplace-shell .header-navigation nav a { position: relative; }
+.marketplace-shell .header-navigation nav a[aria-current='page'] { color: var(--primary); font-weight: 700; }
+.marketplace-shell .header-navigation nav a[aria-current='page']::after { content: ''; position: absolute; height: 2px; background: #0782b5; left: 0; right: 0; bottom: -30px; }
+.marketplace-shell .header-actions .button { min-height: 45px; padding-inline: 18px; }
+.marketplace-shell .footer-inner { min-height: 78px; }
+.marketplace-shell .footer-brand { font-size: 15px; }
+.marketplace-shell .footer-inner p, .marketplace-shell .footer-inner nav { font-size: 12px; }
+@media (max-width: 1100px) { .marketplace-shell .header-navigation nav { gap: 20px; } }
+@media (max-width: 850px) { .marketplace-shell .header-navigation nav { gap: 0; } .marketplace-shell .header-navigation nav a[aria-current='page']::after { display: none; } }

@@ -1,6 +1,15 @@
 ﻿# RedeCamarão — Frontend
 
-Interface em React, TypeScript e Vite. A tela de cadastro está disponível em `/` e `/registro`; o login, em `/entrar` e `/login`.
+Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
+
+## Marketplace
+
+- Tela responsiva com apresentação, categorias e ofertas ativas carregadas do banco de dados.
+- Busca por produto, descrição, tamanho e localização; filtros por tipo, tamanho, peso e região usam os dados retornados pela API.
+- Os detalhes da oferta incluem descrição, localização, quantidade, preço e período de disponibilidade.
+- Quando a API retorna uma lista vazia, a tela informa que nenhuma oferta foi encontrada. Falhas de conexão ou respostas inválidas são exibidas separadamente e permitem tentar novamente.
+- O marketplace consome `GET /offer/marketplace`, uma rota pública que retorna somente ofertas ativas dentro do período de disponibilidade, sem expor o ID do anunciante.
+- Fotografias ilustrativas locais em `public/images`; fontes em `public/images/SOURCES.md`.
 
 ## Executar
 
@@ -15,9 +24,9 @@ Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou cami
 ## Cadastro
 
 - Etapa 1: comprador/produtor, nome, CPF/CNPJ, e-mail, senha, confirmação e aceite.
-- Etapa 2: telefone e localização opcionais, conforme o contrato existente.
+- Etapa 2: telefone opcional e localidade preenchida com cidade e estado; os dois campos de localidade podem ficar vazios, mas devem ser informados juntos.
 - Validações ao sair do campo e ao continuar; campos já visitados atualizam o feedback durante a edição.
-- Envio para `POST /users/register`, com `BUYER`/`PRODUCER` e documento/telefones normalizados. Confirmação de senha e aceite não são enviados ao DTO.
+- Envio para `POST /users/register`, com `BUYER`/`PRODUCER`, documento/telefones normalizados e localidade no formato `Cidade, UF`. Confirmação de senha e aceite não são enviados ao DTO.
 - Sucesso exibido somente após resposta HTTP 201. Nenhum dado de cadastro é salvo no armazenamento do navegador.
 
 ## Login
@@ -29,7 +38,7 @@ Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou cami
 - O sucesso mostra a confirmação de acesso e a opção de sair (`POST /users/logout`). O cabeçalho passa a exibir “Minha conta”. Não há redirecionamento para o marketplace enquanto essa página não estiver implementada.
 - O backend deve permitir a origem exata do frontend em `FRONTEND_URL` e credenciais no CORS. Cookies em produção exigem HTTPS conforme a configuração existente do backend.
 
-`Header`, `Footer` e `FormField` são componentes reutilizáveis, com estilos separados. As demais páginas vinculadas (marketplace, produtos, produtores, ajuda, termos e privacidade) ainda não foram implementadas e exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
+`Header`, `Footer` e `FormField` são componentes reutilizáveis, com estilos separados. A navegação de produtos, produtores e funcionamento leva às seções do marketplace. Ajuda, termos e privacidade ainda exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
 
 ## Verificar
 
