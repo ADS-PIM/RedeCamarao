@@ -39,7 +39,6 @@ export class CreateUser implements UseCase<UserCreateDTO, null>{
         description: userCreateDTO.description,
         location: userCreateDTO.location,
         phone: userCreateDTO.phone,
-        whatsapp: userCreateDTO.whatsapp,
         businessHours: userCreateDTO.businessHours
 });
 

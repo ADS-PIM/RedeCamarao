@@ -7,7 +7,7 @@ import { accessFields, contactFields, formatDocument, formatPhone, validateRegis
 import type { FieldName, RegistrationData } from '../utils/registration'
 import './RegisterPage.css'
 
-const initialData: RegistrationData = { name: '', document: '', email: '', password: '', confirmPassword: '', terms: false, phone: '', whatsapp: '', location: '' }
+const initialData: RegistrationData = { name: '', document: '', email: '', password: '', confirmPassword: '', terms: false, phone: '', location: '' }
 
 export function RegisterPage() {
   const [step, setStep] = useState(1)
@@ -133,8 +133,7 @@ export function RegisterPage() {
                 <h2 ref={headingRef} tabIndex={-1}>Dados de contato</h2>
                 <p className="contact-description">Como podemos encontrar você? Os campos desta etapa são opcionais.</p>
                 <div className="fields-grid contact-fields">
-                  <FormField {...fieldProps('phone')} onChange={value => changeField('phone', formatPhone(value))} label="Telefone" type="tel" autoComplete="tel-national" placeholder="(00) 00000-0000" maxLength={15} />
-                  <FormField {...fieldProps('whatsapp')} onChange={value => changeField('whatsapp', formatPhone(value))} label="WhatsApp" type="tel" placeholder="(00) 00000-0000" maxLength={15} />
+                  <FormField {...fieldProps('phone')} onChange={value => changeField('phone', formatPhone(value))} label="Telefone" type="tel" autoComplete="tel-national" placeholder="(00) 00000-0000" maxLength={15} wide />
                   <FormField {...fieldProps('location')} label="Cidade e estado" placeholder="Ex.: Aracati, CE" autoComplete="address-level2" maxLength={255} wide />
                 </div>
                 <div className="contact-note"><Icon name="info" /><p>A plataforma aproxima compradores e produtores. Negociação e pagamento acontecem fora da plataforma.</p></div>

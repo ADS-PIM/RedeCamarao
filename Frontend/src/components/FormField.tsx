@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { InputHTMLAttributes } from 'react'
 import { Icon } from './Icon'
+import './FormField.css'
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> & {
   label: string

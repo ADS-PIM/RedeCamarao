@@ -1,6 +1,6 @@
 ﻿# RedeCamarão — Frontend
 
-Interface em React, TypeScript e Vite. A tela de cadastro está disponível em `/` e `/registro`.
+Interface em React, TypeScript e Vite. A tela de cadastro está disponível em `/` e `/registro`; o login, em `/entrar` e `/login`.
 
 ## Executar
 
@@ -15,12 +15,21 @@ Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou cami
 ## Cadastro
 
 - Etapa 1: comprador/produtor, nome, CPF/CNPJ, e-mail, senha, confirmação e aceite.
-- Etapa 2: telefone, WhatsApp e localização opcionais, conforme o contrato existente.
+- Etapa 2: telefone e localização opcionais, conforme o contrato existente.
 - Validações ao sair do campo e ao continuar; campos já visitados atualizam o feedback durante a edição.
 - Envio para `POST /users/register`, com `BUYER`/`PRODUCER` e documento/telefones normalizados. Confirmação de senha e aceite não são enviados ao DTO.
 - Sucesso exibido somente após resposta HTTP 201. Nenhum dado de cadastro é salvo no armazenamento do navegador.
 
-`Header` e `Footer` são componentes reutilizáveis, com estilos separados. As demais páginas vinculadas (login, marketplace, produtos, produtores, ajuda, termos e privacidade) ainda não foram implementadas e exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
+## Login
+
+- E-mail e senha com validações ao sair do campo e ao enviar, botão de mostrar/ocultar senha e bloqueio de envios duplicados.
+- Envio para `POST /users/login` com `credentials: 'include'`, usando a mesma `VITE_API_URL` do cadastro. Erros de credenciais, limite de tentativas e conexão são exibidos em português.
+- O access token fica apenas no estado em memória. Senhas e tokens não são gravados em `localStorage` ou `sessionStorage`. O backend gerencia o refresh token por cookie HttpOnly.
+- Ao abrir o app, `POST /users/refresh` tenta restaurar a sessão; chamadas simultâneas compartilham a mesma requisição para evitar rotação duplicada. Uma sessão expirada ou um servidor indisponível libera o formulário para novo login.
+- O sucesso mostra a confirmação de acesso e a opção de sair (`POST /users/logout`). O cabeçalho passa a exibir “Minha conta”. Não há redirecionamento para o marketplace enquanto essa página não estiver implementada.
+- O backend deve permitir a origem exata do frontend em `FRONTEND_URL` e credenciais no CORS. Cookies em produção exigem HTTPS conforme a configuração existente do backend.
+
+`Header`, `Footer` e `FormField` são componentes reutilizáveis, com estilos separados. As demais páginas vinculadas (marketplace, produtos, produtores, ajuda, termos e privacidade) ainda não foram implementadas e exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
 
 ## Verificar
 
@@ -29,4 +38,4 @@ npm.cmd run build
 npm.cmd test
 ```
 
-Os testes cobrem validação de documentos, máscaras, confirmação de senha, aceite e contatos opcionais. A integração real depende do backend configurado e de seu banco de dados.
+Os testes cobrem validação de documentos, máscaras, confirmação de senha, aceite, contatos opcionais e o contrato de login/refresh/logout com respostas simuladas. A integração real depende do backend configurado e de seu banco de dados.

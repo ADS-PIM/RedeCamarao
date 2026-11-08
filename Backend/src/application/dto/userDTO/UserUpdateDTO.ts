@@ -38,12 +38,6 @@ export class UserUpdateDTO {
 
     @IsOptional()
     @IsString()
-    @MaxLength(20)
-    @Matches(/^\+?[\d()\s-]{10,20}$/)
-    whatsapp?: string | null;
-
-    @IsOptional()
-    @IsString()
     @MaxLength(255)
     businessHours?: string | null;
 }

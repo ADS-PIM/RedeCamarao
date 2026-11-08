@@ -7,7 +7,6 @@ export class UserSearchDTO {
     description!: string | null;
     location!: string | null;
     phone!: string | null;
-    whatsapp!: string | null;
     businessHours!: string | null;
     createdAt!: Date;
 }

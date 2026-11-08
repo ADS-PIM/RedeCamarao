@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Icon } from './Icon'
 import './Header.css'
 
-export function Header() {
+export function Header({ authenticated = false }: { authenticated?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   return (
     <header className="site-header">
@@ -17,8 +17,10 @@ export function Header() {
             <a href="/produtores">Produtores</a><a href="/como-funciona">Como funciona</a>
           </nav>
           <div className="header-actions">
-            <a className="login-link" href="/entrar">Entrar</a>
-            <a className="button button-primary" href="/registro">Criar conta</a>
+            {authenticated ? <a className="button button-primary" href="/entrar">Minha conta</a> : <>
+              <a className="login-link" href="/entrar">Entrar</a>
+              <a className="button button-primary" href="/registro">Criar conta</a>
+            </>}
           </div>
         </div>
       </div>

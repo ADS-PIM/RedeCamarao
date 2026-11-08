@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { formatDocument, formatPhone, isValidDocument, validateRegistration } from '../src/utils/registration.ts'
 
-const validData = { name: 'Marina Souza', document: '529.982.247-25', email: 'marina@example.com', password: 'senha1234', confirmPassword: 'senha1234', terms: true, phone: '', whatsapp: '', location: '' }
+const validData = { name: 'Marina Souza', document: '529.982.247-25', email: 'marina@example.com', password: 'senha1234', confirmPassword: 'senha1234', terms: true, phone: '', location: '' }
 
 test('aceita CPF e CNPJ com dígitos verificadores válidos', () => {
   assert.equal(isValidDocument('529.982.247-25'), true)
@@ -21,9 +21,8 @@ test('contato é opcional e cadastro válido não apresenta erros', () => {
   assert.deepEqual(validateRegistration(validData), {})
 })
 test('exige confirmação, consentimento e contatos válidos quando preenchidos', () => {
-  const errors = validateRegistration({ ...validData, confirmPassword: 'outrasenha', terms: false, phone: '123', whatsapp: '00123456789' })
+  const errors = validateRegistration({ ...validData, confirmPassword: 'outrasenha', terms: false, phone: '123' })
   assert.ok(errors.confirmPassword)
   assert.ok(errors.terms)
   assert.ok(errors.phone)
-  assert.ok(errors.whatsapp)
 })

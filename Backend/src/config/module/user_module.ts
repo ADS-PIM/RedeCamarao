@@ -2,7 +2,7 @@ import { UserController } from '../../infra/web/express/controllers/user.control
 
 import { UserDAOMySQL } from '../../infra/bd/mySql/user.MySQL.dao';
 
-import { UserRefreshTokenDAOMySQL } from '../../infra/bd/mySql/UserRefreshToken.MySQL.dao';
+import { UserRefreshTokenDAOMySQL } from '../../infra/bd/mySql/userRefreshToken.MySQL.dao';
 
 
 import { CreateUser } from '../../application/usecase/user/CreateUserCase';

@@ -15,7 +15,6 @@ export type propsUser = {
     description: string | null;
     location: string | null;
     phone: string | null;
-    whatsapp: string | null;
     businessHours: string | null;
     createdAt: Date;
 }
@@ -23,7 +22,7 @@ export type propsUser = {
 export class User {
     constructor(private props: propsUser) {}
 
-    public static construct({name, email, password, userType, cpf_cnpj, description, location, phone, whatsapp, businessHours}: { name: string; email: string; password: string; userType: UserType; cpf_cnpj: string; description?: string | null; location?: string; phone?: string; whatsapp?: string | null; businessHours?: string | null }): User{
+    public static construct({name, email, password, userType, cpf_cnpj, description, location, phone, businessHours}: { name: string; email: string; password: string; userType: UserType; cpf_cnpj: string; description?: string | null; location?: string; phone?: string; businessHours?: string | null }): User{
 
          if (!name || !email || !password || !userType || !cpf_cnpj) {
             throw new Error('All required fields must be provided');
@@ -43,7 +42,6 @@ export class User {
             description: description?.trim() || null,
             location: location?.trim() || null,
             phone: phone?.trim() || null,
-            whatsapp: whatsapp?.trim() || null,
             businessHours: businessHours?.trim() || null,
             createdAt: new Date()
         });
@@ -87,10 +85,6 @@ export class User {
 
     get phone() {
         return this.props.phone;
-    }
-
-    get whatsapp() {
-        return this.props.whatsapp;
     }
 
     get businessHours() {

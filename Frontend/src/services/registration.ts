@@ -14,7 +14,6 @@ export async function registerUser(data: RegistrationData, userType: 'BUYER' | '
         name: data.name.trim(), email: data.email.trim().toLowerCase(), password: data.password,
         userType, cpf_cnpj: digitsOnly(data.document),
         ...(data.phone && { phone: digitsOnly(data.phone) }),
-        ...(data.whatsapp && { whatsapp: digitsOnly(data.whatsapp) }),
         ...(data.location.trim() && { location: data.location.trim() }),
       }),
     })

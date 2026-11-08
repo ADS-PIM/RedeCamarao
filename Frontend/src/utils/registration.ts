@@ -6,13 +6,12 @@ export type RegistrationData = {
   confirmPassword: string
   terms: boolean
   phone: string
-  whatsapp: string
   location: string
 }
 export type FieldName = Exclude<keyof RegistrationData, 'terms'>
 export type RegistrationErrors = Partial<Record<keyof RegistrationData, string>>
 export const accessFields: (keyof RegistrationData)[] = ['name', 'document', 'email', 'password', 'confirmPassword', 'terms']
-export const contactFields: (keyof RegistrationData)[] = ['phone', 'whatsapp', 'location']
+export const contactFields: (keyof RegistrationData)[] = ['phone', 'location']
 export const digitsOnly = (value: string) => value.replace(/\D/g, '')
 
 export function formatDocument(value: string) {
@@ -51,7 +50,7 @@ export function validateRegistration(data: RegistrationData): RegistrationErrors
   if (!data.confirmPassword) errors.confirmPassword = 'Repita a senha.'
   else if (data.confirmPassword !== data.password) errors.confirmPassword = 'As senhas não coincidem.'
   if (!data.terms) errors.terms = 'Aceite os Termos de Uso e a Política de Privacidade para continuar.'
-  for (const field of ['phone', 'whatsapp'] as const) {
+  for (const field of ['phone'] as const) {
     if (data[field] && !/^[1-9]{2}\d{8,9}$/.test(digitsOnly(data[field]))) errors[field] = 'Informe um telefone válido com DDD.'
   }
   return errors
