@@ -54,6 +54,11 @@ os registros excluídos só podem ser recuperados de um backup.
 
 ## Reversão
 
+A migration `20261108120000-remove-user-whatsapp.js` remove `users.WhatsApp`.
+O cadastro e a API de usuários passam a usar apenas `phone` para telefone.
+Seu `down` recria a coluna opcional vazia, sem recuperar os números removidos.
+As migrations anteriores permanecem como histórico.
+
 Cada execução desfaz apenas a última migration aplicada. A reversão da cascata
 de usuários para ofertas restaura `ON DELETE RESTRICT`, sem recuperar registros
 excluídos. Ao chegar à migration de remoção de conversas e mensagens, a reversão

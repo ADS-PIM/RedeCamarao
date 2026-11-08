@@ -24,7 +24,6 @@ export class SearchByIdUser implements UseCase<string, UserSearchByIdDTO | null>
             description: user.description,
             location: user.location,
             phone: user.phone,
-            whatsapp: user.whatsapp,
             businessHours: user.businessHours,
             createdAt: user.createdAt
         };

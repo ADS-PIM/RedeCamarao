@@ -28,7 +28,6 @@ import { DeleteByUserId } from '../../../../application/usecase/refresh_token/De
 
 import type { UserAuthRequest } from '../../../../../userAuthMiddleware';
 import { UserType } from '../../../../domain/model/user';
-import { generateWhatsAppLink } from '../../../../util/generateWhatsappLink';
 
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
@@ -278,11 +277,7 @@ export class UserController {
             description: user.description,
             location: user.location,
             phone: user.phone,
-            whatsapp: user.whatsapp,
             businessHours: user.businessHours,
-            whatsappLink: user.whatsapp
-                ? generateWhatsAppLink(user.whatsapp, user.name)
-                : null
         });
         } catch (error: any) {
             console.error('Error searching public user:', error);

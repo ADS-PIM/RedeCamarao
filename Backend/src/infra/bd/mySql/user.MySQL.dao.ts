@@ -15,7 +15,6 @@ const userColumns = `
     description,
     location,
     phone,
-    WhatsApp AS whatsapp,
     businessHours,
     createdAt
 `;
@@ -36,10 +35,9 @@ export class UserDAOMySQL implements UserDAOInterface {
                 description,
                 location,
                 phone,
-                WhatsApp,
                 businessHours,
                 createdAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user.id,
                 user.name,
@@ -50,7 +48,6 @@ export class UserDAOMySQL implements UserDAOInterface {
                 user.description,
                 user.location,
                 user.phone,
-                user.whatsapp,
                 user.businessHours,
                 user.createdAt
             ]
@@ -133,11 +130,6 @@ export class UserDAOMySQL implements UserDAOInterface {
         if (data.phone !== undefined) {
             fields.push('phone = ?');
             values.push(data.phone);
-        }
-
-        if (data.whatsapp !== undefined) {
-            fields.push('WhatsApp = ?');
-            values.push(data.whatsapp);
         }
 
         if (data.businessHours !== undefined) {
