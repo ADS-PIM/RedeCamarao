@@ -1,0 +1,14 @@
+.site-footer { background: var(--white); border-top: 1px solid var(--border); }
+.footer-inner { min-height: 94px; display: flex; align-items: center; justify-content: space-between; gap: 30px; }
+.footer-brand { font-size: 18px; font-weight: 700; color: var(--brand-dark); white-space: nowrap; }
+.footer-inner p, .footer-inner nav { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.footer-inner nav { display: flex; gap: 9px; white-space: nowrap; }
+.footer-inner a:hover { color: var(--primary); }
+@media (max-width: 1000px) {
+  .footer-inner { flex-wrap: wrap; padding-block: 26px; gap: 16px 32px; }
+  .footer-inner p { order: 3; flex-basis: 100%; }
+}
+@media (max-width: 480px) {
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+  .footer-inner p { order: 0; }
+}

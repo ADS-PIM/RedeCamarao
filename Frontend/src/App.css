@@ -1,0 +1,4 @@
+﻿.app-shell { min-height: 100svh; display: flex; flex-direction: column; }
+.app-shell > main { flex: 1; }
+.unavailable-page { padding-block: 80px; }
+.unavailable-page p { margin-block: 20px; color: var(--muted); }
