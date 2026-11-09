@@ -2,9 +2,7 @@
 .offer-container { padding-block: 32px 40px; }
 .offer-page .button { min-height: 44px; padding: 10px 16px; border-radius: 8px; font-size: 14px; gap: 8px; }
 .offer-page button:disabled { cursor: not-allowed; }
-.offer-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
-.offer-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; flex: 1; gap: 5px; min-width: 0; color: var(--muted); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
-.offer-breadcrumb a:hover { color: var(--primary); text-decoration: underline; }
+.offer-topbar { display: flex; align-items: center; justify-content: flex-end; gap: 24px; margin-bottom: 18px; }
 .offer-actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
 .offer-actions .button { background: white; color: var(--primary); }
 .offer-actions .button[aria-pressed='true'] { border-color: #b8dce9; background: #e9f5fa; color: var(--primary-dark); }
