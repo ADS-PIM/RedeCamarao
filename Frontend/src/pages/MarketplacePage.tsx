@@ -15,6 +15,11 @@ const categories: { id: Category; title: string; icon: IconName }[] = [
   { id: 'nearby', title: 'Perto de você', icon: 'pin' },
 ]
 
+function scrollToOffers() {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  document.getElementById('ofertas')?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' })
+}
+
 function DetailDialog({ offer, onClose }: { offer: Offer; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -25,7 +30,7 @@ function DetailDialog({ offer, onClose }: { offer: Offer; onClose: () => void })
     return () => { dialog.close(); document.body.style.overflow = originalOverflow }
   }, [])
   return (
-    <dialog ref={ref} className="market-dialog" aria-labelledby="detail-title" onClose={onClose} onClick={event => { if (event.target === event.currentTarget) onClose() }}>
+    <dialog ref={ref} className="market-dialog" aria-labelledby="detail-title" onClose={event => { if (!event.currentTarget.open) onClose() }} onClick={event => { if (event.target === event.currentTarget) onClose() }}>
       <button className="dialog-close" type="button" aria-label="Fechar detalhes" onClick={onClose} autoFocus><Icon name="close" /></button>
       <div className="detail-content">
         <span className="market-eyebrow">{offer.type || 'Oferta de camarão'}</span>
@@ -53,9 +58,14 @@ export function MarketplacePage() {
   const [error, setError] = useState<string | null>(null)
   const [reload, setReload] = useState(0)
   const filteredOffers = filterOffers(offers, query, category, region)
-  const filtering = Boolean(query || category)
-
-  useEffect(() => { document.title = 'Marketplace | RedeCamarão' }, [])
+  const filtering = Boolean(query.trim() || category)
+  const offersDescription = loading
+    ? 'Carregando ofertas...'
+    : error
+      ? 'Consulte as ofertas dos produtores assim que a conexão for restabelecida.'
+      : filtering
+        ? `${filteredOffers.length} ${filteredOffers.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}${query ? ` para “${query}”` : ''}`
+        : `${offers.length} ${offers.length === 1 ? 'oferta disponível' : 'ofertas disponíveis'} para sua próxima negociação`
 
   useEffect(() => {
     let active = true
@@ -76,11 +86,25 @@ export function MarketplacePage() {
 
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setQuery(input)
-    document.getElementById('ofertas')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setQuery(input.trim())
+    scrollToOffers()
   }
 
   function clearFilters() { setInput(''); setQuery(''); setCategory(null); setRegion('') }
+
+  function selectCategory(value: Category | null) {
+    setCategory(value)
+    setQuery('')
+    setInput('')
+    setRegion('')
+  }
+
+  function categoryDescription(value: Category) {
+    if (loading) return 'Carregando...'
+    if (error) return 'Explorar ofertas'
+    const count = filterOffers(offers, '', value, region).length
+    return `${count} ${count === 1 ? 'oferta' : 'ofertas'}`
+  }
 
   return (
     <main id="main-content" className="marketplace-main">
@@ -92,10 +116,17 @@ export function MarketplacePage() {
             <p className="market-hero-description">Compare ofertas por região, tamanho e quantidade. Fale com o produtor e combine os detalhes fora da plataforma.</p>
             <form className="market-search" role="search" onSubmit={search}>
               <Icon name="search" />
-              <input type="search" aria-label="Buscar ofertas, tamanho ou produtor" placeholder="Buscar ofertas, tamanho ou produtor..." value={input} onChange={event => setInput(event.target.value)} />
+              <input type="search" aria-label="Buscar camarão, tamanho ou região" placeholder="Buscar camarão, tamanho ou região" value={input} onChange={event => setInput(event.target.value)} />
               <button className="button button-primary" type="submit">Buscar</button>
             </form>
-            <p className="popular-searches">Buscas populares: <button type="button" onClick={() => { setCategory('large'); setQuery(''); setInput(''); document.getElementById('ofertas')?.scrollIntoView({ behavior: 'smooth' }) }}>camarão grande</button> · <button type="button" onClick={() => { setInput('Ceará'); setQuery('Ceará'); setCategory(null); document.getElementById('ofertas')?.scrollIntoView({ behavior: 'smooth' }) }}>Ceará</button> · <button type="button" onClick={() => { setCategory('bulk'); setQuery(''); setInput(''); document.getElementById('ofertas')?.scrollIntoView({ behavior: 'smooth' }) }}>acima de 50 kg</button></p>
+            <div className="popular-searches">
+              <span>Buscas populares:</span>
+              <button type="button" onClick={() => { selectCategory('large'); scrollToOffers() }}>camarão grande</button>
+              <span aria-hidden="true">·</span>
+              <button type="button" onClick={() => { selectCategory('nearby'); setRegion('CE'); scrollToOffers() }}>Ceará</button>
+              <span aria-hidden="true">·</span>
+              <button type="button" onClick={() => { selectCategory('bulk'); scrollToOffers() }}>acima de 50 kg</button>
+            </div>
           </div>
           <aside className="how-card" id="como-funciona" aria-labelledby="how-title">
             <img className="farm-image" src="/images/shrimp-farm.jpg" alt="Vista aérea de viveiros de camarão próximos ao litoral" width="1200" height="675" fetchPriority="high" />
@@ -117,8 +148,8 @@ export function MarketplacePage() {
           <h2 id="category-title">Explore por categoria</h2>
           <p className="section-description">Atalhos para começar sua busca</p>
           <div className="category-grid">
-            {categories.map(item => <button className={`category-card ${category === item.id ? 'is-selected' : ''}`} key={item.id} type="button" aria-pressed={category === item.id} onClick={() => { setCategory(category === item.id ? null : item.id); setQuery(''); setInput('') }}>
-              <span className="category-icon"><Icon name={item.icon} /></span><span><strong>{item.title}</strong><small>{filterOffers(offers, '', item.id, region).length} ofertas</small></span>
+            {categories.map(item => <button className={`category-card ${category === item.id ? 'is-selected' : ''}`} key={item.id} type="button" aria-pressed={category === item.id} onClick={() => selectCategory(category === item.id ? null : item.id)}>
+              <span className="category-icon"><Icon name={item.icon} /></span><span><strong>{item.title}</strong><small>{categoryDescription(item.id)}</small></span>
             </button>)}
           </div>
           {category === 'nearby' && (
@@ -135,11 +166,15 @@ export function MarketplacePage() {
 
         <section className="offers-section" id="ofertas" aria-labelledby="offers-title">
           <div className="section-heading">
-            <div><p className="market-eyebrow">Ofertas ativas</p><h2 id="offers-title">{filtering ? 'Ofertas encontradas' : 'Ofertas disponíveis'}</h2><p className="section-description">{loading ? 'Carregando ofertas...' : filtering ? `${filteredOffers.length} ${filteredOffers.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}${query ? ` para “${query}”` : ''}` : `${offers.length} ${offers.length === 1 ? 'oferta disponível' : 'ofertas disponíveis'}`}</p></div>
-            <button className="button button-secondary view-all" type="button" onClick={clearFilters}><Icon name="arrow" />{filtering ? 'Limpar filtros' : 'Ver todas'}</button>
+            <div>
+              <p className="market-eyebrow">Ofertas ativas</p>
+              <h2 id="offers-title">{filtering ? 'Ofertas encontradas' : 'Ofertas disponíveis'}</h2>
+              <p className="section-description">{offersDescription}</p>
+            </div>
+            {filtering && <button className="button button-secondary view-all" type="button" onClick={clearFilters}><Icon name="close" />Limpar filtros</button>}
           </div>
           <div className="offer-grid" aria-live="polite" aria-atomic="true" aria-busy={loading}>
-            {loading && <div className="empty-offers" role="status">Carregando ofertas...</div>}
+            {loading && <div className="offers-loading" role="status">Carregando ofertas...</div>}
             {!loading && error && <div className="empty-offers" role="alert"><Icon name="info" /><h3>Não foi possível carregar as ofertas</h3><p>{error}</p><button type="button" className="button button-secondary" onClick={reloadOffers}>Tentar novamente</button></div>}
             {!loading && !error && filteredOffers.map(offer => <article className="offer-card" key={offer.id}>
               <div className="offer-content">
@@ -150,7 +185,7 @@ export function MarketplacePage() {
                 <div className="offer-bottom"><p className="offer-price">{formatPrice(offer.price)} <small>/ kg</small></p><button className="button button-secondary" type="button" aria-label={`Ver oferta: ${offer.title}`} onClick={() => setDetail(offer)}>Ver oferta</button></div>
               </div>
             </article>)}
-            {!loading && !error && filteredOffers.length === 0 && <div className="empty-offers"><Icon name="search" /><h3>{offers.length === 0 ? 'Não foi possível encontrar nenhuma oferta' : 'Nenhuma oferta encontrada'}</h3><p>{offers.length === 0 ? 'Ainda não há ofertas ativas disponíveis.' : 'Tente outro produto, tamanho ou região.'}</p>{filtering && <button type="button" className="button button-secondary" onClick={clearFilters}>Limpar filtros</button>}</div>}
+            {!loading && !error && filteredOffers.length === 0 && <div className="empty-offers"><Icon name="search" /><h3>{offers.length === 0 ? 'Ainda não há ofertas disponíveis' : 'Nenhuma oferta encontrada'}</h3><p>{offers.length === 0 ? 'Novas ofertas aparecerão aqui quando forem publicadas pelos produtores.' : 'Tente outro produto, tamanho ou região.'}</p></div>}
           </div>
         </section>
       </div>
