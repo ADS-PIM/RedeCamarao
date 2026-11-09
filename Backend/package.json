@@ -9,6 +9,7 @@
     "test:offer": "node --require tsx/cjs --test test/offer-create.test.cjs test/offer-list.test.cjs test/offer-update.test.cjs test/offer-status-migration.test.cjs",
     "test:offer-photos": "node --require tsx/cjs --test test/offer-photos.test.cjs",
     "test:offer-detail": "node --require tsx/cjs --test test/public-offer-detail.test.cjs",
+    "test:producers": "node --require tsx/cjs --test test/public-producers.test.cjs",
     "test:offer-delete": "node --require tsx/cjs --test test/offer-delete.test.cjs test/offer-cascade-migration.test.cjs",
     "test:application-errors": "node --require tsx/cjs --test test/application-errors.test.cjs",
     "test:offer-list": "node --require tsx/cjs --test test/offer-list.test.cjs",

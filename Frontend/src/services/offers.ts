@@ -2,7 +2,7 @@ import type { Offer, OfferDetail } from '../data/marketplace'
 
 const configuredUrl = import.meta.env?.VITE_API_URL
 
-function isOffer(value: unknown): value is Offer {
+export function isOffer(value: unknown): value is Offer {
   if (!value || typeof value !== 'object') return false
   const offer = value as Record<string, unknown>
   return typeof offer.id === 'string'

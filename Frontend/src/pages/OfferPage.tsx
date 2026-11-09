@@ -6,6 +6,7 @@ import { useOfferDetail } from '../hooks/useOfferDetail'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
 import { formatDate, formatPrice } from '../data/marketplace'
 import { getOfferState } from '../data/products'
+import { producerHref } from '../data/producers'
 import { offerGallery, offerHref, readSavedOffers, relatedOffers, savedOffersKey, setOfferSaved } from '../data/offerDetail'
 import './OfferPage.css'
 
@@ -129,6 +130,7 @@ export function OfferPage({ offerId }: { offerId: string }) {
               {producer.businessHours && <div><dt>Horário de atendimento</dt><dd>{producer.businessHours}</dd></div>}
             </dl>
             <div className="offer-producer-contact"><p>O contato com o produtor será feito pelo WhatsApp. Esse recurso estará disponível em breve.</p></div>
+            <a className="button button-secondary" href={producerHref(producer.id)}>Ver perfil do produtor<Icon name="arrow" /></a>
           </aside>
         </div>
 

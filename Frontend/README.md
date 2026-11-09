@@ -1,6 +1,6 @@
 ﻿# RedeCamarão — Frontend
 
-Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; os produtos, em `/produtos`; cada oferta, em `/produtos/:id`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
+Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; os produtos, em `/produtos`; cada oferta, em `/produtos/:id`; os produtores, em `/produtores`; cada perfil, em `/produtores/:id`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
 
 ## Marketplace
 
@@ -31,6 +31,19 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - Compartilhar usa o recurso nativo quando disponível, com alternativa de copiar o link ou selecioná-lo manualmente. Salvar mantém apenas IDs em `localStorage`, sob a chave `rede-camarao:saved-offers`, neste navegador. Dados de sessão não são armazenados por esse recurso.
 - O contato por WhatsApp está indicado como recurso futuro. Esta etapa não implementa integração com WhatsApp, chat interno ou tabela de mensagens.
 - Backend: `npm.cmd run build` e `npm.cmd run test:offer-detail` verificam o contrato HTTP com DAOs simulados, sem acessar o banco.
+
+## Produtores
+
+- `/produtores` e `/produtores/` exibem o diretório, com título, busca por nome, estado e cidade, ordenação e seis cards por página. O link Produtores fica ativo no header, inclusive ao abrir um perfil.
+- A busca ignora acentos e combina nome/localização. As cidades disponíveis dependem do estado selecionado; trocar o estado limpa a cidade anterior. Os filtros só são aplicados por “Buscar produtores” e podem ser limpos na área de resultados.
+- “Mais relevantes” prioriza correspondências do nome e depois quantidade de ofertas ativas; também há ordem alfabética crescente/decrescente e mais ofertas. As contagens vêm da API, incluindo produtores sem ofertas.
+- `GET /users/producers` retorna somente `id`, `name`, `description`, `location`, `businessHours` e `activeOfferCount`. A consulta agrega a contagem de ofertas `ATIVO` dentro do prazo em uma única consulta, preservando produtores com zero ofertas. Não há migração de banco.
+- “Ver produtor” abre `/produtores/:id`, um perfil básico com apresentação, localidade, horários informados e ofertas reais, reutilizando `ProductCard`. O detalhe da oferta também leva a esse perfil. `GET /users/producers/:id` retorna `{ producer, offers }`; um produtor sem ofertas tem perfil válido, e produtor inexistente retorna 404.
+- A paginação foi extraída para `Pagination`, compartilhada por produtos, produtores e ofertas do perfil. Header, footer, ícones e navegação sem recarregamento permanecem compartilhados. Não há faixa de caminhos/voltar adicional.
+- Cards em 3/2/1 colunas, busca adaptada a desktop/tablet/celular, campos de 16px e controles de pelo menos 44px. Carregamento, falha com nova tentativa, diretório vazio, busca sem resultados e perfil indisponível têm estados próprios.
+- Imagens ilustrativas originais geradas com Imagegen integrado ficam em `public/images/producer-farm-1.jpg`, `producer-farm-2.jpg` e `producer-farm-3.jpg`. Não representam as fazendas cadastradas. Prompts finais e proveniência: [PRODUCER_ASSETS.md](public/images/PRODUCER_ASSETS.md).
+- O contato pelo WhatsApp continua como recurso futuro. Nenhum chat interno ou integração de mensagens foi adicionado.
+- Backend: `npm.cmd run test:producers` valida rotas, campos públicos, contagem, casos vazios e consulta agregada com dados simulados, sem acessar o banco.
 
 ## Padrão visual e responsividade
 
@@ -71,7 +84,7 @@ Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou cami
 - O sucesso mostra a confirmação de acesso e a opção de sair (`POST /users/logout`). O cabeçalho passa a exibir “Minha conta”, e a sessão permanece disponível ao navegar pelo header.
 - O backend deve permitir a origem exata do frontend em `FRONTEND_URL` e credenciais no CORS. Cookies em produção exigem HTTPS conforme a configuração existente do backend.
 
-`Header`, `Footer` e `FormField` são componentes reutilizáveis, com estilos separados. Produtos leva ao catálogo em `/produtos`; Como funciona leva à apresentação do marketplace. Ajuda, termos e privacidade ainda exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
+`Header`, `Footer`, `FormField` e `Pagination` são componentes reutilizáveis, com estilos separados. Produtos leva ao catálogo em `/produtos`; Produtores leva a `/produtores`; Como funciona leva à apresentação do marketplace. Ajuda, termos e privacidade ainda exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
 
 ## Verificar
 
