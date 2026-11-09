@@ -3,8 +3,10 @@ import { ListOffersByUserId } from '../../application/usecase/offer/ListOffersBy
 import { UpdateOffer } from '../../application/usecase/offer/UpdateOfferUseCase';
 import { SearchOffer } from '../../application/usecase/offer/SearchOfferUseCase';
 import { DeleteOffer } from '../../application/usecase/offer/DeleteOfferUseCase';
+import { SearchPublicOfferById } from '../../application/usecase/offer/SearchPublicOfferByIdUseCase';
 import { OfferDAOMySQL } from '../../infra/bd/mySql/offer.MySQL.dao';
 import { UserDAOMySQL } from '../../infra/bd/mySql/user.MySQL.dao';
+import { OfferPhotoDAOMySQL } from '../../infra/bd/mySql/offerPhoto.MySQL.dao';
 import { OfferController } from '../../infra/web/express/controllers/offer.controller';
 
 const offerDAO = new OfferDAOMySQL();
@@ -19,5 +21,6 @@ const updateOffer = new UpdateOffer(offerDAO);
 const searchOffer = new SearchOffer(offerDAO);
 
 const deleteOffer = new DeleteOffer(offerDAO);
+const searchPublicOfferById = new SearchPublicOfferById(offerDAO, userDAO, new OfferPhotoDAOMySQL());
 
-export const offerController = new OfferController(createOffer, listOffersByUserId, updateOffer, searchOffer, deleteOffer);
+export const offerController = new OfferController(createOffer, listOffersByUserId, updateOffer, searchOffer, deleteOffer, searchPublicOfferById);

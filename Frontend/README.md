@@ -1,6 +1,6 @@
 ﻿# RedeCamarão — Frontend
 
-Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; os produtos, em `/produtos`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
+Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; os produtos, em `/produtos`; cada oferta, em `/produtos/:id`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
 
 ## Marketplace
 
@@ -17,9 +17,20 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - Busca por oferta, descrição, tamanho e região; filtros combinados por cidade/estado, faixa de preço por kg, tamanho e quantidade disponível. As opções de um mesmo grupo se somam; grupos diferentes se combinam. Os filtros são aplicados pelo botão e podem ser removidos pelos chips ou por “Limpar tudo”.
 - Preços aceitam vírgula decimal e separador de milhares; valores inválidos ou intervalos invertidos recebem orientação antes de aplicar.
 - Ordenação por mais recentes (ordem retornada pela API), menor/maior preço e maior quantidade; paginação real de seis ofertas por página.
-- O catálogo consome a mesma API pública de ofertas. Fotos locais identificadas como ilustrativas compõem os cards, pois o contrato público atual não fornece fotos nem nomes dos anunciantes. Não são criados anúncios ou nomes de produtores fictícios.
+- O catálogo consome a API pública de listagem de ofertas. Fotos locais identificadas como ilustrativas compõem os cards, pois a listagem não fornece fotos nem nomes dos anunciantes. Não são criados anúncios ou nomes de produtores fictícios.
 - Filtros laterais no desktop; painel expansível até 1000px. Cards em 3/2/1 colunas, campos de 16px e controles adaptados para toque. Header e footer mantêm os padrões compartilhados.
-- Carregamento, falha com nova tentativa, catálogo vazio, busca sem resultados e detalhes acessíveis da oferta têm estados próprios. O carregamento e o modal são compartilhados com o marketplace.
+- Carregamento, falha com nova tentativa, catálogo vazio e busca sem resultados têm estados próprios. “Ver oferta” abre a página específica, tanto no catálogo quanto no marketplace e nos relacionados.
+
+## Detalhe da oferta
+
+- `/produtos/:id` abre diretamente uma oferta, inclusive após atualizar a página. Produtos permanece ativo no header; a navegação preserva header, footer e sessão.
+- `GET /offer/marketplace/:id` retorna somente ofertas ativas dentro do período, com dados do lote, publicação, fotos e os campos de produtor já públicos. Ofertas inexistentes ou indisponíveis retornam 404; a tela diferencia isso de uma falha de conexão e permite nova tentativa.
+- A galeria usa as fotos cadastradas, com miniaturas, ampliação, navegação por setas e fechamento por Escape. Quando não há fotos, as imagens locais são explicitamente identificadas como ilustrativas. Fotos que não carregam têm estado próprio.
+- Descrição, quantidade mínima/máxima, disponibilidade e apresentação do produtor usam os dados da API. Não são inventados tempo de resposta, condição do produto ou data de entrada do produtor.
+- Outras ofertas disponíveis são ordenadas por proximidade de localização/estado e tipo, excluindo a oferta atual e duplicatas.
+- Compartilhar usa o recurso nativo quando disponível, com alternativa de copiar o link ou selecioná-lo manualmente. Salvar mantém apenas IDs em `localStorage`, sob a chave `rede-camarao:saved-offers`, neste navegador. Dados de sessão não são armazenados por esse recurso.
+- O contato por WhatsApp está indicado como recurso futuro. Esta etapa não implementa integração com WhatsApp, chat interno ou tabela de mensagens.
+- Backend: `npm.cmd run build` e `npm.cmd run test:offer-detail` verificam o contrato HTTP com DAOs simulados, sem acessar o banco.
 
 ## Padrão visual e responsividade
 

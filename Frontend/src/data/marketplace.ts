@@ -15,6 +15,18 @@ export type Offer = {
 
 export type Category = 'gray' | 'white' | 'large' | 'bulk' | 'nearby'
 
+export type OfferPhoto = { id: string; imageUrl: string; description: string | null }
+export type OfferProducer = {
+  id: string
+  name: string
+  description: string | null
+  location: string | null
+  phone: string | null
+  businessHours: string | null
+  activeOfferCount: number
+}
+export type OfferDetail = Offer & { createdAt: string; photos: OfferPhoto[]; producer: OfferProducer }
+
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 function locationMatchesRegion(location: string, region: string) {
