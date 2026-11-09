@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
-import { OfferDetails } from '../components/OfferDetails'
 import { ProductCard } from '../components/ProductCard'
 import { ProductFilters } from '../components/ProductFilters'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
 import { formatPrice } from '../data/marketplace'
-import type { Offer } from '../data/marketplace'
 import { emptyProductFilters, filterProductOffers, parseProductPrice, productPagination, productsPerPage, quantityOptions, sizeOptions, sortProductOffers, validateProductPrices } from '../data/products'
 import type { ProductFilters as Filters, ProductSort } from '../data/products'
 import { brazilianStates } from '../utils/registration'
@@ -35,7 +33,6 @@ export function ProductsPage() {
   const [sort, setSort] = useState<ProductSort>('recent')
   const [page, setPage] = useState(1)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [detail, setDetail] = useState<Offer | null>(null)
   const results = sortProductOffers(filterProductOffers(offers, query, filters), sort)
   const pageCount = Math.max(1, Math.ceil(results.length / productsPerPage))
   const currentPage = Math.min(page, pageCount)
@@ -122,7 +119,7 @@ export function ProductsPage() {
           <div className="products-grid" aria-busy={loading}>
             {loading && <div className="products-state products-loading" role="status"><span className="products-spinner" aria-hidden="true" /><h2>Carregando ofertas...</h2><p>Estamos buscando as ofertas disponíveis para você.</p></div>}
             {!loading && error && <div className="products-state" role="alert"><Icon name="info" /><h2>Não foi possível carregar as ofertas</h2><p>{error}</p><button type="button" className="button button-secondary" onClick={reloadOffers}>Tentar novamente</button></div>}
-            {!loading && !error && visible.map(offer => <ProductCard key={offer.id} offer={offer} onSelect={setDetail} />)}
+            {!loading && !error && visible.map(offer => <ProductCard key={offer.id} offer={offer} />)}
             {!loading && !error && !results.length && <div className="products-state"><Icon name="search" /><h2>{offers.length ? 'Nenhuma oferta encontrada' : 'Ainda não há ofertas disponíveis'}</h2><p>{offers.length ? 'Tente outros filtros, uma nova região ou uma faixa de preço diferente.' : 'As ofertas aparecerão aqui quando forem publicadas pelos produtores.'}</p>{chips.length > 0 && <button type="button" className="button button-secondary" onClick={clearFilters}>Limpar filtros</button>}</div>}
           </div>
           {!loading && !error && results.length > 0 && <>
@@ -136,7 +133,6 @@ export function ProductsPage() {
           </>}
         </section>
       </div>
-      {detail && <OfferDetails offer={detail} onClose={() => setDetail(null)} backLabel="Voltar aos produtos" />}
     </main>
   )
 }

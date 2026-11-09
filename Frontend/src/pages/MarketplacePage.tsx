@@ -3,9 +3,9 @@ import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
 import type { IconName } from '../components/Icon'
 import { filterOffers, formatPrice } from '../data/marketplace'
-import type { Category, Offer } from '../data/marketplace'
+import type { Category } from '../data/marketplace'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
-import { OfferDetails } from '../components/OfferDetails'
+import { offerHref } from '../data/offerDetail'
 import './MarketplacePage.css'
 
 const categories: { id: Category; title: string; icon: IconName }[] = [
@@ -26,7 +26,6 @@ export function MarketplacePage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | null>(null)
   const [region, setRegion] = useState('')
-  const [detail, setDetail] = useState<Offer | null>(null)
   const { offers, loading, error, reloadOffers } = useMarketplaceOffers()
   const filteredOffers = filterOffers(offers, query, category, region)
   const filtering = Boolean(query.trim() || category)
@@ -137,14 +136,13 @@ export function MarketplacePage() {
                 <h3>{offer.title}</h3>
                 <p className="offer-description">{offer.description}</p>
                 <div className="offer-specs"><span>{offer.size} · {offer.weight} kg</span><span><Icon name="pin" />{offer.location}</span></div>
-                <div className="offer-bottom"><p className="offer-price">{formatPrice(offer.price)} <small>/ kg</small></p><button className="button button-secondary" type="button" aria-label={`Ver oferta: ${offer.title}`} onClick={() => setDetail(offer)}>Ver oferta</button></div>
+                <div className="offer-bottom"><p className="offer-price">{formatPrice(offer.price)} <small>/ kg</small></p><a className="button button-secondary" aria-label={`Ver oferta: ${offer.title}`} href={offerHref(offer.id)}>Ver oferta</a></div>
               </div>
             </article>)}
             {!loading && !error && filteredOffers.length === 0 && <div className="empty-offers"><Icon name="search" /><h3>{offers.length === 0 ? 'Ainda não há ofertas disponíveis' : 'Nenhuma oferta encontrada'}</h3><p>{offers.length === 0 ? 'Novas ofertas aparecerão aqui quando forem publicadas pelos produtores.' : 'Tente outro produto, tamanho ou região.'}</p></div>}
           </div>
         </section>
       </div>
-      {detail && <OfferDetails offer={detail} onClose={() => setDetail(null)} />}
     </main>
   )
 }

@@ -10,6 +10,7 @@ import { OfferUpdateDTO } from '../../../../application/dto/offerDTO/OfferUpdate
 import { UpdateOffer } from '../../../../application/usecase/offer/UpdateOfferUseCase';
 import { SearchOffer } from '../../../../application/usecase/offer/SearchOfferUseCase';
 import { DeleteOffer } from '../../../../application/usecase/offer/DeleteOfferUseCase';
+import { SearchPublicOfferById } from '../../../../application/usecase/offer/SearchPublicOfferByIdUseCase';
 
 export class OfferController {
     constructor(
@@ -17,7 +18,8 @@ export class OfferController {
         private readonly listOffersByUserId: ListOffersByUserId,
         private readonly updateOffer: UpdateOffer,
         private readonly searchOffer: SearchOffer,
-        private readonly deleteOffer: DeleteOffer
+        private readonly deleteOffer: DeleteOffer,
+        private readonly searchPublicOfferById: SearchPublicOfferById
     ) {}
 
     public async search(req: UserAuthRequest, res: Response): Promise<Response> {
@@ -47,6 +49,24 @@ export class OfferController {
 
             console.error('Error searching public offers:', error);
             return res.status(500).json({ error: 'Error searching offers' });
+        }
+    }
+
+    public async searchPublicById(req: UserAuthRequest, res: Response): Promise<Response> {
+        try {
+            const id = req.params.id;
+            if (typeof id !== 'string' || !id.trim() || id.length > 36) {
+                return res.status(400).json({ error: 'ID da oferta inválido' });
+            }
+
+            const offer = await this.searchPublicOfferById.execute(id);
+            return res.status(200).json(offer);
+        } catch (error: unknown) {
+            const response = applicationErrorResponse(error, res);
+            if (response) return response;
+
+            console.error('Error searching public offer details:', error);
+            return res.status(500).json({ error: 'Não foi possível carregar os detalhes da oferta' });
         }
     }
 

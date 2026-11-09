@@ -7,6 +7,8 @@ import type { UserSession } from './services/auth'
 import { RegisterPage } from './pages/RegisterPage'
 import { MarketplacePage } from './pages/MarketplacePage'
 import { ProductsPage } from './pages/ProductsPage'
+import { OfferPage } from './pages/OfferPage'
+import { offerIdFromPath } from './data/offerDetail'
 import { useNavigation } from './hooks/useNavigation'
 import './App.css'
 
@@ -16,12 +18,13 @@ function App() {
   const [restoring, setRestoring] = useState(true)
   const isMarketplace = ['/', '/marketplace', '/marketplace/'].includes(pathname)
   const isProducts = ['/produtos', '/produtos/'].includes(pathname)
+  const offerId = offerIdFromPath(pathname)
   const isRegister = ['/registro', '/registro/'].includes(pathname)
   const isLogin = ['/entrar', '/entrar/', '/login', '/login/'].includes(pathname)
 
   useEffect(() => {
-    document.title = `${isMarketplace ? 'Marketplace' : isProducts ? 'Produtos' : isRegister ? 'Criar conta' : isLogin ? 'Entrar' : 'Página indisponível'} | RedeCamarão`
-  }, [isMarketplace, isProducts, isRegister, isLogin])
+    document.title = `${isMarketplace ? 'Marketplace' : offerId ? 'Oferta de camarão' : isProducts ? 'Produtos' : isRegister ? 'Criar conta' : isLogin ? 'Entrar' : 'Página indisponível'} | RedeCamarão`
+  }, [isMarketplace, isProducts, offerId, isRegister, isLogin])
 
   useEffect(() => {
     let active = true
@@ -34,8 +37,8 @@ function App() {
   return (
     <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts} />
-      {isMarketplace ? <MarketplacePage /> : isProducts ? <ProductsPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : (
+      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} />
+      {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>
