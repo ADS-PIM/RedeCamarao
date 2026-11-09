@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
 import type { IconName } from '../components/Icon'
-import { filterOffers, formatDate, formatPrice } from '../data/marketplace'
+import { filterOffers, formatPrice } from '../data/marketplace'
 import type { Category, Offer } from '../data/marketplace'
-import { fetchMarketplaceOffers } from '../services/offers'
+import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
+import { OfferDetails } from '../components/OfferDetails'
 import './MarketplacePage.css'
 
 const categories: { id: Category; title: string; icon: IconName }[] = [
@@ -20,43 +21,13 @@ function scrollToOffers() {
   document.getElementById('ofertas')?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' })
 }
 
-function DetailDialog({ offer, onClose }: { offer: Offer; onClose: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  useEffect(() => {
-    const dialog = ref.current!
-    dialog.showModal()
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { dialog.close(); document.body.style.overflow = originalOverflow }
-  }, [])
-  return (
-    <dialog ref={ref} className="market-dialog" aria-labelledby="detail-title" onClose={event => { if (!event.currentTarget.open) onClose() }} onClick={event => { if (event.target === event.currentTarget) onClose() }}>
-      <button className="dialog-close" type="button" aria-label="Fechar detalhes" onClick={onClose} autoFocus><Icon name="close" /></button>
-      <div className="detail-content">
-        <span className="market-eyebrow">{offer.type || 'Oferta de camarão'}</span>
-        <h2 id="detail-title">{offer.title}</h2>
-        <p>{offer.location}</p>
-        <p>{offer.description}</p>
-        <p>{offer.size} · Lote de {offer.weight} kg</p>
-        <p>Quantidade: {offer.minimumQuantity}–{offer.maximumQuantity} kg</p>
-        <p>Disponível de {formatDate(offer.startDate)} até {formatDate(offer.endDate)}</p>
-        <p className="detail-price">{formatPrice(offer.price)} <small>/ kg</small></p>
-        <button className="button button-secondary" type="button" onClick={onClose}>Voltar ao marketplace</button>
-      </div>
-    </dialog>
-  )
-}
-
 export function MarketplacePage() {
   const [input, setInput] = useState('')
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | null>(null)
   const [region, setRegion] = useState('')
   const [detail, setDetail] = useState<Offer | null>(null)
-  const [offers, setOffers] = useState<Offer[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [reload, setReload] = useState(0)
+  const { offers, loading, error, reloadOffers } = useMarketplaceOffers()
   const filteredOffers = filterOffers(offers, query, category, region)
   const filtering = Boolean(query.trim() || category)
   const offersDescription = loading
@@ -66,23 +37,6 @@ export function MarketplacePage() {
       : filtering
         ? `${filteredOffers.length} ${filteredOffers.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}${query ? ` para “${query}”` : ''}`
         : `${offers.length} ${offers.length === 1 ? 'oferta disponível' : 'ofertas disponíveis'} para sua próxima negociação`
-
-  useEffect(() => {
-    let active = true
-    fetchMarketplaceOffers()
-      .then(data => { if (active) setOffers(data) })
-      .catch(reason => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Não foi possível carregar as ofertas.')
-      })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
-  }, [reload])
-
-  function reloadOffers() {
-    setLoading(true)
-    setError(null)
-    setReload(value => value + 1)
-  }
 
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -171,7 +125,8 @@ export function MarketplacePage() {
               <h2 id="offers-title">{filtering ? 'Ofertas encontradas' : 'Ofertas disponíveis'}</h2>
               <p className="section-description">{offersDescription}</p>
             </div>
-            {filtering && <button className="button button-secondary view-all" type="button" onClick={clearFilters}><Icon name="close" />Limpar filtros</button>}
+            {filtering ? <button className="button button-secondary view-all" type="button" onClick={clearFilters}><Icon name="close" />Limpar filtros</button>
+              : <a className="button button-secondary view-all" href="/produtos"><Icon name="arrow" />Ver todas</a>}
           </div>
           <div className="offer-grid" aria-live="polite" aria-atomic="true" aria-busy={loading}>
             {loading && <div className="offers-loading" role="status">Carregando ofertas...</div>}
@@ -189,7 +144,7 @@ export function MarketplacePage() {
           </div>
         </section>
       </div>
-      {detail && <DetailDialog offer={detail} onClose={() => setDetail(null)} />}
+      {detail && <OfferDetails offer={detail} onClose={() => setDetail(null)} />}
     </main>
   )
 }

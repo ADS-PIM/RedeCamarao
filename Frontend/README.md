@@ -1,6 +1,6 @@
 ﻿# RedeCamarão — Frontend
 
-Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
+Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; os produtos, em `/produtos`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
 
 ## Marketplace
 
@@ -10,6 +10,16 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - Quando a API retorna uma lista vazia, a tela informa que nenhuma oferta foi encontrada. Falhas de conexão ou respostas inválidas são exibidas separadamente e permitem tentar novamente.
 - O marketplace consome `GET /offer/marketplace`, uma rota pública que retorna somente ofertas ativas dentro do período de disponibilidade, sem expor o ID do anunciante.
 - Fotografias ilustrativas locais em `public/images`; fontes em `public/images/SOURCES.md`.
+
+## Produtos
+
+- `/produtos` e `/produtos/` exibem o catálogo, com o link Produtos ativo no header. “Ver todas” no marketplace também leva ao catálogo, sem recarregar o header.
+- Busca por oferta, descrição, tamanho e região; filtros combinados por cidade/estado, faixa de preço por kg, tamanho e quantidade disponível. As opções de um mesmo grupo se somam; grupos diferentes se combinam. Os filtros são aplicados pelo botão e podem ser removidos pelos chips ou por “Limpar tudo”.
+- Preços aceitam vírgula decimal e separador de milhares; valores inválidos ou intervalos invertidos recebem orientação antes de aplicar.
+- Ordenação por mais recentes (ordem retornada pela API), menor/maior preço e maior quantidade; paginação real de seis ofertas por página.
+- O catálogo consome a mesma API pública de ofertas. Fotos locais identificadas como ilustrativas compõem os cards, pois o contrato público atual não fornece fotos nem nomes dos anunciantes. Não são criados anúncios ou nomes de produtores fictícios.
+- Filtros laterais no desktop; painel expansível até 1000px. Cards em 3/2/1 colunas, campos de 16px e controles adaptados para toque. Header e footer mantêm os padrões compartilhados.
+- Carregamento, falha com nova tentativa, catálogo vazio, busca sem resultados e detalhes acessíveis da oferta têm estados próprios. O carregamento e o modal são compartilhados com o marketplace.
 
 ## Padrão visual e responsividade
 
@@ -46,10 +56,10 @@ Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou cami
 - Envio para `POST /users/login` com `credentials: 'include'`, usando a mesma `VITE_API_URL` do cadastro. Erros de credenciais, limite de tentativas e conexão são exibidos em português.
 - O access token fica apenas no estado em memória. Senhas e tokens não são gravados em `localStorage` ou `sessionStorage`. O backend gerencia o refresh token por cookie HttpOnly.
 - Ao abrir o app, `POST /users/refresh` tenta restaurar a sessão; chamadas simultâneas compartilham a mesma requisição para evitar rotação duplicada. Uma sessão expirada ou um servidor indisponível libera o formulário para novo login.
-- O sucesso mostra a confirmação de acesso e a opção de sair (`POST /users/logout`). O cabeçalho passa a exibir “Minha conta”. Não há redirecionamento para o marketplace enquanto essa página não estiver implementada.
+- O sucesso mostra a confirmação de acesso e a opção de sair (`POST /users/logout`). O cabeçalho passa a exibir “Minha conta”, e a sessão permanece disponível ao navegar pelo header.
 - O backend deve permitir a origem exata do frontend em `FRONTEND_URL` e credenciais no CORS. Cookies em produção exigem HTTPS conforme a configuração existente do backend.
 
-`Header`, `Footer` e `FormField` são componentes reutilizáveis, com estilos separados. A navegação de produtos, produtores e funcionamento leva às seções do marketplace. Ajuda, termos e privacidade ainda exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
+`Header`, `Footer` e `FormField` são componentes reutilizáveis, com estilos separados. Produtos leva ao catálogo em `/produtos`; Como funciona leva à apresentação do marketplace. Ajuda, termos e privacidade ainda exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
 
 ## Verificar
 

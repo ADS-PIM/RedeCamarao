@@ -1,4 +1,4 @@
-export type IconName = 'bag' | 'store' | 'check' | 'info' | 'arrow' | 'menu' | 'close' | 'eye' | 'eye-off' | 'search' | 'waves' | 'sparkle' | 'ruler' | 'box' | 'pin' | 'chat' | 'handshake'
+export type IconName = 'bag' | 'store' | 'check' | 'info' | 'arrow' | 'menu' | 'close' | 'eye' | 'eye-off' | 'search' | 'waves' | 'sparkle' | 'ruler' | 'box' | 'pin' | 'chat' | 'handshake' | 'filters'
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {
   return (
@@ -10,6 +10,7 @@ export function Icon({ name, className }: { name: IconName; className?: string }
       {name === 'arrow' && <path d="M3 12h18m-8-8 8 8-8 8" />}
       {name === 'menu' && <path d="M4 6h16M4 12h16M4 18h16" />}
       {name === 'close' && <path d="m6 6 12 12M6 18 18 6" />}
+      {name === 'filters' && <><path d="M3 6h18M3 12h18M3 18h18" /><circle cx="8" cy="6" r="2" fill="white" /><circle cx="16" cy="12" r="2" fill="white" /><circle cx="10" cy="18" r="2" fill="white" /></>}
       {name === 'search' && <><circle cx="10.5" cy="10.5" r="7.5" /><path d="m16 16 5 5" /></>}
       {name === 'waves' && <path d="M2 5q2.5 4 5 0t5 0 5 0 5 0M2 12q2.5 4 5 0t5 0 5 0 5 0M2 19q2.5 4 5 0t5 0 5 0 5 0" />}
       {name === 'sparkle' && <><path d="m12 2 2 8 8 2-8 2-2 8-2-8-8-2 8-2Z" /><circle cx="3" cy="21" r="1" /></>}
