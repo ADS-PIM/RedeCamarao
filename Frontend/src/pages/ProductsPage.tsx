@@ -2,10 +2,11 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
 import { ProductCard } from '../components/ProductCard'
+import { Pagination } from '../components/Pagination'
 import { ProductFilters } from '../components/ProductFilters'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
 import { formatPrice } from '../data/marketplace'
-import { emptyProductFilters, filterProductOffers, parseProductPrice, productPagination, productsPerPage, quantityOptions, sizeOptions, sortProductOffers, validateProductPrices } from '../data/products'
+import { emptyProductFilters, filterProductOffers, parseProductPrice, productsPerPage, quantityOptions, sizeOptions, sortProductOffers, validateProductPrices } from '../data/products'
 import type { ProductFilters as Filters, ProductSort } from '../data/products'
 import { brazilianStates } from '../utils/registration'
 import './ProductsPage.css'
@@ -123,12 +124,7 @@ export function ProductsPage() {
           </div>
           {!loading && !error && results.length > 0 && <>
             <p className="products-page-summary" role="status">Exibindo {(currentPage - 1) * productsPerPage + 1}–{Math.min(currentPage * productsPerPage, results.length)} de {results.length} ofertas</p>
-            {pageCount > 1 && <nav className="products-pagination" aria-label="Paginação de produtos">
-              <button type="button" disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)}>Anterior</button>
-              {productPagination(currentPage, pageCount).map((item, index) => item === 'ellipsis' ? <span className="pagination-ellipsis" key={`ellipsis-${index}`} aria-hidden="true">…</span>
-                : <button type="button" key={item} aria-label={`Página ${item}`} aria-current={currentPage === item ? 'page' : undefined} onClick={() => changePage(item)}>{item}</button>)}
-              <button type="button" disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)}>Próxima</button>
-            </nav>}
+            <Pagination currentPage={currentPage} totalPages={pageCount} onChange={changePage} label="Paginação de produtos" />
           </>}
         </section>
       </div>

@@ -1,4 +1,8 @@
 import { UserController } from '../../infra/web/express/controllers/user.controller';
+import { PublicProducerController } from '../../infra/web/express/controllers/publicProducer.controller';
+import { OfferDAOMySQL } from '../../infra/bd/mySql/offer.MySQL.dao';
+import { SearchPublicProducers } from '../../application/usecase/user/SearchPublicProducersUseCase';
+import { SearchPublicProducerById } from '../../application/usecase/user/SearchPublicProducerByIdUseCase';
 
 import { UserDAOMySQL } from '../../infra/bd/mySql/user.MySQL.dao';
 
@@ -19,6 +23,11 @@ import { DeleteByUserId } from '../../application/usecase/refresh_token/DeleteBy
 
 
 const userDAO = new UserDAOMySQL();
+
+export const publicProducerController = new PublicProducerController(
+    new SearchPublicProducers(userDAO),
+    new SearchPublicProducerById(userDAO, new OfferDAOMySQL())
+);
 
 const userRefreshTokenDAO = new UserRefreshTokenDAOMySQL();
 

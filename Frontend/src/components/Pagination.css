@@ -1,0 +1,7 @@
+.catalog-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
+.catalog-pagination button, .catalog-pagination-ellipsis { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 10px 13px; border: 1px solid var(--border); border-radius: 7px; background: white; color: var(--primary); font-size: 14px; }
+.catalog-pagination button:hover:not(:disabled) { background: #e9f5fa; }
+.catalog-pagination button[aria-current='page'] { background: var(--primary); border-color: var(--primary); color: white; }
+.catalog-pagination button:disabled { cursor: default; opacity: .5; }
+.catalog-pagination-ellipsis { color: var(--muted); }
+@media (max-width: 640px) { .catalog-pagination { gap: 6px; } }

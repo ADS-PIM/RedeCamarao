@@ -10,6 +10,9 @@ import {
 
 const router = Router();
 
+router.get('/producers', (req, res) => controllers.publicProducerController.search(req, res));
+router.get('/producers/:id', (req, res) => controllers.publicProducerController.searchById(req, res));
+
 router.post('/register', ...registrationRateLimit, (req, res) => controllers.userController.register(req, res));
 
 router.post('/login', ...loginRateLimit, (req, res) => controllers.userController.login(req, res));

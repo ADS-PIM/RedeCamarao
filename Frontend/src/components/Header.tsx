@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import './Header.css'
 
-export function Header({ authenticated = false, marketplace = false, products = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean }) {
+export function Header({ authenticated = false, marketplace = false, products = false, producers = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
@@ -55,7 +55,7 @@ export function Header({ authenticated = false, marketplace = false, products = 
         <div id="main-navigation" className={`header-navigation ${menuOpen ? 'is-open' : ''}`}>
           <nav aria-label="Navegação principal">
             <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a><a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtos</a>
-            <a href="/marketplace#produtores" onClick={() => setMenuOpen(false)}>Produtores</a><a href="/marketplace#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a>
+            <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a><a href="/marketplace#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a>
           </nav>
           <div className="header-actions">
             {authenticated ? <a className="button button-primary" href="/entrar" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>
