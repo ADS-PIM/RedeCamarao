@@ -3,6 +3,3 @@
 .app-shell > main:focus { outline: none; }
 .unavailable-page { padding-block: 80px; }
 .unavailable-page p { margin-block: 20px; color: var(--muted); }
-.marketplace-shell .footer-inner { min-height: 78px; }
-.marketplace-shell .footer-brand { font-size: 15px; }
-.marketplace-shell .footer-inner p, .marketplace-shell .footer-inner nav { font-size: 12px; }
