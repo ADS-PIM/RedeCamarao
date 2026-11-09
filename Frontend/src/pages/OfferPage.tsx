@@ -66,7 +66,6 @@ export function OfferPage({ offerId }: { offerId: string }) {
   if (loading || error || !offer) return (
     <main id="main-content" className="offer-page">
       <div className="container offer-container">
-        <nav className="offer-breadcrumb" aria-label="Caminho de navegação"><a href="/">Início</a><span aria-hidden="true">/</span><a href="/produtos">Produtos</a></nav>
         <section className="offer-page-status" role={error ? 'alert' : 'status'}>
           <Icon name={loading ? 'waves' : 'info'} />
           <h1>{loading ? 'Carregando oferta...' : error ? 'Não foi possível carregar esta oferta' : 'Oferta não encontrada'}</h1>
@@ -88,10 +87,6 @@ export function OfferPage({ offerId }: { offerId: string }) {
     <main id="main-content" className="offer-page">
       <div className="container offer-container">
         <div className="offer-topbar">
-          <nav className="offer-breadcrumb" aria-label="Caminho de navegação">
-            <a href="/">Início</a><span aria-hidden="true">/</span><a href="/produtos">Produtos</a><span aria-hidden="true">/</span>
-            <span>{offer.type || 'Camarão'}</span><span aria-hidden="true">/</span><span aria-current="page" title={`Oferta #${offer.id}`}>Oferta #{offer.id.slice(0, 8)}</span>
-          </nav>
           <div className="offer-actions">
             <button type="button" className="button button-secondary" onClick={shareOffer}><Icon name="share" />Compartilhar</button>
             <button type="button" className="button button-secondary" aria-label="Salvar oferta" aria-pressed={saved} onClick={saveOffer}><Icon name="bookmark" />{saved ? 'Salvo' : 'Salvar'}</button>

@@ -42,6 +42,7 @@ A Feira do Agricultor foi usada como referência de organização: estilos próx
 - A busca e os atalhos respeitam a preferência de movimento reduzido. Os estados de carregamento e erro não apresentam contagens de ofertas como se os dados já estivessem disponíveis.
 - O cadastro tem largura máxima própria de 1200px, com título de até 44px e formulário proporcional, sem alterar a largura do header. Até 1000px, o conteúdo passa para uma coluna.
 - A navegação interna usa a History API e mantém o header e a sessão montados, evitando o recarregamento completo que causava a piscada entre páginas. Voltar/avançar, âncoras e posições de rolagem são tratados pelo hook `useNavigation`; links externos, downloads e abertura em nova aba mantêm o comportamento do navegador.
+- A navegação entre as telas fica no header, sem faixa adicional de voltar/avançar ou caminho separado por barras.
 
 ## Executar
 

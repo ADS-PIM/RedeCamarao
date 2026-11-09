@@ -87,7 +87,6 @@ export function ProductsPage() {
     <main id="main-content" className="products-main">
       <section className="products-intro" aria-labelledby="products-title">
         <div className="container">
-          <nav className="products-breadcrumb" aria-label="Caminho de navegação"><a href="/">Início</a><span aria-hidden="true">/</span><span aria-current="page">Produtos</span></nav>
           <div className="products-title-row">
             <div><h1 id="products-title">Ofertas de camarão</h1><p className="products-count" role="status">{resultLabel}</p></div>
             <form className="products-search" role="search" aria-label="Buscar produtos" onSubmit={search}>
