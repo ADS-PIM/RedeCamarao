@@ -11,6 +11,17 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - O marketplace consome `GET /offer/marketplace`, uma rota pública que retorna somente ofertas ativas dentro do período de disponibilidade, sem expor o ID do anunciante.
 - Fotografias ilustrativas locais em `public/images`; fontes em `public/images/SOURCES.md`.
 
+## Padrão visual e responsividade
+
+A Feira do Agricultor foi usada como referência de organização: estilos próximos dos componentes, cores compartilhadas, conteúdo com largura máxima e grids que se adaptam à tela. A identidade azul da RedeCamarão permanece como base para as próximas telas.
+
+- O container compartilhado ocupa 89% da tela, com largura máxima de 1800px, mantendo logo e ações próximos às laterais como no wireframe. As cores e o contraste dos textos secundários ficam em `src/index.css`.
+- O header concentra seus estilos em `components/Header.css`: área interna de 80px no desktop e 64px até 1000px, logo de 24px e botões de pelo menos 44px. As páginas não devem sobrescrever essas medidas. O menu móvel abre sobre o conteúdo e fecha por Escape, clique fora ou navegação.
+- O marketplace usa títulos fluidos, categorias em 5/3/2/1 colunas e ofertas em 4/2/1 colunas. Em telas de até 600px, o botão de busca fica abaixo do campo; o texto do campo mantém 16px para leitura em celulares.
+- A busca e os atalhos respeitam a preferência de movimento reduzido. Os estados de carregamento e erro não apresentam contagens de ofertas como se os dados já estivessem disponíveis.
+- O cadastro tem largura máxima própria de 1200px, com título de até 44px e formulário proporcional, sem alterar a largura do header. Até 1000px, o conteúdo passa para uma coluna.
+- A navegação interna usa a History API e mantém o header e a sessão montados, evitando o recarregamento completo que causava a piscada entre páginas. Voltar/avançar, âncoras e posições de rolagem são tratados pelo hook `useNavigation`; links externos, downloads e abertura em nova aba mantêm o comportamento do navegador.
+
 ## Executar
 
 ```powershell
@@ -47,4 +58,4 @@ npm.cmd run build
 npm.cmd test
 ```
 
-Os testes cobrem validação de documentos, máscaras, confirmação de senha, aceite, contatos opcionais e o contrato de login/refresh/logout com respostas simuladas. A integração real depende do backend configurado e de seu banco de dados.
+Os testes cobrem validação de documentos, máscaras, confirmação de senha, aceite, contatos opcionais, navegação interna e o contrato de login/refresh/logout com respostas simuladas. A integração real depende do backend configurado e de seu banco de dados.
