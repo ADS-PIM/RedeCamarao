@@ -69,8 +69,8 @@ module.exports = {
       type: Sequelize.ENUM('PRODUTOR', 'COMPRADOR', 'REVENDEDOR', 'PRODUCER', 'BUYER'), allowNull: false
     });
     await sql(`UPDATE users SET user_type = CASE
-      WHEN user_type = 'PRODUCER' THEN 'PRODUTOR'
-      WHEN user_type IN ('BUYER', 'REVENDEDOR') THEN 'COMPRADOR'
+      WHEN user_type = 'PRODUTOR' THEN 'PRODUCER'
+      WHEN user_type IN ('COMPRADOR', 'REVENDEDOR') THEN 'BUYER'
       ELSE user_type END, updatedAt = updatedAt`);
     await queryInterface.changeColumn('users', 'user_type', {
       type: Sequelize.ENUM('PRODUCER', 'BUYER'), allowNull: false

@@ -35,12 +35,12 @@ export class UserCreateDTO {
     @MaxLength(2000)
     description?: string;
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
     @MaxLength(255)
     location?: string;
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
     @MaxLength(20)
     @Matches(/^\+?[\d()\s-]{10,20}$/)

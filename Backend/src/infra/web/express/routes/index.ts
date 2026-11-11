@@ -8,7 +8,7 @@ const routes = Router();
 
 routes.use('/admin', adminRoutes);
 
-routes.use('/users', userRoutes)
+routes.use('/users', userRoutes);
 
 routes.use('/offer', offerRoutes);
 

@@ -18,8 +18,8 @@ A migration `20261101120000-align-marketplace-schema.js`:
   horário de funcionamento e `CPF_CNPJ CHAR(14)`. Remove a formatação dos
   documentos existentes e interrompe antes das alterações se algum ultrapassar
   14 caracteres. Documentos ausentes e textos novos começam vazios.
-- Converte `PRODUCER` em `PRODUTOR`, e `BUYER`/`REVENDEDOR` em `COMPRADOR`.
-  O DAO mantém `PRODUCER`/`BUYER` no contrato HTTP atual.
+- Converte `PRODUTOR` em `PRODUCER`, e `COMPRADOR`/`REVENDEDOR` em `BUYER`.
+  O banco, o DAO e o contrato HTTP usam `PRODUCER`/`BUYER`.
 - Remove `offers.type`. Converte `quantity` em `max_quantity` e
   `availability_date` em `start_availability_date`; a data final recebe a data
   inicial. Peso e quantidade mínima começam em `0`, pois não existiam no modelo
@@ -39,6 +39,21 @@ A migration `20261101120000-align-marketplace-schema.js`:
 telefone, que não têm campos equivalentes no diagrama. `offer_types_legacy_20261101`
 guarda os tipos removidos das ofertas. São arquivos de migração sem FKs, não
 tabelas usadas pela aplicação. Mantenha-os enquanto precisar da reversão.
+
+## Alinhamento dos tipos de usuário
+
+A aplicação grava `PRODUCER` e `BUYER` em `users.user_type`, como no
+`RedeCamarao_db.sql`. A migration `20261111130000-normalize-user-type.js`
+converte instalações que ainda tenham `PRODUTOR`, `COMPRADOR` ou `REVENDEDOR`.
+Se o cadastro falhar com `Data truncated for column 'user_type'`, aplique as
+migrations pendentes em `Backend` e reinicie a aplicação:
+
+```powershell
+npm.cmd run db:migrate
+```
+
+Faça backup antes da migração. Não é necessário recriar ou importar o dump SQL
+em um banco existente.
 
 Pare as escritas da aplicação e faça backup antes de aplicar: DDL de MySQL/MariaDB
 tem commit implícito. A migration admite nova execução de `up` após interrupção,

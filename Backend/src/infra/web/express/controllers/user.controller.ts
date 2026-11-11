@@ -74,10 +74,7 @@ export class UserController {
                 req.body
             );
 
-            const errors = await validate(userCreateDTO, {
-                whitelist: true,
-                forbidNonWhitelisted: true
-            });
+            const errors = await validate(userCreateDTO);
 
             if (errors.length > 0) {
                 return res.status(400).json({
