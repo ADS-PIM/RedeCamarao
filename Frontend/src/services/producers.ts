@@ -7,7 +7,7 @@ function isProducer(value: unknown): value is Producer {
   const producer = value as Record<string, unknown>
   const nullableText = (value: unknown) => value === null || typeof value === 'string'
   return typeof producer.id === 'string' && Boolean(producer.id) && typeof producer.name === 'string'
-    && nullableText(producer.description) && nullableText(producer.location) && nullableText(producer.businessHours)
+    && nullableText(producer.description) && nullableText(producer.location) && nullableText(producer.phone) && nullableText(producer.businessHours)
     && typeof producer.activeOfferCount === 'number' && Number.isInteger(producer.activeOfferCount) && producer.activeOfferCount >= 0
 }
 

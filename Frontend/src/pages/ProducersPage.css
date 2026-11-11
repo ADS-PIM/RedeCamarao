@@ -56,31 +56,64 @@
 .producers-spinner { display: block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: producers-spin .8s linear infinite; }
 @keyframes producers-spin { to { transform: rotate(360deg); } }
 
-.producer-profile-container { padding-block: 32px 40px; }
-.producer-profile { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: white; }
-.producer-profile > * { min-width: 0; }
-.producer-profile-photo img { display: block; width: 100%; height: 100%; min-height: 340px; object-fit: cover; }
-.producer-profile-body { padding: clamp(24px, 2.5vw, 40px); }
-.producer-profile-eyebrow { margin-bottom: 12px; color: var(--primary); font-size: 12px; font-weight: 700; line-height: 1.6; letter-spacing: .3px; text-transform: uppercase; }
-.producer-profile h1 { font-size: clamp(28px, 2.6vw, 38px); line-height: 1.2; letter-spacing: -.8px; overflow-wrap: anywhere; }
-.producer-profile-description { margin-top: 22px; color: var(--muted); font-size: 16px; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; }
-.producer-profile-facts { display: flex; flex-wrap: wrap; gap: 20px 40px; margin: 24px 0 0; padding-top: 22px; border-top: 1px solid var(--border); }
+.producer-profile-banner { position: relative; height: 176px; overflow: hidden; background: #315d69; }
+.producer-profile-banner::after { position: absolute; inset: 0; background: linear-gradient(90deg, #102d39a6, #102d3920 70%), linear-gradient(0deg, #102d3945, transparent 70%); content: ''; pointer-events: none; }
+.producer-profile-banner > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.producer-profile-banner-content { position: absolute; z-index: 1; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding-block: 16px 12px; color: white; }
+.producer-profile-banner nav { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 12px; line-height: 1.5; text-shadow: 0 1px 3px #102d39; }
+.producer-profile-banner nav a:hover { text-decoration: underline; }
+.producer-profile-image-note { align-self: flex-end; padding: 3px 7px; border-radius: 4px; background: #143746df; font-size: 10px; line-height: 1.5; }
+.producer-profile-heading { border-bottom: 1px solid var(--border); background: white; }
+.producer-profile-heading-inner { display: flex; align-items: center; gap: 14px; min-height: 92px; padding-block: 14px; }
+.producer-profile-avatar { display: grid; width: 58px; height: 58px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #e9f5fa; color: var(--primary); }
+.producer-profile-avatar svg { width: 31px; height: 31px; }
+.producer-profile-heading-copy { min-width: 0; }
+.producer-profile-eyebrow { margin-bottom: 2px; color: var(--primary); font-size: 11px; font-weight: 700; line-height: 1.5; letter-spacing: .3px; text-transform: uppercase; }
+.producer-profile-heading h1 { font-size: clamp(23px, 2.2vw, 30px); line-height: 1.25; letter-spacing: -.5px; overflow-wrap: anywhere; }
+.producer-profile-heading .producer-location { margin-top: 3px; font-size: 12px; }
+.producer-profile-heading .producer-location > svg { width: 14px; height: 16px; }
+.producer-profile-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-left: auto; }
+.producer-profile-main .producer-profile-actions .button { min-height: 40px; padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+.producer-profile-main .producer-profile-actions button:disabled { opacity: 1; cursor: not-allowed; }
+.producer-whatsapp-button { border-color: #12845e; background: #12845e; color: white; }
+.producer-whatsapp-button:hover { background: #0e6b4c; }
+.producer-profile-actions svg { width: 16px; height: 16px; }
+.producer-profile-container { display: grid; grid-template-columns: minmax(210px, 260px) minmax(0, 1fr); align-items: start; gap: 16px; padding-block: 18px 32px; }
+.producer-profile-sidebar { display: grid; gap: 12px; }
+.producer-profile-card { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 11px; background: white; }
+.producer-profile-card h2 { font-size: 17px; line-height: 1.4; }
+.producer-profile-description { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.65; white-space: pre-line; overflow-wrap: anywhere; }
+.producer-profile-facts { display: flex; flex-wrap: wrap; gap: 12px 22px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--border); }
 .producer-profile-facts > div { min-width: 0; flex: 1; }
-.producer-profile-facts dt { color: var(--muted); font-size: 13px; line-height: 1.6; }
-.producer-profile-facts dd { margin: 6px 0 0; color: #304956; font-size: 17px; font-weight: 650; line-height: 1.5; overflow-wrap: anywhere; }
-.producer-profile-contact { margin-top: 24px; padding: 14px 16px; border-radius: 9px; background: #eaf5f9; color: var(--muted); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
-.producer-profile-offers { margin-top: 36px; }
+.producer-profile-facts dt, .producer-contact-details dt { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.producer-profile-facts dd { margin: 3px 0 0; color: var(--brand-dark); font-size: 17px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.producer-contact-details { display: grid; gap: 12px; margin: 12px 0 0; }
+.producer-contact-details > div { min-width: 0; }
+.producer-contact-details dd { margin: 3px 0 0; color: #304956; font-size: 12px; font-weight: 600; line-height: 1.55; overflow-wrap: anywhere; }
+.producer-profile-contact { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; padding: 10px; border-radius: 8px; background: #eaf5f9; color: var(--muted); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.producer-profile-contact svg { width: 16px; height: 16px; flex: 0 0 auto; margin-top: 1px; color: var(--primary); }
+.producer-profile-offers { min-width: 0; scroll-margin-top: 24px; }
 .producer-profile-offers:focus { outline: none; }
-.producer-profile-offer-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-.producer-profile-offers .producers-toolbar > .button { flex-shrink: 0; }
+.producer-profile-offers .producers-toolbar { margin-bottom: 12px; }
+.producer-profile-offers .producers-toolbar h2 { font-size: 22px; }
+.producer-profile-offers .producers-results-description { margin-top: 2px; font-size: 12px; }
+.producer-profile-offers .producers-toolbar > .button { min-height: 38px; padding: 7px 10px; flex-shrink: 0; font-size: 12px; }
+.producer-profile-offers .producers-toolbar > .button svg { width: 15px; height: 15px; }
+.producer-offer-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.producer-offer-filter { min-height: 30px; padding: 5px 9px; border: 1px solid transparent; border-radius: 16px; background: transparent; color: #526b77; font-size: 11px; line-height: 1.4; }
+.producer-offer-filter:hover { background: white; }
+.producer-offer-filter[aria-pressed='true'] { border-color: #dcebf1; background: #e9f5fa; color: var(--primary-dark); font-weight: 650; }
+.producer-profile-offer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.producer-profile-offer-grid .product-photo img { aspect-ratio: 1.95; }
+.producer-profile-back { color: var(--primary); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+.producer-profile-main .producers-state { margin-top: 8px; }
 
 @media (max-width: 1100px) {
   .producers-search { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .producers-grid, .producer-profile-offer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   .producers-sort select { font-size: 16px; }
   .producer-card h3 { font-size: 23px; }
-  .producer-profile { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
-  .producer-profile-body { padding: 26px; }
+  .producer-profile-container { grid-template-columns: minmax(190px, 260px) minmax(0, 1fr); }
 }
 @media (max-width: 800px) {
   .producers-intro { padding-top: 32px; }
@@ -95,12 +128,21 @@
   .producer-card-bottom .button { width: 100%; }
   .producers-pagination-row { justify-content: center; }
   .producers-page-summary { width: 100%; text-align: center; }
-  .producer-profile { grid-template-columns: minmax(0, 1fr); }
-  .producer-profile-photo img { height: auto; min-height: 0; max-height: 380px; aspect-ratio: 2.1; }
+  .producer-profile-container { grid-template-columns: minmax(170px, 27%) minmax(0, 1fr); gap: 12px; }
+  .producer-profile-heading-inner { gap: 10px; }
+  .producer-profile-avatar { width: 48px; height: 48px; }
+  .producer-profile-main .producer-profile-actions .button { padding-inline: 9px; font-size: 11px; }
 }
 @media (max-width: 680px) {
   .producers-grid, .producer-profile-offer-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .producers-results, .producer-profile-container { padding-block: 26px 32px; }
+  .producer-profile-container { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .producer-profile-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .producer-profile-heading-inner { flex-wrap: wrap; }
+  .producer-profile-heading-copy { flex: 1; }
+  .producer-profile-actions { width: 100%; margin-left: 0; }
+  .producer-profile-main .producer-profile-actions .button { flex: 1; }
+  .producer-profile-offers { margin-top: 0; }
   .producers-intro-description { font-size: 15px; }
   .producers-toolbar { margin-bottom: 20px; }
   .producers-toolbar h2 { font-size: 24px; }
@@ -113,20 +155,24 @@
   .producer-card-bottom .button { width: auto; }
   .producers-pagination-row { margin-top: 26px; gap: 16px; }
   .producers-state { padding: 40px 20px; }
-  .producer-profile-body { padding: 24px 20px; }
-  .producer-profile-description { margin-top: 18px; font-size: 15px; }
-  .producer-profile-facts { gap: 20px 26px; }
-  .producer-profile-offers { margin-top: 28px; }
+  .producer-profile-banner { height: 148px; }
+  .producer-profile-sidebar { grid-template-columns: minmax(0, 1fr); }
+  .producer-profile-heading h1 { font-size: 25px; letter-spacing: -.5px; }
+  .producer-profile-facts { gap: 12px 20px; }
 }
 @media (max-width: 480px) {
   .producers-intro { padding-block: 26px; }
-  .producers-intro h1, .producer-profile h1 { font-size: 28px; letter-spacing: -.6px; }
+  .producers-intro h1 { font-size: 28px; letter-spacing: -.6px; }
   .producers-search { grid-template-columns: minmax(0, 1fr); margin-top: 24px; }
   .producers-main .button, .producer-profile-main .button { min-height: 46px; }
   .producers-search > .button { min-height: 50px; }
   .producer-card-body { padding: 20px; }
   .producer-card-bottom { gap: 12px; }
-  .producer-profile-facts { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .producer-profile-facts { display: flex; }
+  .producer-profile-heading-inner { gap: 8px; }
+  .producer-profile-avatar { width: 42px; height: 42px; }
+  .producer-profile-avatar svg { width: 25px; height: 25px; }
+  .producer-profile-heading h1 { font-size: 22px; }
 }
 @media (max-width: 360px) {
   .producer-card-bottom { flex-direction: column; align-items: stretch; }
