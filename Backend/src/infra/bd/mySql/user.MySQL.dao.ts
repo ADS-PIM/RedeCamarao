@@ -77,12 +77,10 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
                 hashPassword,
                 CPF_CNPJ,
                 user_type,
-                description,
                 location,
                 phone,
-                businessHours,
                 createdAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user.id,
                 user.name,
@@ -90,10 +88,8 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
                 user.password,
                 user.cpf_cnpj,
                 user.userType,
-                user.description,
                 user.location,
                 user.phone,
-                user.businessHours,
                 user.createdAt
             ]
         );
@@ -106,8 +102,8 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
             (RowDataPacket & propsUser)[]
         >(
             `SELECT ${userColumns}
-             FROM users
-             WHERE email = ?`,
+            FROM users
+            WHERE email = ?`,
             [email]
         );
 
@@ -125,8 +121,8 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
             (RowDataPacket & propsUser)[]
         >(
             `SELECT ${userColumns}
-             FROM users
-             WHERE id = ?`,
+            FROM users
+            WHERE id = ?`,
             [id]
         );
 
@@ -188,8 +184,8 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
 
         await connection.query(
             `UPDATE users
-             SET ${fields.join(', ')}
-             WHERE id = ?`,
+            SET ${fields.join(', ')}
+            WHERE id = ?`,
             [...values, id]
         );
     }

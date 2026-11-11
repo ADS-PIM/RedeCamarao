@@ -65,7 +65,7 @@ Copy-Item .env.example .env
 npm.cmd run dev
 ```
 
-Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou caminho de endpoint. Reinicie o Vite depois de alterar a variável. O exemplo usa `http://localhost:3000`; inicie o backend nessa porta (`$env:PORT = '3000'` antes de executar seu script de desenvolvimento), pois o backend e o Vite usam 5173 por padrão. O `FRONTEND_URL` do backend deve permitir a origem do frontend.
+Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou caminho de endpoint. Reinicie o Vite depois de alterar a variável. O exemplo usa `http://localhost:3001`; o backend usa essa porta por padrão e o Vite usa 5173. O `FRONTEND_URL` do backend deve permitir a origem do frontend.
 
 ## Cadastro
 

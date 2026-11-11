@@ -18,7 +18,9 @@ export class CreateUser implements UseCase<UserCreateDTO, null>{
             !userCreateDTO.email ||
             !userCreateDTO.password ||
             !userCreateDTO.userType ||
-            !userCreateDTO.cpf_cnpj
+            !userCreateDTO.cpf_cnpj ||
+            !userCreateDTO.location ||
+            !userCreateDTO.phone
         ) {
             throw new ApplicationError('INVALID_DATA', 'Invalid user data');
         }
@@ -36,10 +38,8 @@ export class CreateUser implements UseCase<UserCreateDTO, null>{
         password: hashedPassword,
         userType: userCreateDTO.userType,
         cpf_cnpj: userCreateDTO.cpf_cnpj,
-        description: userCreateDTO.description,
         location: userCreateDTO.location,
-        phone: userCreateDTO.phone,
-        businessHours: userCreateDTO.businessHours
+        phone: userCreateDTO.phone
 });
 
         await this.userDAO.register(user)

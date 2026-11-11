@@ -12,19 +12,17 @@ export type propsUser = {
     password: string;
     userType: UserType;
     cpf_cnpj: string;
-    description: string | null;
-    location: string | null;
-    phone: string | null;
-    businessHours: string | null;
+    location: string;
+    phone: string;
     createdAt: Date;
 }
 
 export class User {
     constructor(private props: propsUser) {}
 
-    public static construct({name, email, password, userType, cpf_cnpj, description, location, phone, businessHours}: { name: string; email: string; password: string; userType: UserType; cpf_cnpj: string; description?: string | null; location?: string; phone?: string; businessHours?: string | null }): User{
+    public static construct({name, email, password, userType, cpf_cnpj, location, phone}: { name: string; email: string; password: string; userType: UserType; cpf_cnpj: string; location: string; phone: string;}): User{
 
-         if (!name || !email || !password || !userType || !cpf_cnpj) {
+        if (!name || !email || !password || !userType || !cpf_cnpj) {
             throw new Error('All required fields must be provided');
         }
 
@@ -39,10 +37,8 @@ export class User {
             password,
             userType,
             cpf_cnpj,
-            description: description?.trim() || null,
-            location: location?.trim() || null,
-            phone: phone?.trim() || null,
-            businessHours: businessHours?.trim() || null,
+            location: location?.trim(),
+            phone: phone.trim(),
             createdAt: new Date()
         });
     }
@@ -75,20 +71,12 @@ export class User {
         return this.props.cpf_cnpj;
     }
 
-    get description() {
-        return this.props.description;
-    }
-
     get location() {
         return this.props.location;
     }
 
     get phone() {
         return this.props.phone;
-    }
-
-    get businessHours() {
-        return this.props.businessHours;
     }
 
     get createdAt() {
