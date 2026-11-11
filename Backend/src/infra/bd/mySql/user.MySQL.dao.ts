@@ -22,7 +22,7 @@ const userColumns = `
 
 
 const publicProducerQuery = `
-    SELECT u.id, u.name, u.description, u.location, u.businessHours,
+    SELECT u.id, u.name, u.description, u.location, u.phone, u.businessHours,
         COALESCE(activeOffers.activeOfferCount, 0) AS activeOfferCount
     FROM users AS u
     LEFT JOIN (
@@ -45,6 +45,7 @@ const publicProducerFromRow = (row: PublicProducerRow): PublicProducer => ({
     name: row.name,
     description: row.description,
     location: row.location,
+    phone: row.phone,
     businessHours: row.businessHours,
     activeOfferCount: Number(row.activeOfferCount)
 });

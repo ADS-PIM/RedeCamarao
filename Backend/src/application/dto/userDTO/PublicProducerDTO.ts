@@ -14,6 +14,7 @@ export function toPublicProducerDTO(producer: PublicProducer): PublicProducerDTO
         name: producer.name,
         description: producer.description,
         location: producer.location,
+        phone: producer.phone,
         businessHours: producer.businessHours,
         activeOfferCount: producer.activeOfferCount
     };

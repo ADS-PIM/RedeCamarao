@@ -3,6 +3,7 @@ export type PublicProducer = {
     name: string;
     description: string | null;
     location: string | null;
+    phone: string | null;
     businessHours: string | null;
     activeOfferCount: number;
 };

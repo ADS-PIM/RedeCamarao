@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Producer } from '../src/data/producers.ts'
-import { emptyProducerFilters, filterProducers, producerCities, producerHref, producerIdFromPath, producerLocation, sortProducers } from '../src/data/producers.ts'
+import { emptyProducerFilters, filterProducerOffers, filterProducers, producerCities, producerHref, producerIdFromPath, producerLocation, producerWhatsAppHref, sortProducers } from '../src/data/producers.ts'
 import { fetchProducerProfile, fetchProducers } from '../src/services/producers.ts'
 
-const base: Producer = { id: 'producer-1', name: 'Fazenda Mar Azul', description: 'Produção local', location: 'Fortim, CE', businessHours: null, activeOfferCount: 6 }
+const base: Producer = { id: 'producer-1', name: 'Fazenda Mar Azul', description: 'Produção local', location: 'Fortim, CE', phone: null, businessHours: null, activeOfferCount: 6 }
 const producers: Producer[] = [base,
   { ...base, id: 'producer-2', name: 'Aquamar Pescados', location: 'Aracati, Ceará', activeOfferCount: 4 },
   { ...base, id: 'producer-3', name: 'Viveiro Boa Água', location: 'Mossoró, RN', activeOfferCount: 5 },
@@ -41,6 +41,27 @@ test('ordenação usa nomes e ofertas reais e mantém a lista original', () => {
   assert.equal(sortProducers(producers, 'name-desc')[0].id, 'producer-3')
   assert.equal(sortProducers(producers, 'relevant', 'aquamar')[0].id, 'producer-2')
   assert.equal(producers[0].id, 'producer-1')
+})
+
+test('filtro de ofertas do produtor separa camarão cinza, branco e outros sem descartar tipos nulos', () => {
+  const offers = [
+    { id: 'gray', type: 'Camarão cinza' },
+    { id: 'white', type: 'Camarão branco' },
+    { id: 'other', type: 'Lagosta' },
+    { id: 'unspecified', type: null },
+  ] as const
+  assert.deepEqual(filterProducerOffers([...offers], 'all').map(offer => offer.id), ['gray', 'white', 'other', 'unspecified'])
+  assert.deepEqual(filterProducerOffers([...offers], 'gray').map(offer => offer.id), ['gray'])
+  assert.deepEqual(filterProducerOffers([...offers], 'white').map(offer => offer.id), ['white'])
+  assert.deepEqual(filterProducerOffers([...offers], 'other').map(offer => offer.id), ['other', 'unspecified'])
+})
+
+test('link do WhatsApp normaliza telefone brasileiro e rejeita números inválidos', () => {
+  assert.equal(producerWhatsAppHref('(85) 99999-0000'), 'https://wa.me/5585999990000')
+  assert.equal(producerWhatsAppHref('+55 85 99999-0000'), 'https://wa.me/5585999990000')
+  assert.equal(producerWhatsAppHref(''), null)
+  assert.equal(producerWhatsAppHref(null), null)
+  assert.equal(producerWhatsAppHref('123'), null)
 })
 
 test('rota pública do perfil aceita ID e barra final sem aceitar caminhos inválidos', () => {

@@ -23,7 +23,7 @@ let offerQuery;
 function publicProducer(overrides = {}) {
     return {
         id: producerId, name: 'Fazenda de teste', description: 'Produção familiar.',
-        location: 'Fortim, CE', businessHours: 'Segunda a sexta, 8h às 17h',
+        location: 'Fortim, CE', phone: '85999990000', businessHours: 'Segunda a sexta, 8h às 17h',
         activeOfferCount: 2, ...overrides
     };
 }
@@ -70,7 +70,7 @@ function request(path = '/users/producers') { return fetch(`${baseUrl}${path}`);
 
 function assertNoPrivateFields(result) {
     const serialized = JSON.stringify(result);
-    for (const key of ['email', 'password', 'hashPassword', 'CPF_CNPJ', 'cpf_cnpj', 'phone', 'userType', 'userId', 'status']) {
+    for (const key of ['email', 'password', 'hashPassword', 'CPF_CNPJ', 'cpf_cnpj', 'userType', 'userId', 'status']) {
         assert.ok(!serialized.includes(`"${key}"`), key);
     }
     for (const value of ['private-owner', 'private-password', 'private-document']) {
@@ -91,7 +91,7 @@ test('public directory includes producers with zero offers and preserves optiona
 });
 
 test('directory uses an explicit public field allowlist even if a DAO returns additional fields', async () => {
-    producers[0] = { ...producer, email: 'private-owner', password: 'private-password', cpf_cnpj: 'private-document', phone: 'private-phone' };
+    producers[0] = { ...producer, email: 'private-owner', password: 'private-password', cpf_cnpj: 'private-document' };
     const response = await request();
     assert.equal(response.status, 200);
     const result = await response.json();
@@ -107,7 +107,7 @@ test('empty directory returns an empty array instead of fictional producers', as
 });
 
 test('public producer profile contains only its own active catalog offers and public fields', async () => {
-    producer = { ...producer, email: 'private-owner', password: 'private-password', cpf_cnpj: 'private-document', phone: 'private-phone' };
+    producer = { ...producer, email: 'private-owner', password: 'private-password', cpf_cnpj: 'private-document' };
     const response = await request(`/users/producers/${producerId}`);
     assert.equal(response.status, 200);
     const result = await response.json();
@@ -180,7 +180,8 @@ test('directory DAO uses one producer-only public query with aggregated currentl
         assert.match(sql, /end_availability_date >= CURRENT_DATE/i);
         assert.match(sql, /WHERE u\.user_type = \?/i);
         assert.match(sql, /ORDER BY u\.name ASC, u\.id ASC/i);
-        assert.doesNotMatch(sql, /email|hashPassword|CPF_CNPJ|phone|SELECT\s+\*/i);
+        assert.match(sql, /u\.phone/i);
+        assert.doesNotMatch(sql, /email|hashPassword|CPF_CNPJ|SELECT\s+\*/i);
         return [rows, []];
     });
     const result = await listFromDatabase.call(new UserDAOMySQL());
@@ -197,7 +198,8 @@ test('public producer DAO binds the identifier and excludes buyer rows without p
         assert.deepEqual(params, [UserType.PRODUCER, id]);
         assert.match(sql, /WHERE u\.user_type = \?\s+AND u\.id = \? LIMIT 1/i);
         assert.ok(!sql.includes(id));
-        assert.doesNotMatch(sql, /email|hashPassword|CPF_CNPJ|phone|SELECT\s+\*/i);
+        assert.match(sql, /u\.phone/i);
+        assert.doesNotMatch(sql, /email|hashPassword|CPF_CNPJ|SELECT\s+\*/i);
         return [[], []];
     });
     assert.equal(await producerFromDatabase.call(new UserDAOMySQL(), id), null);

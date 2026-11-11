@@ -7,10 +7,12 @@ export type Producer = {
   name: string
   description: string | null
   location: string | null
+  phone: string | null
   businessHours: string | null
   activeOfferCount: number
 }
 export type ProducerProfile = { producer: Producer; offers: Offer[] }
+export type ProducerOfferFilter = 'all' | 'gray' | 'white' | 'other'
 export type ProducerFilters = { name: string; state: string; city: string }
 export type ProducerSort = 'relevant' | 'name-asc' | 'name-desc' | 'offers-desc'
 export const emptyProducerFilters: ProducerFilters = { name: '', state: '', city: '' }
@@ -19,6 +21,13 @@ const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u0
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric: true })
 
 export function producerHref(id: string) { return `/produtores/${encodeURIComponent(id)}` }
+export function producerWhatsAppHref(phone: string | null) {
+  const digits = phone?.replace(/\D/g, '') ?? ''
+  const localNumber = digits.startsWith('55') && [12, 13].includes(digits.length) ? digits.slice(2) : digits
+  if (!/^[1-9]{2}\d{8,9}$/.test(localNumber)) return null
+  return `https://wa.me/55${localNumber}`
+}
+
 export function producerIdFromPath(pathname: string) {
   const match = pathname.match(/^\/produtores\/([^/]+)\/?$/)
   if (!match) return null
@@ -76,4 +85,14 @@ export function sortProducers(producers: Producer[], sort: ProducerSort, query =
 export function producerIllustration(id: string) {
   const hash = [...id].reduce((value, character) => (value * 31 + character.charCodeAt(0)) >>> 0, 0)
   return `/images/producer-farm-${hash % 3 + 1}.jpg`
+}
+
+export function filterProducerOffers(offers: Offer[], filter: ProducerOfferFilter) {
+  if (filter === 'all') return offers
+  return offers.filter(offer => {
+    const type = normalize(offer.type ?? '')
+    if (filter === 'gray') return type.includes('cinza')
+    if (filter === 'white') return type.includes('branco')
+    return !type.includes('cinza') && !type.includes('branco')
+  })
 }
