@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --require tsx/cjs --test tests/http.test.cjs",
     "test:user-auth": "node --require tsx/cjs --test test/user-auth.test.cjs",
+    "test:user-profile": "node --require tsx/cjs --test test/user-profile.test.cjs",
     "test:offer": "node --require tsx/cjs --test test/offer-create.test.cjs test/offer-list.test.cjs test/offer-update.test.cjs test/offer-status-migration.test.cjs",
     "test:offer-photos": "node --require tsx/cjs --test test/offer-photos.test.cjs",
     "test:offer-detail": "node --require tsx/cjs --test test/public-offer-detail.test.cjs",

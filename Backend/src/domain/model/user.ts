@@ -14,6 +14,8 @@ export type propsUser = {
     cpf_cnpj: string;
     location: string;
     phone: string;
+    description: string | null;
+    businessHours: string | null;
     createdAt: Date;
 }
 
@@ -39,6 +41,8 @@ export class User {
             cpf_cnpj,
             location: location?.trim(),
             phone: phone.trim(),
+            description: null,
+            businessHours: null,
             createdAt: new Date()
         });
     }
@@ -77,6 +81,14 @@ export class User {
 
     get phone() {
         return this.props.phone;
+    }
+
+    get description(): string | null {
+        return this.props.description ?? null;
+    }
+
+    get businessHours(): string | null {
+        return this.props.businessHours ?? null;
     }
 
     get createdAt() {
