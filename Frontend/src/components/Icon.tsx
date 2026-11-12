@@ -1,4 +1,4 @@
-export type IconName = 'bag' | 'store' | 'check' | 'info' | 'arrow' | 'menu' | 'close' | 'eye' | 'eye-off' | 'search' | 'waves' | 'sparkle' | 'ruler' | 'box' | 'pin' | 'chat' | 'handshake' | 'filters' | 'calendar' | 'share' | 'bookmark' | 'grid'
+export type IconName = 'bag' | 'store' | 'check' | 'info' | 'arrow' | 'menu' | 'close' | 'eye' | 'eye-off' | 'search' | 'waves' | 'sparkle' | 'ruler' | 'box' | 'pin' | 'chat' | 'handshake' | 'filters' | 'calendar' | 'share' | 'bookmark' | 'grid' | 'edit' | 'pause' | 'play' | 'trash' | 'more'
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {
   return (
@@ -14,6 +14,11 @@ export function Icon({ name, className }: { name: IconName; className?: string }
       {name === 'share' && <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4m-6.8 7 6.8 4" /></>}
       {name === 'bookmark' && <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />}
       {name === 'grid' && <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>}
+      {name === 'edit' && <><path d="m15 5 4 4M4 20l4-.8L20 7.2 16.8 4 4.8 16Z" /><path d="M13 20h8" /></>}
+      {name === 'pause' && <><path d="M8 5v14M16 5v14" /></>}
+      {name === 'play' && <path d="m7 4 13 8-13 8Z" />}
+      {name === 'trash' && <><path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6" /><path d="M10 11v6m4-6v6" /></>}
+      {name === 'more' && <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>}
       {name === 'filters' && <><path d="M3 6h18M3 12h18M3 18h18" /><circle cx="8" cy="6" r="2" fill="white" /><circle cx="16" cy="12" r="2" fill="white" /><circle cx="10" cy="18" r="2" fill="white" /></>}
       {name === 'search' && <><circle cx="10.5" cy="10.5" r="7.5" /><path d="m16 16 5 5" /></>}
       {name === 'waves' && <path d="M2 5q2.5 4 5 0t5 0 5 0 5 0M2 12q2.5 4 5 0t5 0 5 0 5 0M2 19q2.5 4 5 0t5 0 5 0 5 0" />}

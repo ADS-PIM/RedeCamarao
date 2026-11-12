@@ -10,6 +10,7 @@ import { ProductsPage } from './pages/ProductsPage'
 import { OfferPage } from './pages/OfferPage'
 import { ProducersPage } from './pages/ProducersPage'
 import { ProducerProfilePage } from './pages/ProducerProfilePage'
+import { AccountPage } from './pages/AccountPage'
 import { producerIdFromPath } from './data/producers'
 import { offerIdFromPath } from './data/offerDetail'
 import { useNavigation } from './hooks/useNavigation'
@@ -26,10 +27,11 @@ function App() {
   const producerId = producerIdFromPath(pathname)
   const isRegister = ['/registro', '/registro/'].includes(pathname)
   const isLogin = ['/entrar', '/entrar/', '/login', '/login/'].includes(pathname)
+  const isAccount = ['/painel', '/painel/', '/perfil', '/perfil/'].includes(pathname)
 
   useEffect(() => {
-    document.title = `${isMarketplace ? 'Marketplace' : offerId ? 'Oferta de camarão' : isProducts ? 'Produtos' : producerId ? 'Produtor' : isProducers ? 'Produtores' : isRegister ? 'Criar conta' : isLogin ? 'Entrar' : 'Página indisponível'} | RedeCamarão`
-  }, [isMarketplace, isProducts, offerId, isProducers, producerId, isRegister, isLogin])
+    document.title = `${isMarketplace ? 'Marketplace' : offerId ? 'Oferta de camarão' : isProducts ? 'Produtos' : producerId ? 'Produtor' : isProducers ? 'Produtores' : isRegister ? 'Criar conta' : isLogin ? 'Entrar' : isAccount ? 'Minha conta' : 'Página indisponível'} | RedeCamarão`
+  }, [isMarketplace, isProducts, offerId, isProducers, producerId, isRegister, isLogin, isAccount])
 
   useEffect(() => {
     let active = true
@@ -42,8 +44,8 @@ function App() {
   return (
     <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} />
-      {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : (
+      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount} producer={session?.userType === 'PRODUCER'} />
+      {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : isAccount ? <AccountPage session={session} onSessionChange={setSession} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

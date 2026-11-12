@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import './Header.css'
 
-export function Header({ authenticated = false, marketplace = false, products = false, producers = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean }) {
+export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
@@ -54,11 +54,22 @@ export function Header({ authenticated = false, marketplace = false, products = 
         </button>
         <div id="main-navigation" className={`header-navigation ${menuOpen ? 'is-open' : ''}`}>
           <nav aria-label="Navegação principal">
-            <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a><a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtos</a>
-            <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a><a href="/marketplace#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a>
+            {account && producer ? <>
+              <a href="/painel" aria-current="page" onClick={() => setMenuOpen(false)}>Painel</a>
+              <a href="/painel#ofertas" onClick={() => setMenuOpen(false)}>Minhas ofertas</a>
+              <a href="/painel#perfil" onClick={() => setMenuOpen(false)}>Meu perfil</a>
+            </> : account ? <>
+              <a href="/painel" aria-current="page" onClick={() => setMenuOpen(false)}>Minha conta</a>
+              <a href="/painel#salvas" onClick={() => setMenuOpen(false)}>Ofertas salvas</a>
+              <a href="/painel#perfil" onClick={() => setMenuOpen(false)}>Dados pessoais</a>
+              <a href="/produtos" onClick={() => setMenuOpen(false)}>Explorar ofertas</a>
+            </> : <>
+              <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a><a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtos</a>
+              <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a><a href="/marketplace#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a>
+            </>}
           </nav>
           <div className="header-actions">
-            {authenticated ? <a className="button button-primary" href="/entrar" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>
+            {authenticated ? <a className="button button-primary" href="/painel" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>
               <a className="login-link" href="/entrar" onClick={() => setMenuOpen(false)}>Entrar</a>
               <a className="button button-primary" href="/registro" onClick={() => setMenuOpen(false)}>Criar conta</a>
             </>}
