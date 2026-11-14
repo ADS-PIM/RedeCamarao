@@ -68,7 +68,7 @@ export function Header({ authenticated = false, marketplace = false, products = 
     <header ref={headerRef} className={`site-header${account && producer ? ' producer-header' : ''}`}>
       <div className="container header-inner">
         <a href="/" className="brand" aria-label="RedeCamarão — início" onClick={() => setMenuOpen(false)}><strong>Rede</strong>Camarão</a>
-        {account && producer && <span className="header-role">Produtor</span>}
+        {authenticated && account && <span className="header-role">{producer ? 'Produtor' : 'Comprador'}</span>}
         <button ref={menuToggleRef} className="menu-toggle" type="button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-controls="main-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}>
           <Icon name={menuOpen ? 'close' : 'menu'} />
         </button>
