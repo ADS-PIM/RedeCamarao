@@ -84,7 +84,7 @@ export function LoginPage({ session, restoring, onSessionChange }: Props) {
           <p className="login-description">Entre na sua conta e continue fazendo parte da rede que aproxima compradores e produtores de camarão.</p>
           <ul className="login-benefits">
             <li><span className="login-benefit-icon"><Icon name="bag" /></span><div><strong>Encontre novas oportunidades</strong><p>Acesse ofertas e conecte-se com produtores.</p></div></li>
-            <li><span className="login-benefit-icon"><Icon name="store" /></span><div><strong>Seu negócio mais perto de quem compra</strong><p>Gerencie suas ofertas e amplie suas conexões.</p></div></li>
+            <li><span className="login-benefit-icon"><Icon name="farm" /></span><div><strong>Seu negócio mais perto de quem compra</strong><p>Gerencie suas ofertas e amplie suas conexões.</p></div></li>
           </ul>
           <p className="login-note"><Icon name="info" /><span>A negociação e o pagamento acontecem diretamente entre comprador e produtor.</span></p>
         </div>

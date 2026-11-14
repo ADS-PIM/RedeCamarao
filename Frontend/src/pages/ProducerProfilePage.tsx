@@ -74,14 +74,14 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
 
       <section className="producer-profile-heading" aria-labelledby="producer-profile-title">
         <div className="container producer-profile-heading-inner">
-          <span className="producer-profile-avatar"><Icon name="waves" /></span>
+          <span className="producer-profile-avatar"><Icon name="farm" /></span>
           <div className="producer-profile-heading-copy">
             <p className="producer-profile-eyebrow">Produtor da RedeCamarão</p>
             <h1 id="producer-profile-title">{producer.name}</h1>
             <p className="producer-location"><Icon name="pin" /><span>{location}</span></p>
           </div>
           <div className="producer-profile-actions" aria-label="Opções de contato">
-            <button type="button" className="button producer-whatsapp-button" disabled aria-describedby="producer-contact-note"><Icon name="chat" />WhatsApp em breve</button>
+            <button type="button" className="button producer-whatsapp-button" disabled aria-describedby="producer-contact-note"><Icon name="whatsapp" />WhatsApp em breve</button>
           </div>
         </div>
       </section>

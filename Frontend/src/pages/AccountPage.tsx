@@ -192,7 +192,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
           <div><p className="account-eyebrow">{profile.userType === 'PRODUCER' ? 'PAINEL DO PRODUTOR' : 'PERFIL DO COMPRADOR'}</p>
             <h1>Olá, {profile.name}!</h1>
             <p>{profile.userType === 'PRODUCER' ? 'Acompanhe e atualize suas ofertas publicadas.' : 'Encontre ofertas salvas e mantenha seus dados atualizados para comprar com mais facilidade.'}</p></div>
-          {profile.userType === 'PRODUCER' ? <a className="button button-primary account-create" href={newOfferHref}><span aria-hidden="true">+</span>Cadastrar nova oferta</a> : <button type="button" className="button button-secondary account-logout" onClick={logout} disabled={loggingOut}>
+          {profile.userType === 'PRODUCER' ? <a className="button button-primary account-create" href={newOfferHref}><Icon name="plus" />Cadastrar nova oferta</a> : <button type="button" className="button button-secondary account-logout" onClick={logout} disabled={loggingOut}>
             {loggingOut ? 'Saindo...' : 'Sair da conta'}
           </button>}
         </section>
