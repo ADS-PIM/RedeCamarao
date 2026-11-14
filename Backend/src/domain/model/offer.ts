@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 export enum OfferStatus {
+    DRAFT = 'DRAFT',
     ACTIVE = 'ACTIVE',
     INACTIVE = 'INACTIVE',
     EXPIRED = 'EXPIRED',
@@ -24,6 +25,8 @@ export type propsOffer = {
     endDate: Date;
     status: OfferStatus;
     createdAt: Date;
+    updatedAt?: Date;
+    coverPhoto?: string | null;
 }
 
 export class Offer {
@@ -102,6 +105,8 @@ export class Offer {
         return this.props.status;
     }
 
+    public get updatedAt() { return this.props.updatedAt ?? this.props.createdAt; }
+    public get coverPhoto() { return this.props.coverPhoto ?? null; }
     public get createdAt () {
         return this.props.createdAt;
     }

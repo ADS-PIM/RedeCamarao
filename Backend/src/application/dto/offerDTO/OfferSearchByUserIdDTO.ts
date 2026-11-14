@@ -15,4 +15,6 @@ export class OfferSearchByUserIdDTO {
     endDate: Date;
     status: OfferStatus;
     createdAt: Date;
+    updatedAt: Date;
+    coverPhoto: string | null;
 }

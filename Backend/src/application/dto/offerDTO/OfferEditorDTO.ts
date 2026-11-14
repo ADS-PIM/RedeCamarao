@@ -5,7 +5,7 @@ export type EditorPhoto = { id?: string; data?: string; description: string };
 export type OfferEditorData = {
     title: string; description: string; type: string; size: string; price: number; weight: number;
     minimumQuantity: number; maximumQuantity: number; location: string;
-    startDate: string; endDate: string; status: 'ACTIVE' | 'INACTIVE';
+    startDate: string; endDate: string; status: 'ACTIVE' | 'INACTIVE' | 'DRAFT';
 };
 const invalid = (message: string): never => { throw new ApplicationError('INVALID_DATA', message); };
 
@@ -29,7 +29,7 @@ export function parseOfferEditor(body: unknown): { offer: OfferEditorData; photo
     data.startDate = offerDate(offer.startDate);
     data.endDate = offerDate(offer.endDate);
     if (data.endDate < data.startDate) return invalid('A data final não pode ser anterior à data inicial');
-    if (!['ACTIVE', 'INACTIVE'].includes(offer.status)) return invalid('Status inválido');
+    if (!['ACTIVE', 'INACTIVE', 'DRAFT'].includes(offer.status)) return invalid('Status inválido');
     data.status = offer.status;
     const seen = new Set<string>();
     const parsed = photos.map(photo => {

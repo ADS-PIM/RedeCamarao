@@ -2,9 +2,10 @@
 
 ## Edição conjunta da oferta e das fotos
 
-`PUT /offer/:id/editor`, com `Authorization: Bearer <accessToken>`, recebe
+`POST /offer/editor` cadastra e `PUT /offer/:id/editor` atualiza. Ambos exigem
+`Authorization: Bearer <accessToken>` e recebem
 `{ offer, photos }`. `offer` contém todos os campos editáveis do lote e status
-`ACTIVE` ou `INACTIVE`. `photos` é um array ordenado de até cinco itens:
+`ACTIVE`, `INACTIVE` ou `DRAFT`. `photos` é um array ordenado de até cinco itens:
 
 - Foto existente: `{ id, description }`. O ID precisa pertencer à oferta.
 - Foto nova: `{ data, description }`, onde `data` é uma data URL base64 JPG/PNG
@@ -15,6 +16,11 @@ grava os dados e substitui os registros da galeria na mesma transação. Os IDs
 das fotos são renovados em ordem para manter compatibilidade com as consultas
 existentes que usam `ORDER BY id ASC`; nenhum campo de ordenação ou migration
 é necessário. A resposta `200` inclui `photos` com os novos IDs e URLs.
+
+O cadastro retorna `201` com `id` e `photos`; apenas produtores podem cadastrar.
+Fotos existentes não podem ser vinculadas a uma oferta nova. O status `DRAFT`
+é persistido como `RASCUNHO`, incluído pela migration específica do enum. Os
+campos obrigatórios do lote são validados também para rascunhos.
 
 Arquivos novos ficam em `Backend/uploads/offers`, fora do Git, e são servidos
 em `/uploads/offers/...`. A origem da URL vem de `PUBLIC_API_URL`, quando
@@ -37,7 +43,7 @@ DTOs, casos de uso, interface de DAO e persistência MySQL do backend.
 Todas as rotas exigem `Authorization: Bearer <accessToken>` de usuário.
 Somente o dono da oferta pode cadastrar, atualizar ou excluir suas fotos.
 Qualquer usuário autenticado pode consultar as fotos de uma oferta, seguindo
-a mesma regra de consulta das ofertas.
+a regra anterior de consulta, exceto fotos de rascunhos, restritas ao dono.
 
 | Operação | Método e rota | Sucesso |
 | --- | --- | --- |

@@ -72,7 +72,7 @@ export class OfferPhotoController {
             const offerId = req.params.offerId;
             if (!validId(offerId)) return res.status(400).json({ error: 'ID da oferta inválido' });
 
-            const photos = await this.searchOfferPhotosByOfferId.execute(offerId);
+            const photos = await this.searchOfferPhotosByOfferId.execute(offerId, req.user.userId);
             return res.status(200).json(photos);
         } catch (error: unknown) {
             const response = applicationErrorResponse(error, res);

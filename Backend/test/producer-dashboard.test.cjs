@@ -16,7 +16,7 @@ test('authenticated listing preserves all editable fields for duplication withou
         return [Offer.reconstruct(props)];
     } }, { searchById: async () => ({ id: 'producer-1' }) });
     const { userId, ...expected } = props;
-    assert.deepEqual(await useCase.execute('producer-1'), [expected]);
+    assert.deepEqual(await useCase.execute('producer-1'), [{ ...expected, updatedAt: props.createdAt, coverPhoto: null }]);
 });
 
 test('missing account does not query offers', async () => {

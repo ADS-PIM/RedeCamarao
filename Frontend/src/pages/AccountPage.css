@@ -1,5 +1,10 @@
 .account-main { flex: 1; background: #f3f7f8; padding-block: 40px 56px; }
 .account-container { display: grid; gap: 28px; }
+.account-recent-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.account-recent-grid > article { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px; border: 1px solid var(--border); border-radius: 10px; }
+.account-recent-grid h3 { margin: 0; font-size: 18px; line-height: 1.5; overflow-wrap: anywhere; }
+.account-recent-grid p { margin-top: auto; color: var(--muted); font-size: 14px; line-height: 1.5; }
+@media (max-width: 800px) { .account-recent-grid { grid-template-columns: minmax(0, 1fr); } }
 .account-welcome { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 4px 8px; }
 .account-welcome > div { min-width: 0; }
 .account-eyebrow { color: var(--primary); font-size: 12px; font-weight: 700; letter-spacing: .4px; }

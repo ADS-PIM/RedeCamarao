@@ -5,7 +5,7 @@ import type { propsOffer } from '../../../domain/model/offer';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 const databaseOfferStatuses: Record<OfferStatus, string> = {
-    ACTIVE: 'ATIVO', INACTIVE: 'PAUSADO', SOLD_OUT: 'VENDIDO', CANCELLED: 'CANCELADO', EXPIRED: 'EXPIRADO'
+    ACTIVE: 'ATIVO', INACTIVE: 'PAUSADO', SOLD_OUT: 'VENDIDO', CANCELLED: 'CANCELADO', EXPIRED: 'EXPIRADO', DRAFT: 'RASCUNHO'
 };
 
 const offerColumns = `id, userId, title, description, type, size, price, weight,
@@ -14,7 +14,7 @@ const offerColumns = `id, userId, title, description, type, size, price, weight,
     end_availability_date AS endDate,
     CASE status ${Object.entries(databaseOfferStatuses)
         .map(([status, stored]) => `WHEN '${stored}' THEN '${status}'`).join(' ')}
-    END AS status, createdAt`;
+    END AS status, createdAt, updatedAt`;
 
 const reconstructOffer = (row: RowDataPacket & propsOffer): Offer => Offer.reconstruct({
     ...row,
@@ -47,7 +47,7 @@ export class OfferDAOMySQL implements OfferDAOInterface {
 
     public async listByUserId(userId: string): Promise<Offer[]> {
         const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
-            `SELECT ${offerColumns}
+            `SELECT ${offerColumns}, (SELECT imageUrl FROM offerPhotos WHERE offerId = offers.id ORDER BY id ASC LIMIT 1) AS coverPhoto
             FROM offers WHERE userId = ? ORDER BY createdAt DESC, id DESC`,
             [userId]
         );

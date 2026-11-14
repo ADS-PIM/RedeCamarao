@@ -12,6 +12,7 @@ import { ProducersPage } from './pages/ProducersPage'
 import { ProducerProfilePage } from './pages/ProducerProfilePage'
 import { AccountPage } from './pages/AccountPage'
 import { OfferEditorPage } from './pages/OfferEditorPage'
+import { MyOffersPage } from './pages/MyOffersPage'
 import { editOfferIdFromPath } from './data/offerEditor'
 import { producerIdFromPath } from './data/producers'
 import { offerIdFromPath } from './data/offerDetail'
@@ -35,6 +36,8 @@ function App() {
   const isLogin = ['/entrar', '/entrar/', '/login', '/login/'].includes(pathname)
   const isAccount = ['/painel', '/painel/', '/perfil', '/perfil/'].includes(pathname)
   const editingOfferId = editOfferIdFromPath(pathname)
+  const isNewOffer = ['/painel/ofertas/nova', '/painel/ofertas/nova/'].includes(pathname)
+  const isMyOffers = ['/painel/ofertas', '/painel/ofertas/'].includes(pathname)
 
   async function handleLogout() {
     if (logoutPending.current) return
@@ -46,8 +49,8 @@ function App() {
   }
 
   useEffect(() => {
-    document.title = `${editingOfferId ? 'Editar oferta' : isMarketplace ? 'Marketplace' : offerId ? 'Oferta de camarão' : isProducts ? 'Produtos' : producerId ? 'Produtor' : isProducers ? 'Produtores' : isRegister ? 'Criar conta' : isLogin ? 'Entrar' : isAccount ? 'Minha conta' : 'Página indisponível'} | RedeCamarão`
-  }, [isMarketplace, isProducts, offerId, isProducers, producerId, isRegister, isLogin, isAccount, editingOfferId])
+    document.title = `${isNewOffer ? 'Cadastrar oferta' : isMyOffers ? 'Minhas ofertas' : editingOfferId ? 'Editar oferta' : isMarketplace ? 'Marketplace' : offerId ? 'Oferta de camarão' : isProducts ? 'Produtos' : producerId ? 'Produtor' : isProducers ? 'Produtores' : isRegister ? 'Criar conta' : isLogin ? 'Entrar' : isAccount ? 'Minha conta' : 'Página indisponível'} | RedeCamarão`
+  }, [isMarketplace, isProducts, offerId, isProducers, producerId, isRegister, isLogin, isAccount, editingOfferId, isNewOffer, isMyOffers])
 
   useEffect(() => {
     let active = true
@@ -60,8 +63,8 @@ function App() {
   return (
     <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || Boolean(editingOfferId)} editingOffer={Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} onLogout={handleLogout} loggingOut={loggingOut} />
-      {editingOfferId ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId}`} offerId={editingOfferId} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
+      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || isNewOffer || isMyOffers || Boolean(editingOfferId)} editingOffer={isNewOffer || isMyOffers || Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} onLogout={handleLogout} loggingOut={loggingOut} />
+      {editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
       {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>

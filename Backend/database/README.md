@@ -1,5 +1,24 @@
 # Banco de dados
 
+## Rascunhos de ofertas
+
+O SQL de referência inclui `RASCUNHO` em `offers.status`. Para bancos com
+histórico de migrations, aplique `20261114120000-add-draft-offer-status.js`
+usando `npm.cmd run db:migrate`.
+
+Para um banco existente criado manualmente pelo SQL, sem `SequelizeMeta`,
+selecione esse banco e aplique somente:
+
+```sql
+ALTER TABLE offers MODIFY status
+  ENUM('ATIVO', 'PAUSADO', 'VENDIDO', 'CANCELADO', 'EXPIRADO', 'RASCUNHO') NOT NULL;
+```
+
+Isso acrescenta uma opção ao enum, preservando os valores e registros
+existentes. Não execute todo o histórico de migrations sobre uma instalação
+manual. O `down` da nova migration recusa a remoção do enum enquanto houver
+rascunhos, evitando converter ou apagar ofertas silenciosamente.
+
 As migrations em `migrations/` são o histórico de alterações. `RedeCamarao_db.sql`
 representa o schema atual para criação manual; não execute esse arquivo sobre um
 banco existente nem combine a criação manual com `db:init`.
