@@ -1,4 +1,5 @@
 import type { Offer } from '../data/marketplace'
+import type { EditorPhoto, editorPayload } from '../data/offerEditor'
 
 const configuredUrl = import.meta.env?.VITE_API_URL
 export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED'
@@ -100,4 +101,30 @@ export async function updateOffer(token: string, id: string, data: OfferUpdate, 
 export async function deleteOffer(token: string, id: string, baseUrl = configuredUrl): Promise<void> {
   const response = await request(`/offer/${encodeURIComponent(id)}`, token, 'DELETE', undefined, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível excluir a oferta.')
+}
+
+export async function fetchEditorPhotos(token: string, offerId: string, baseUrl = configuredUrl): Promise<EditorPhoto[]> {
+  const response = await request(`/offerPhotos/offer/${encodeURIComponent(offerId)}`, token, 'GET', undefined, baseUrl)
+  if (!response.ok) return responseError(response, 'Não foi possível carregar as fotos da oferta.')
+  const data: unknown = await response.json().catch(() => null)
+  return readEditorPhotos(data)
+}
+
+function readEditorPhotos(data: unknown): EditorPhoto[] {
+  if (!Array.isArray(data) || !data.every(photo => photo && typeof photo.id === 'string' && typeof photo.imageUrl === 'string' && /^https?:\/\//i.test(photo.imageUrl) && typeof photo.description === 'string')) throw new Error('O servidor retornou fotos inválidas.')
+  return data.map(photo => ({ ...photo, key: photo.id }))
+}
+
+export async function saveEditedOffer(token: string, id: string, data: ReturnType<typeof editorPayload>, baseUrl = configuredUrl): Promise<EditorPhoto[]> {
+  const response = await request(`/offer/${encodeURIComponent(id)}/editor`, token, 'PUT', data, baseUrl)
+  if (!response.ok) {
+    if (response.status === 413) throw new Error('As fotos excedem o limite de envio. Use até 5 imagens de 3 MB cada.')
+    if (response.status === 400) {
+      const result = await response.json().catch(() => null)
+      throw new Error(typeof result?.error === 'string' ? result.error : 'Confira os campos da oferta.')
+    }
+    return responseError(response, 'Não foi possível salvar a oferta. Suas alterações continuam nesta tela.')
+  }
+  const saved = await response.json().catch(() => null)
+  return readEditorPhotos(saved?.photos)
 }

@@ -1,5 +1,36 @@
 # Fotos das ofertas
 
+## Edição conjunta da oferta e das fotos
+
+`PUT /offer/:id/editor`, com `Authorization: Bearer <accessToken>`, recebe
+`{ offer, photos }`. `offer` contém todos os campos editáveis do lote e status
+`ACTIVE` ou `INACTIVE`. `photos` é um array ordenado de até cinco itens:
+
+- Foto existente: `{ id, description }`. O ID precisa pertencer à oferta.
+- Foto nova: `{ data, description }`, onde `data` é uma data URL base64 JPG/PNG
+  de até 3 MB decodificados. O backend verifica tamanho e assinatura do formato.
+
+O primeiro item será a capa. O salvamento confirma a propriedade da oferta,
+grava os dados e substitui os registros da galeria na mesma transação. Os IDs
+das fotos são renovados em ordem para manter compatibilidade com as consultas
+existentes que usam `ORDER BY id ASC`; nenhum campo de ordenação ou migration
+é necessário. A resposta `200` inclui `photos` com os novos IDs e URLs.
+
+Arquivos novos ficam em `Backend/uploads/offers`, fora do Git, e são servidos
+em `/uploads/offers/...`. A origem da URL vem de `PUBLIC_API_URL`, quando
+configurada, ou da origem da requisição ao backend. Em hospedagem, esse diretório
+precisa de armazenamento persistente e backup; a configuração atual atende ao
+backend local. Nenhum provedor externo de imagens é usado.
+
+Falhas antes do commit revertem os registros e removem os arquivos novos da
+tentativa. Arquivos antigos de fotos retiradas da galeria permanecem no disco,
+como ocorre com as URLs no CRUD abaixo; a exclusão de registros não faz coleta
+de arquivos. Não há requisições para baixar URLs externas.
+
+Validação sem banco e arquivos reais: `npm.cmd run test:offer-editor`.
+
+## CRUD por foto
+
 CRUD da tabela `offerPhotos`, seguindo o fluxo de rotas Express, controller,
 DTOs, casos de uso, interface de DAO e persistência MySQL do backend.
 

@@ -6,6 +6,7 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 
 - Tela responsiva com apresentação, categorias e ofertas ativas carregadas do banco de dados.
 - Busca por produto, descrição, tamanho e localização; filtros por tipo, tamanho, peso e região usam os dados retornados pela API.
+- Os atalhos de categoria combinam com a busca e com o filtro permanente “Por região”, que oferece os 27 estados/DF. Trocar de categoria preserva a região e a busca; “Limpar filtros” restaura o catálogo. A seleção regional não solicita geolocalização.
 - Os detalhes da oferta incluem descrição, localização, quantidade, preço e período de disponibilidade.
 - Quando a API retorna uma lista vazia, a tela informa que nenhuma oferta foi encontrada. Falhas de conexão ou respostas inválidas são exibidas separadamente e permitem tentar novamente.
 - O marketplace consome `GET /offer/marketplace`, uma rota pública que retorna somente ofertas ativas dentro do período de disponibilidade, sem expor o ID do anunciante.
@@ -54,6 +55,15 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - Pausar, ativar e remover usam confirmação em diálogo nativo, com foco contido, Escape e retorno de foco. Falhas mantêm o diálogo aberto e permitem nova tentativa. Remover exclui a oferta e suas fotos conforme o contrato existente.
 - `GET /offer/user/:userId` inclui descrição, limites de quantidade e `createdAt`, necessários para editar e duplicar sem perder dados. A coluna mostra **Publicação**; não existe data de última atualização no modelo. O contrato público do catálogo não muda.
 - `npm.cmd run test:producer-dashboard`, no backend, verifica esses campos sem banco. O frontend valida o contrato e testa busca, status e limites do período em `npm.cmd test`.
+
+## Edição de ofertas
+
+- “Editar” no painel abre `/painel/ofertas/:id/editar`, mantendo header, footer e a navegação sem recarregamento. A página exige conta de produtor e carrega apenas ofertas da própria conta; “Minhas ofertas” fica ativo no header.
+- Formulário com fotos, título, descrição, tipo, tamanho, preço em formato brasileiro, quantidades mínima/máxima, cidade, estado e disponibilidade. A validação mantém os campos preenchidos e destaca o primeiro erro. A prévia reflete os dados locais e a capa escolhida, sem gravar.
+- Até cinco fotos JPG/PNG de até 3 MB cada, com seleção de capa e remoção antes de salvar. O indicador de preenchimento verifica cinco critérios objetivos; não avalia nitidez ou qualidade visual das fotos.
+- “Salvar como pausada” salva os dados com status `INACTIVE`; “Salvar e publicar” salva com `ACTIVE`. Desmarcar a disponibilidade também salva como pausada. O período controla a exibição no marketplace.
+- `PUT /offer/:id/editor` salva os campos e a galeria em uma transação. Imagens novas ficam em `Backend/uploads/offers`, servidas pelo backend. Falhas preservam as alterações na tela; a renovação do token não recarrega o formulário. O recurso não requer migration.
+- O menu do ícone do produtor inclui “Sair da conta” tanto no painel quanto na edição. O logout usa o endpoint existente, só limpa a sessão após sucesso e leva a `/entrar` sem recarregar o documento; falhas permitem nova tentativa no menu.
 
 ## Padrão visual e responsividade
 

@@ -1,3 +1,5 @@
+import { getOfferState } from './products.ts'
+
 export type Offer = {
   id: string
   title: string
@@ -29,13 +31,6 @@ export type OfferDetail = Offer & { createdAt: string; photos: OfferPhoto[]; pro
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
-function locationMatchesRegion(location: string, region: string) {
-  const normalized = normalize(location)
-  return region === 'CE'
-    ? /\bce\b/.test(normalized) || normalized.includes('ceara')
-    : /\brn\b/.test(normalized) || normalized.includes('rio grande do norte')
-}
-
 export function filterOffers(offers: Offer[], query: string, category: Category | null, region: string) {
   const words = normalize(query.trim()).split(/\s+/).filter(Boolean)
   return offers.filter(offer => {
@@ -47,7 +42,7 @@ export function filterOffers(offers: Offer[], query: string, category: Category 
       && (category !== 'white' || type.includes('branco'))
       && (category !== 'large' || size.includes('grande') || size.includes('large'))
       && (category !== 'bulk' || offer.weight > 50)
-      && (category !== 'nearby' || !region || locationMatchesRegion(offer.location, region))
+      && (!region || getOfferState(offer.location) === region)
   })
 }
 

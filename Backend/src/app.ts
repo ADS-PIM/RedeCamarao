@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import routes from './infra/web/express/routes/index';
+import { authUser } from '../userAuthMiddleware';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/offer/:id/editor', authUser, express.json({ limit: '22mb' }));
 app.use(express.json());
 
 app.use((req, _res, next) => {

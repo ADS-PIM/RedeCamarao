@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { MouseEvent } from 'react'
 import { getInternalDestination } from '../utils/navigation'
 
@@ -87,6 +87,15 @@ export function useNavigation() {
     return stop
   }, [navigation])
 
+  const navigate = useCallback((href: string) => {
+    const destination = new URL(href, window.location.href)
+    positions.current.set(current.current.key, { left: window.scrollX, top: window.scrollY })
+    if (destination.href === window.location.href) { revealDestination(destination, true); return }
+    const key = newEntryKey()
+    window.history.pushState({ ...window.history.state, [entryKey]: key }, '', destination)
+    setNavigation({ href: destination.href, key, kind: 'push' })
+  }, [])
+
   function handleLinkClick(event: MouseEvent<HTMLDivElement>) {
     if (!(event.target instanceof Element)) return
     const link = event.target.closest<HTMLAnchorElement>('a[href]')
@@ -97,15 +106,8 @@ export function useNavigation() {
     if (!destination) return
 
     event.preventDefault()
-    positions.current.set(current.current.key, { left: window.scrollX, top: window.scrollY })
-    if (destination.href === window.location.href) {
-      revealDestination(destination, true)
-      return
-    }
-    const key = newEntryKey()
-    window.history.pushState({ ...window.history.state, [entryKey]: key }, '', destination)
-    setNavigation({ href: destination.href, key, kind: 'push' })
+    navigate(destination.href)
   }
 
-  return { pathname: new URL(navigation.href).pathname, handleLinkClick }
+  return { pathname: new URL(navigation.href).pathname, handleLinkClick, navigate }
 }

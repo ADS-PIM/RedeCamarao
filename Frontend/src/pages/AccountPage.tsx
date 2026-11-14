@@ -7,6 +7,7 @@ import { formatDate, formatPrice } from '../data/marketplace'
 import type { OfferDetail } from '../data/marketplace'
 import { readSavedOffers, savedOffersKey, setOfferSaved } from '../data/offerDetail'
 import { producerHref } from '../data/producers'
+import { editOfferHref } from '../data/offerEditor'
 import { offerHref, offerIllustration } from '../data/offerDetail'
 import { canActivateOffer, filterManagedOffers, isPublishedOffer, localDateString, offerStatusNames } from '../data/account'
 import { logoutUser, restoreSession } from '../services/auth'
@@ -182,12 +183,6 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
 
   function openCreateOffer() {
     setOfferEditor({ offer: null, values: { ...emptyOffer, startDate: localDateString(), endDate: localDateString(7), location: profile?.location ?? '' } })
-    setFeedback('')
-    requestAnimationFrame(() => offerTitleRef.current?.focus())
-  }
-
-  function openEditOffer(offer: ManagedOffer) {
-    setOfferEditor({ offer, values: initialOfferForm(offer) })
     setFeedback('')
     requestAnimationFrame(() => offerTitleRef.current?.focus())
   }
@@ -382,7 +377,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
                 <td data-label="Status"><span className={`offer-status status-${offer.status.toLowerCase()}`}>{offerStatusNames[offer.status]}</span></td>
                 <td data-label="Publicação"><time dateTime={offer.createdAt}>{formatDate(offer.createdAt)}</time></td>
                 <td><div className="account-row-actions">
-                  <button type="button" aria-label={`Editar ${offer.title}`} onClick={() => openEditOffer(offer)}><Icon name="edit" />Editar</button>
+                  <a aria-label={`Editar ${offer.title}`} href={editOfferHref(offer.id)}><Icon name="edit" />Editar</a>
                   {(offer.status === 'ACTIVE' || canActivateOffer(offer)) && <button type="button" aria-label={`${offer.status === 'ACTIVE' ? 'Pausar' : 'Ativar'} ${offer.title}`} disabled={Boolean(busyOfferId)} onClick={() => { setFeedback(''); setConfirmation({ offer, action: offer.status === 'ACTIVE' ? 'pause' : 'activate' }) }}>
                     <Icon name={offer.status === 'ACTIVE' ? 'pause' : 'play'} />{offer.status === 'ACTIVE' ? 'Pausar' : 'Ativar'}</button>}
                   <details className="account-more">

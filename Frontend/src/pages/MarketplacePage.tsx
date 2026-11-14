@@ -6,6 +6,7 @@ import { filterOffers, formatPrice } from '../data/marketplace'
 import type { Category } from '../data/marketplace'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
 import { offerHref } from '../data/offerDetail'
+import { brazilianStates } from '../utils/registration'
 import './MarketplacePage.css'
 
 const categories: { id: Category; title: string; icon: IconName }[] = [
@@ -13,7 +14,6 @@ const categories: { id: Category; title: string; icon: IconName }[] = [
   { id: 'white', title: 'Camarão branco', icon: 'sparkle' },
   { id: 'large', title: 'Tamanho grande', icon: 'ruler' },
   { id: 'bulk', title: 'Lotes acima de 50 kg', icon: 'box' },
-  { id: 'nearby', title: 'Perto de você', icon: 'pin' },
 ]
 
 function scrollToOffers() {
@@ -28,7 +28,7 @@ export function MarketplacePage() {
   const [region, setRegion] = useState('')
   const { offers, loading, error, reloadOffers } = useMarketplaceOffers()
   const filteredOffers = filterOffers(offers, query, category, region)
-  const filtering = Boolean(query.trim() || category)
+  const filtering = Boolean(query.trim() || category || region)
   const offersDescription = loading
     ? 'Carregando ofertas...'
     : error
@@ -47,9 +47,6 @@ export function MarketplacePage() {
 
   function selectCategory(value: Category | null) {
     setCategory(value)
-    setQuery('')
-    setInput('')
-    setRegion('')
   }
 
   function categoryDescription(value: Category) {
@@ -76,7 +73,7 @@ export function MarketplacePage() {
               <span>Buscas populares:</span>
               <button type="button" onClick={() => { selectCategory('large'); scrollToOffers() }}>camarão grande</button>
               <span aria-hidden="true">·</span>
-              <button type="button" onClick={() => { selectCategory('nearby'); setRegion('CE'); scrollToOffers() }}>Ceará</button>
+              <button type="button" onClick={() => { setRegion('CE'); scrollToOffers() }}>Ceará</button>
               <span aria-hidden="true">·</span>
               <button type="button" onClick={() => { selectCategory('bulk'); scrollToOffers() }}>acima de 50 kg</button>
             </div>
@@ -102,19 +99,20 @@ export function MarketplacePage() {
           <p className="section-description">Atalhos para começar sua busca</p>
           <div className="category-grid">
             {categories.map(item => <button className={`category-card ${category === item.id ? 'is-selected' : ''}`} key={item.id} type="button" aria-pressed={category === item.id} onClick={() => selectCategory(category === item.id ? null : item.id)}>
-              <span className="category-icon"><Icon name={item.icon} /></span><span><strong>{item.title}</strong><small>{categoryDescription(item.id)}</small></span>
+              <span className="category-icon"><Icon name={item.icon} /></span><span className="category-copy"><strong>{item.title}</strong><small>{categoryDescription(item.id)}</small></span>
             </button>)}
-          </div>
-          {category === 'nearby' && (
-            <div className="region-filter">
-              <label htmlFor="market-region">Selecione sua região</label>
+            <div className={`category-region-card${region ? ' is-selected' : ''}`}>
+              <label htmlFor="market-region"><span className="category-icon"><Icon name="pin" /></span><span className="category-copy"><strong>Por região</strong><small>Ofertas no estado</small></span></label>
               <select id="market-region" value={region} onChange={event => setRegion(event.target.value)}>
                 <option value="">Todas as regiões</option>
-                <option value="CE">Ceará</option>
-                <option value="RN">Rio Grande do Norte</option>
+                {brazilianStates.map(state => <option key={state.code} value={state.code}>{state.name}</option>)}
               </select>
             </div>
-          )}
+          </div>
+          <div className="category-filter-summary">
+            <p>{category || region ? <>{categories.find(item => item.id === category)?.title ?? 'Todas as categorias'}<span aria-hidden="true"> · </span>{brazilianStates.find(state => state.code === region)?.name ?? 'Todas as regiões'}</> : 'Combine uma categoria com o estado onde deseja comprar.'}</p>
+            {filtering && <button type="button" onClick={clearFilters}>Limpar filtros<Icon name="close" /></button>}
+          </div>
         </section>
 
         <section className="offers-section" id="ofertas" aria-labelledby="offers-title">

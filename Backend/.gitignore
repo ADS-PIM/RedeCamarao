@@ -1,4 +1,5 @@
 node_modules
+/uploads/
 .env
 /tests
 /test/*
@@ -8,4 +9,5 @@ node_modules
 !/test/public-offer-detail.test.cjs
 !/test/public-producers.test.cjs
 !/test/producer-dashboard.test.cjs
+!/test/offer-editor.test.cjs
 /database/tests

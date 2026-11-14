@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import './Header.css'
 
-export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, userId, accountName = '' }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; userId?: string; accountName?: string }) {
+export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, userId, accountName = '', editingOffer = false, onLogout, loggingOut = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; userId?: string; accountName?: string; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [logoutError, setLogoutError] = useState('')
   const headerRef = useRef<HTMLElement>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
 
@@ -73,8 +74,8 @@ export function Header({ authenticated = false, marketplace = false, products = 
         <div id="main-navigation" className={`header-navigation ${menuOpen ? 'is-open' : ''}`}>
           <nav aria-label="Navegação principal">
             {account && producer ? <>
-              <a href="/painel" aria-current="page" onClick={() => setMenuOpen(false)}>Painel</a>
-              <a href="/painel#ofertas" onClick={() => setMenuOpen(false)}>Minhas ofertas</a>
+              <a href="/painel" aria-current={!editingOffer ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Painel</a>
+              <a href="/painel#ofertas" aria-current={editingOffer ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Minhas ofertas</a>
               <a href={`/produtores/${encodeURIComponent(userId ?? '')}`} onClick={() => setMenuOpen(false)}>Perfil público</a>
             </> : account ? <>
               <a href="/painel" aria-current="page" onClick={() => setMenuOpen(false)}>Minha conta</a>
@@ -92,6 +93,8 @@ export function Header({ authenticated = false, marketplace = false, products = 
               <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
                 <a href="/painel#perfil">Dados da conta</a>
                 <a href="/marketplace">Ver marketplace</a>
+                <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}>{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
+                {logoutError && <p className="header-logout-error" role="alert">{logoutError}</p>}
               </div>
             </details> : authenticated ? <a className="button button-primary" href="/painel" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>
               <a className="login-link" href="/entrar" onClick={() => setMenuOpen(false)}>Entrar</a>
