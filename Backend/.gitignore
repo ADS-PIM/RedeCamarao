@@ -7,4 +7,5 @@ node_modules
 !/test/offer-cascade-migration.test.cjs
 !/test/public-offer-detail.test.cjs
 !/test/public-producers.test.cjs
+!/test/producer-dashboard.test.cjs
 /database/tests

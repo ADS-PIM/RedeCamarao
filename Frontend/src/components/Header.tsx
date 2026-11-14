@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import './Header.css'
 
-export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean }) {
+export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, userId, accountName = '' }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; userId?: string; accountName?: string }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
@@ -12,13 +12,30 @@ export function Header({ authenticated = false, marketplace = false, products = 
     const handleViewportChange = (event: MediaQueryListEvent) => {
       if (!event.matches) setMenuOpen(false)
     }
-    const closeMenu = () => setMenuOpen(false)
+    const closeMenu = () => {
+      setMenuOpen(false)
+      const accountMenu = headerRef.current?.querySelector<HTMLDetailsElement>('.header-account-menu')
+      if (accountMenu) accountMenu.open = false
+    }
+    const dismissAccountMenu = (event: Event) => {
+      const accountMenu = headerRef.current?.querySelector<HTMLDetailsElement>('.header-account-menu[open]')
+      if (!accountMenu) return
+      if (event instanceof KeyboardEvent) {
+        if (event.key !== 'Escape') return
+        accountMenu.querySelector<HTMLElement>('summary')?.focus()
+      } else if (event.target instanceof Node && accountMenu.contains(event.target)) return
+      accountMenu.open = false
+    }
 
     mobileViewport.addEventListener('change', handleViewportChange)
     window.addEventListener('popstate', closeMenu)
+    document.addEventListener('pointerdown', dismissAccountMenu)
+    document.addEventListener('keydown', dismissAccountMenu)
     return () => {
       mobileViewport.removeEventListener('change', handleViewportChange)
       window.removeEventListener('popstate', closeMenu)
+      document.removeEventListener('pointerdown', dismissAccountMenu)
+      document.removeEventListener('keydown', dismissAccountMenu)
     }
   }, [])
 
@@ -46,9 +63,10 @@ export function Header({ authenticated = false, marketplace = false, products = 
   }, [menuOpen])
 
   return (
-    <header ref={headerRef} className="site-header">
+    <header ref={headerRef} className={`site-header${account && producer ? ' producer-header' : ''}`}>
       <div className="container header-inner">
         <a href="/" className="brand" aria-label="RedeCamarão — início" onClick={() => setMenuOpen(false)}><strong>Rede</strong>Camarão</a>
+        {account && producer && <span className="header-role">Produtor</span>}
         <button ref={menuToggleRef} className="menu-toggle" type="button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-controls="main-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}>
           <Icon name={menuOpen ? 'close' : 'menu'} />
         </button>
@@ -57,7 +75,7 @@ export function Header({ authenticated = false, marketplace = false, products = 
             {account && producer ? <>
               <a href="/painel" aria-current="page" onClick={() => setMenuOpen(false)}>Painel</a>
               <a href="/painel#ofertas" onClick={() => setMenuOpen(false)}>Minhas ofertas</a>
-              <a href="/painel#perfil" onClick={() => setMenuOpen(false)}>Meu perfil</a>
+              <a href={`/produtores/${encodeURIComponent(userId ?? '')}`} onClick={() => setMenuOpen(false)}>Perfil público</a>
             </> : account ? <>
               <a href="/painel" aria-current="page" onClick={() => setMenuOpen(false)}>Minha conta</a>
               <a href="/painel#salvas" onClick={() => setMenuOpen(false)}>Ofertas salvas</a>
@@ -69,7 +87,13 @@ export function Header({ authenticated = false, marketplace = false, products = 
             </>}
           </nav>
           <div className="header-actions">
-            {authenticated ? <a className="button button-primary" href="/painel" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>
+            {authenticated && account && producer ? <details className="header-account-menu">
+              <summary className="header-account" aria-label="Menu da conta"><span className="header-avatar"><Icon name="waves" /></span><span>{accountName || 'Minha conta'}</span><span className="header-account-chevron" aria-hidden="true" /></summary>
+              <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
+                <a href="/painel#perfil">Dados da conta</a>
+                <a href="/marketplace">Ver marketplace</a>
+              </div>
+            </details> : authenticated ? <a className="button button-primary" href="/painel" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>
               <a className="login-link" href="/entrar" onClick={() => setMenuOpen(false)}>Entrar</a>
               <a className="button button-primary" href="/registro" onClick={() => setMenuOpen(false)}>Criar conta</a>
             </>}

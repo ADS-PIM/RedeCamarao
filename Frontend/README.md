@@ -37,13 +37,23 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - `/produtores` e `/produtores/` exibem o diretório, com título, busca por nome, estado e cidade, ordenação e seis cards por página. O link Produtores fica ativo no header, inclusive ao abrir um perfil.
 - A busca ignora acentos e combina nome/localização. As cidades disponíveis dependem do estado selecionado; trocar o estado limpa a cidade anterior. Os filtros só são aplicados por “Buscar produtores” e podem ser limpos na área de resultados.
 - “Mais relevantes” prioriza correspondências do nome e depois quantidade de ofertas ativas; também há ordem alfabética crescente/decrescente e mais ofertas. As contagens vêm da API, incluindo produtores sem ofertas.
-- `GET /users/producers` retorna somente `id`, `name`, `description`, `location`, `businessHours` e `activeOfferCount`. A consulta agrega a contagem de ofertas `ATIVO` dentro do prazo em uma única consulta, preservando produtores com zero ofertas. Não há migração de banco.
-- “Ver produtor” abre `/produtores/:id`, um perfil básico com apresentação, localidade, horários informados e ofertas reais, reutilizando `ProductCard`. O detalhe da oferta também leva a esse perfil. `GET /users/producers/:id` retorna `{ producer, offers }`; um produtor sem ofertas tem perfil válido, e produtor inexistente retorna 404.
+- `GET /users/producers` retorna `id`, `name`, `description`, `location`, `phone`, `businessHours` e `activeOfferCount`, sem e-mail ou documento. A consulta agrega a contagem de ofertas ativas dentro do prazo em uma única consulta, preservando produtores com zero ofertas. Não há migração de banco.
+- “Ver produtor” abre `/produtores/:id`: capa ilustrativa, identidade, apresentação, contato público, localização informada e ofertas reais. Os cards reutilizam `ProductCard` com o nome do produtor; filtros por tipo e paginação de quatro itens acompanham a grade de duas colunas, que passa para uma no celular. O mapa abre uma busca externa pela região cadastrada, sem coordenadas ou endereço inventados.
+- `GET /users/producers/:id` retorna `{ producer, offers }`; um produtor sem ofertas tem perfil válido, e produtor inexistente retorna 404. Não há ações de gestão de ofertas nessa página pública.
 - A paginação foi extraída para `Pagination`, compartilhada por produtos, produtores e ofertas do perfil. Header, footer, ícones e navegação sem recarregamento permanecem compartilhados. Não há faixa de caminhos/voltar adicional.
 - Cards em 3/2/1 colunas, busca adaptada a desktop/tablet/celular, campos de 16px e controles de pelo menos 44px. Carregamento, falha com nova tentativa, diretório vazio, busca sem resultados e perfil indisponível têm estados próprios.
 - Imagens ilustrativas originais geradas com Imagegen integrado ficam em `public/images/producer-farm-1.jpg`, `producer-farm-2.jpg` e `producer-farm-3.jpg`. Não representam as fazendas cadastradas. Prompts finais e proveniência: [PRODUCER_ASSETS.md](public/images/PRODUCER_ASSETS.md).
 - O contato pelo WhatsApp continua como recurso futuro. Nenhum chat interno ou integração de mensagens foi adicionado.
 - Backend: `npm.cmd run test:producers` valida rotas, campos públicos, contagem, casos vazios e consulta agregada com dados simulados, sem acessar o banco.
+
+## Painel do produtor
+
+- `/painel` usa a sessão autenticada. Produtores veem resumo, busca sem acentos, filtro por status e paginação de seis ofertas. O header mantém a altura compartilhada, identifica o perfil Produtor e oferece acesso ao painel, às ofertas e ao perfil público. Compradores continuam com ofertas salvas e dados pessoais.
+- A tabela vira cartões em telas menores; miniaturas são explicitamente ilustrativas. Os indicadores usam dados reais: ofertas disponíveis no período, pausadas, encerradas e total. Conversas, visualizações, tempo de resposta e rascunhos separados não são inventados, pois não existem no contrato atual.
+- Cadastrar, editar e duplicar abrem um formulário com descrição, limites do lote e disponibilidade. Duplicar preenche uma nova oferta, sem publicar automaticamente. O backend cria ofertas com status `INACTIVE`; a ativação posterior é explícita.
+- Pausar, ativar e remover usam confirmação em diálogo nativo, com foco contido, Escape e retorno de foco. Falhas mantêm o diálogo aberto e permitem nova tentativa. Remover exclui a oferta e suas fotos conforme o contrato existente.
+- `GET /offer/user/:userId` inclui descrição, limites de quantidade e `createdAt`, necessários para editar e duplicar sem perder dados. A coluna mostra **Publicação**; não existe data de última atualização no modelo. O contrato público do catálogo não muda.
+- `npm.cmd run test:producer-dashboard`, no backend, verifica esses campos sem banco. O frontend valida o contrato e testa busca, status e limites do período em `npm.cmd test`.
 
 ## Padrão visual e responsividade
 
@@ -56,6 +66,7 @@ A Feira do Agricultor foi usada como referência de organização: estilos próx
 - O cadastro tem largura máxima própria de 1200px, com título de até 44px e formulário proporcional, sem alterar a largura do header. Até 1000px, o conteúdo passa para uma coluna.
 - A navegação interna usa a History API e mantém o header e a sessão montados, evitando o recarregamento completo que causava a piscada entre páginas. Voltar/avançar, âncoras e posições de rolagem são tratados pelo hook `useNavigation`; links externos, downloads e abertura em nova aba mantêm o comportamento do navegador.
 - A navegação entre as telas fica no header, sem faixa adicional de voltar/avançar ou caminho separado por barras.
+- Campos de texto, seletores e buscas compartilham foco sutil com borda reforçada internamente, sem mudar as dimensões do controle. Links e botões mantêm o indicador de teclado.
 
 ## Executar
 

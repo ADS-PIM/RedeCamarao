@@ -3,7 +3,7 @@ import { formatPrice } from '../data/marketplace'
 import { offerHref, offerIllustration } from '../data/offerDetail'
 import { Icon } from './Icon'
 
-export function ProductCard({ offer }: { offer: Offer }) {
+export function ProductCard({ offer, producerName }: { offer: Offer; producerName?: string }) {
   return (
     <article className="product-card">
       <figure className="product-photo">
@@ -16,7 +16,7 @@ export function ProductCard({ offer }: { offer: Offer }) {
           <span className="product-available"><span aria-hidden="true">●</span> Disponível</span>
         </div>
         <h3>{offer.title}</h3>
-        <p className="product-description">{offer.description}</p>
+        <p className="product-description">{producerName ?? offer.description}</p>
         <div className="product-specs"><span>{offer.size} · {offer.weight} kg</span><span><Icon name="pin" />{offer.location}</span></div>
         <div className="product-card-bottom">
           <p className="product-price">{formatPrice(offer.price)} <small>/ kg</small></p>

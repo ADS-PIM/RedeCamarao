@@ -14,7 +14,6 @@
 .market-search > svg { width: 21px; height: 21px; flex-shrink: 0; }
 .market-search input { flex: 1; width: 100%; border: 0; background: transparent; color: #193340; font-size: 16px; min-height: 44px; }
 .market-search input::placeholder { color: #607783; opacity: 1; }
-.market-search:focus-within { outline: 3px solid #79bdda; outline-offset: 3px; }
 .market-search input:focus-visible { outline: none; }
 .market-search .button { flex-shrink: 0; padding-inline: 18px; }
 .popular-searches { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 14px; color: #b7d1dd; font-size: 13px; line-height: 1.5; }

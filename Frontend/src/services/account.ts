@@ -2,7 +2,7 @@ import type { Offer } from '../data/marketplace'
 
 const configuredUrl = import.meta.env?.VITE_API_URL
 export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED'
-export type ManagedOffer = Offer & { status: OfferStatus }
+export type ManagedOffer = Offer & { status: OfferStatus; createdAt: string }
 export type UserProfile = {
   name: string
   email: string
@@ -57,6 +57,10 @@ function isManagedOffer(value: unknown): value is ManagedOffer {
     && (typeof data.type === 'string' || data.type === null)
     && typeof data.size === 'string' && typeof data.price === 'number'
     && Number.isFinite(data.price) && typeof data.weight === 'number' && Number.isFinite(data.weight)
+    && typeof data.description === 'string'
+    && typeof data.minimumQuantity === 'number' && Number.isFinite(data.minimumQuantity)
+    && typeof data.maximumQuantity === 'number' && Number.isFinite(data.maximumQuantity)
+    && typeof data.createdAt === 'string' && Number.isFinite(Date.parse(data.createdAt))
     && typeof data.location === 'string' && typeof data.startDate === 'string' && Number.isFinite(Date.parse(data.startDate))
     && typeof data.endDate === 'string' && Number.isFinite(Date.parse(data.endDate))
     && ['ACTIVE', 'INACTIVE', 'EXPIRED', 'SOLD_OUT', 'CANCELLED'].includes(String(data.status))

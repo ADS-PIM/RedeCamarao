@@ -9,7 +9,6 @@
 .products-search > svg { width: 20px; height: 20px; flex-shrink: 0; }
 .products-search input { flex: 1; width: 100%; min-height: 44px; background: transparent; border: 0; color: #193340; font-size: 16px; }
 .products-search input::placeholder { color: var(--muted); opacity: 1; }
-.products-search:focus-within { outline: 3px solid #1388b7; outline-offset: 3px; }
 .products-search input:focus-visible { outline: none; }
 .products-search .button { flex-shrink: 0; }
 
