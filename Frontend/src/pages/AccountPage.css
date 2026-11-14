@@ -53,6 +53,7 @@
 .account-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
 .account-row-actions button, .account-more summary, .account-more a { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 5px 0; border: 0; background: transparent; color: var(--primary); font-size: 14px; font-weight: 600; white-space: nowrap; }
 .account-row-actions button:hover, .account-more a:hover { color: var(--primary-dark); }
+.account-row-actions > a { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding-block: 5px; color: var(--primary); font-size: 14px; font-weight: 600; }
 .account-row-actions button:disabled { opacity: .55; }
 .account-row-actions svg { width: 19px; height: 19px; flex-shrink: 0; }
 .account-row-actions .account-delete { color: #b7353b; }
