@@ -16,7 +16,7 @@ import './OfferEditorPage.css'
 
 export function OfferEditorPage({ offerId, session, restoring, onSessionChange, onProfileLoad, onCreated }: {
   offerId?: string; session: UserSession | null; restoring: boolean;
-  onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string) => void
+  onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string, profilePicture?: string | null) => void
   onCreated: (href: string) => void
 }) {
   const [values, setValues] = useState<OfferEditorValues | null>(null)
@@ -37,36 +37,38 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
   const fileInput = useRef<HTMLInputElement>(null)
   const pending = useRef(false)
   const action = useAuthenticatedAction(session, onSessionChange)
+  const userId = session?.userId
+  const userType = session?.userType
 
   useEffect(() => {
     document.title = `${offerId ? 'Editar oferta' : 'Cadastrar oferta'} | RedeCamarão`
-    if (restoring || !session || session.userType !== 'PRODUCER') return
+    if (restoring || !userId || userType !== 'PRODUCER') return
     let active = true
     Promise.resolve().then(async () => {
       setLoading(true); setLoadError(''); setMissing(false)
       const profile = await action(fetchMyProfile)
       if (!active) return
-      setName(profile.name); onProfileLoad(profile.name)
+      setName(profile.name); onProfileLoad(profile.name, profile.profilePicture ?? null)
       if (!offerId) {
         const duplicateId = new URLSearchParams(window.location.search).get('duplicar')
-        const source = duplicateId ? (await action(token => fetchMyOffers(token, session.userId))).find(item => item.id === duplicateId) : null
+        const source = duplicateId ? (await action(token => fetchMyOffers(token, userId))).find(item => item.id === duplicateId) : null
         if (!active) return
         setValues(source ? { ...initialEditorValues(source), title: `${source.title} — cópia`.slice(0, 255), startDate: blankEditorValues().startDate, endDate: blankEditorValues().endDate, available: false } : blankEditorValues(profile.location))
         setPhotos([]); setDirty(false); return
       }
-      const offers = await action(token => fetchMyOffers(token, session.userId))
+      const offers = await action(token => fetchMyOffers(token, userId))
       const offer = offers.find(item => item.id === offerId)
       if (!active) return
       if (!offer) { setMissing(true); return }
       const currentPhotos = await action(token => fetchEditorPhotos(token, offerId))
       if (active) {
         setOriginal(offer); setValues(initialEditorValues(offer)); setPhotos(currentPhotos)
-        setName(profile.name); onProfileLoad(profile.name); setDirty(false)
+        setName(profile.name); onProfileLoad(profile.name, profile.profilePicture ?? null); setDirty(false)
       }
     }).catch(error => { if (active) setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar esta oferta.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [offerId, session?.userId, session?.userType, restoring, attempt, action, onProfileLoad])
+  }, [offerId, userId, userType, restoring, attempt, action, onProfileLoad])
 
   useEffect(() => {
     if (!dirty) return

@@ -24,7 +24,7 @@ function publicProducer(overrides = {}) {
     return {
         id: producerId, name: 'Fazenda de teste', description: 'Produção familiar.',
         location: 'Fortim, CE', phone: '85999990000', businessHours: 'Segunda a sexta, 8h às 17h',
-        activeOfferCount: 2, ...overrides
+        profilePicture: null, activeOfferCount: 2, ...overrides
     };
 }
 
@@ -104,6 +104,14 @@ test('empty directory returns an empty array instead of fictional producers', as
     const response = await request();
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), []);
+});
+
+test('profile photo is preserved in the directory and public producer profile', async () => {
+    producer.profilePicture = 'https://example.test/uploads/profiles/photo.jpg';
+    const directory = await (await request()).json();
+    const detail = await (await request(`/users/producers/${producerId}`)).json();
+    assert.equal(directory[0].profilePicture, producer.profilePicture);
+    assert.equal(detail.producer.profilePicture, producer.profilePicture);
 });
 
 test('public producer profile contains only its own active catalog offers and public fields', async () => {

@@ -13,6 +13,7 @@ export type UserProfile = {
   phone: string | null
   businessHours: string | null
   createdAt: string
+  profilePicture?: string | null
 }
 export type ProfileUpdate = Pick<UserProfile, 'name' | 'email' | 'description' | 'location' | 'phone' | 'businessHours'>
 export type NewOffer = Omit<Offer, 'id'>
@@ -49,6 +50,7 @@ function isProfile(value: unknown): value is UserProfile {
     && nullableText(data.description) && nullableText(data.location)
     && nullableText(data.phone) && nullableText(data.businessHours)
     && typeof data.createdAt === 'string'
+    && (data.profilePicture === undefined || data.profilePicture === null || typeof data.profilePicture === 'string' && /^https?:\/\//i.test(data.profilePicture))
 }
 
 function isManagedOffer(value: unknown): value is ManagedOffer {
@@ -80,6 +82,18 @@ export async function fetchMyProfile(token: string, baseUrl = configuredUrl): Pr
 export async function updateMyProfile(token: string, data: ProfileUpdate, baseUrl = configuredUrl): Promise<void> {
   const response = await request('/users/me', token, 'PATCH', data, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível atualizar o perfil.')
+}
+
+export async function saveProfilePhoto(token: string, data: string | null, baseUrl = configuredUrl): Promise<string | null> {
+  const response = await request('/users/me/photo', token, 'PUT', { data }, baseUrl)
+  if (!response.ok) {
+    if (response.status === 413) throw new Error('Escolha uma foto JPG ou PNG de até 3 MB.')
+    if (response.status === 400) throw new Error('A foto não é válida. Use JPG ou PNG de até 3 MB.')
+    return responseError(response, 'Não foi possível salvar a foto de perfil. Tente novamente.')
+  }
+  const result = await response.json().catch(() => null)
+  if (!result || !(result.profilePicture === null || typeof result.profilePicture === 'string' && /^https?:\/\//i.test(result.profilePicture))) throw new Error('Não foi possível confirmar a foto salva. Atualize a página para conferir.')
+  return result.profilePicture
 }
 
 export async function fetchMyOffers(token: string, userId: string, baseUrl = configuredUrl): Promise<ManagedOffer[]> {

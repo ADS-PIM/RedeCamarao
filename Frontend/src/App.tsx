@@ -1,4 +1,4 @@
-﻿import { Header } from './components/Header'
+import { Header } from './components/Header'
 import { Footer } from './components/Footer'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { LoginPage } from './pages/LoginPage'
@@ -23,10 +23,10 @@ function App() {
   const { pathname, handleLinkClick, navigate } = useNavigation()
   const [session, setSession] = useState<UserSession | null>(null)
   const [restoring, setRestoring] = useState(true)
-  const [accountIdentity, setAccountIdentity] = useState({ id: '', name: '' })
+  const [accountIdentity, setAccountIdentity] = useState<{ id: string; name: string; profilePicture: string | null }>({ id: '', name: '', profilePicture: null })
   const [loggingOut, setLoggingOut] = useState(false)
   const logoutPending = useRef(false)
-  const updateAccountName = useCallback((name: string) => setAccountIdentity({ id: session?.userId ?? '', name }), [session?.userId])
+  const updateAccountName = useCallback((name: string, profilePicture: string | null = null) => setAccountIdentity({ id: session?.userId ?? '', name, profilePicture }), [session?.userId])
   const isMarketplace = ['/', '/marketplace', '/marketplace/'].includes(pathname)
   const isProducts = ['/produtos', '/produtos/'].includes(pathname)
   const offerId = offerIdFromPath(pathname)
@@ -44,7 +44,7 @@ function App() {
     logoutPending.current = true; setLoggingOut(true)
     try {
       await logoutUser()
-      setSession(null); setAccountIdentity({ id: '', name: '' }); navigate('/entrar')
+      setSession(null); setAccountIdentity({ id: '', name: '', profilePicture: null }); navigate('/entrar')
     } finally { logoutPending.current = false; setLoggingOut(false) }
   }
 
@@ -63,7 +63,7 @@ function App() {
   return (
     <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || isNewOffer || isMyOffers || Boolean(editingOfferId)} editingOffer={isNewOffer || isMyOffers || Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} onLogout={handleLogout} loggingOut={loggingOut} />
+      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || isNewOffer || isMyOffers || Boolean(editingOfferId)} editingOffer={isNewOffer || isMyOffers || Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onLogout={handleLogout} loggingOut={loggingOut} />
       {editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
       {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">

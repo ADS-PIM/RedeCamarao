@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use('/offer/:id/editor', authUser, express.json({ limit: '22mb' }));
 app.use('/offer/editor', authUser, express.json({ limit: '22mb' }));
+app.use('/users/me/photo', authUser, express.json({ limit: '5mb' }));
 app.use(express.json());
 
 app.use((req, _res, next) => {

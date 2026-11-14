@@ -91,7 +91,7 @@ test('public detail returns the active offer, its photos and only public produce
         photos: [{ id: photoId, imageUrl: 'https://example.test/lote.jpg', description: 'Foto do lote' }],
         producer: {
             id: producerId, name: 'Fazenda de teste', description: 'Produção local.', location: 'Fortim, CE',
-            phone: '85999990000', businessHours: 'Segunda a sexta, 8h às 17h', activeOfferCount: 2
+            phone: '85999990000', businessHours: 'Segunda a sexta, 8h às 17h', profilePicture: null, activeOfferCount: 2
         }
     });
     for (const sensitive of ['private-owner', 'private-password', 'private-document', 'cpf_cnpj', 'email', 'password', 'userId', 'status']) {
@@ -112,6 +112,14 @@ test('detail preserves optional public producer fields and an empty gallery with
     for (const field of ['description', 'location', 'phone', 'businessHours']) assert.equal(result.producer[field], null);
     assert.ok(!('createdAt' in result.producer));
     assert.ok(!('responseTime' in result.producer));
+});
+
+test('offer detail includes the saved producer photo', async () => {
+    const profilePicture = 'https://example.test/uploads/profiles/photo.png';
+    producer = producerRecord({ profilePicture });
+    const response = await request();
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).producer.profilePicture, profilePicture);
 });
 
 test('inactive, expired and missing offers receive the same 404 before reading producer or photos', async () => {

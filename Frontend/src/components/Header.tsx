@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
+import { Avatar } from './Avatar'
 import './Header.css'
 
-export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, userId, accountName = '', editingOffer = false, onLogout, loggingOut = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; userId?: string; accountName?: string; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
+export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, userId, accountName = '', profilePicture, editingOffer = false, onLogout, loggingOut = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; userId?: string; accountName?: string; profilePicture?: string | null; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const headerRef = useRef<HTMLElement>(null)
@@ -84,14 +85,13 @@ export function Header({ authenticated = false, marketplace = false, products = 
               <a href="/produtos" onClick={() => setMenuOpen(false)}>Explorar ofertas</a>
             </> : <>
               <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a><a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtos</a>
-              <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a><a href="/marketplace#como-funciona" onClick={() => setMenuOpen(false)}>Como funciona</a>
+              <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a>
             </>}
           </nav>
           <div className="header-actions">
-            {authenticated && account && producer ? <details className="header-account-menu">
-              <summary className="header-account" aria-label="Menu da conta"><span className="header-avatar"><Icon name="farm" /></span><span>{accountName || 'Minha conta'}</span><Icon name="chevron" className="header-account-chevron" /></summary>
+            {authenticated && account ? <details className="header-account-menu">
+              <summary className="header-account" aria-label="Menu da conta"><Avatar className="header-avatar" src={profilePicture} fallback={producer ? 'farm' : 'bag'} /><span>{accountName || 'Minha conta'}</span><Icon name="chevron" className="header-account-chevron" /></summary>
               <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
-                <a href="/painel#perfil">Dados da conta</a>
                 <a href="/marketplace">Ver marketplace</a>
                 <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}><Icon name="logout" />{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
                 {logoutError && <p className="header-logout-error" role="alert">{logoutError}</p>}

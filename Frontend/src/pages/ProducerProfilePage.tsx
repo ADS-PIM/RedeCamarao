@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../components/Icon'
+import { Avatar } from '../components/Avatar'
 import { Pagination } from '../components/Pagination'
 import { ProductCard } from '../components/ProductCard'
 import { useProducerProfile } from '../hooks/useProducerProfile'
@@ -74,7 +75,7 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
 
       <section className="producer-profile-heading" aria-labelledby="producer-profile-title">
         <div className="container producer-profile-heading-inner">
-          <span className="producer-profile-avatar"><Icon name="farm" /></span>
+          <Avatar className="producer-profile-avatar" src={producer.profilePicture} />
           <div className="producer-profile-heading-copy">
             <p className="producer-profile-eyebrow">Produtor da RedeCamarão</p>
             <h1 id="producer-profile-title">{producer.name}</h1>

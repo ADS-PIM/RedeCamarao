@@ -9,6 +9,7 @@ export type Producer = {
   location: string | null
   phone: string | null
   businessHours: string | null
+  profilePicture?: string | null
   activeOfferCount: number
 }
 export type ProducerProfile = { producer: Producer; offers: Offer[] }

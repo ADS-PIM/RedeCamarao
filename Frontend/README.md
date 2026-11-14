@@ -38,7 +38,7 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - `/produtores` e `/produtores/` exibem o diretório, com título, busca por nome, estado e cidade, ordenação e seis cards por página. O link Produtores fica ativo no header, inclusive ao abrir um perfil.
 - A busca ignora acentos e combina nome/localização. As cidades disponíveis dependem do estado selecionado; trocar o estado limpa a cidade anterior. Os filtros só são aplicados por “Buscar produtores” e podem ser limpos na área de resultados.
 - “Mais relevantes” prioriza correspondências do nome e depois quantidade de ofertas ativas; também há ordem alfabética crescente/decrescente e mais ofertas. As contagens vêm da API, incluindo produtores sem ofertas.
-- `GET /users/producers` retorna `id`, `name`, `description`, `location`, `phone`, `businessHours` e `activeOfferCount`, sem e-mail ou documento. A consulta agrega a contagem de ofertas ativas dentro do prazo em uma única consulta, preservando produtores com zero ofertas. Não há migração de banco.
+- `GET /users/producers` retorna `id`, `name`, `description`, `location`, `phone`, `businessHours`, `profilePicture` e `activeOfferCount`, sem e-mail ou documento. A consulta agrega a contagem de ofertas ativas dentro do prazo em uma única consulta, preservando produtores com zero ofertas.
 - “Ver produtor” abre `/produtores/:id`: capa ilustrativa, identidade, apresentação, contato público, localização informada e ofertas reais. Os cards reutilizam `ProductCard` com o nome do produtor; filtros por tipo e paginação de quatro itens acompanham a grade de duas colunas, que passa para uma no celular. O mapa abre uma busca externa pela região cadastrada, sem coordenadas ou endereço inventados.
 - `GET /users/producers/:id` retorna `{ producer, offers }`; um produtor sem ofertas tem perfil válido, e produtor inexistente retorna 404. Não há ações de gestão de ofertas nessa página pública.
 - A paginação foi extraída para `Pagination`, compartilhada por produtos, produtores e ofertas do perfil. Header, footer, ícones e navegação sem recarregamento permanecem compartilhados. Não há faixa de caminhos/voltar adicional.
@@ -65,6 +65,14 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 - `POST /offer/editor` cadastra e `PUT /offer/:id/editor` atualiza os campos e a galeria em uma transação. Imagens novas ficam em `Backend/uploads/offers`. Falhas preservam as alterações e não deixam ofertas parcialmente criadas; a renovação do token não recarrega o formulário.
 - O SQL inclui `RASCUNHO`. Bancos com histórico usam `20261114120000-add-draft-offer-status.js`; instalações manuais acrescentam esse valor ao enum conforme `Backend/database/README.md`, sem recriar o banco.
 - O menu do ícone do produtor inclui “Sair da conta” tanto no painel quanto na edição. O logout usa o endpoint existente, só limpa a sessão após sucesso e leva a `/entrar` sem recarregar o documento; falhas permitem nova tentativa no menu.
+
+## Foto de perfil
+
+- Em `/painel`, na seção Dados do perfil (ou Dados pessoais para compradores), “Adicionar foto”/“Trocar foto” abre a seleção de JPG ou PNG de até 3 MB. A prévia é local até clicar em “Salvar foto”; cancelar descarta a alteração. A remoção também precisa ser salva.
+- A imagem salva aparece no menu da conta. Para produtores, também aparece na identidade do perfil público, no card da fazenda e na identificação do produtor na oferta. O componente compartilhado `Avatar` mantém um ícone do Font Awesome quando não há foto ou a imagem falha.
+- `PUT /users/me/photo` recebe `{ data: "data:image/png;base64,..." }` (ou JPEG), e `{ data: null }` remove a imagem. O dono vem exclusivamente do token. A API valida formato, assinatura e tamanho; grava o arquivo em `Backend/uploads/profiles` e a URL em `users.profilePicture`. A gravação usa transação, elimina novos arquivos em falhas e remove a foto anterior após a confirmação no banco.
+- `GET /users/me` e os endpoints públicos de produtores/ofertas retornam `profilePicture`, com `null` para quem ainda não enviou foto. O diretório de uploads precisa ser persistente no ambiente que executa a API. `PUBLIC_API_URL`, quando configurada, define a origem das imagens.
+- A alteração de banco está em `20261114130000-add-user-profile-picture.js`; instruções para instalações manuais estão em `Backend/database/README.md`. Validação: frontend `npm.cmd test`; backend `npm.cmd run test:profile-photo`, `test:producers` e `test:offer-detail`.
 
 ## Padrão visual e responsividade
 
@@ -108,7 +116,7 @@ Configure `VITE_API_URL` no `.env` com a URL do backend, sem barra final ou cami
 - O sucesso mostra a confirmação de acesso e a opção de sair (`POST /users/logout`). O cabeçalho passa a exibir “Minha conta”, e a sessão permanece disponível ao navegar pelo header.
 - O backend deve permitir a origem exata do frontend em `FRONTEND_URL` e credenciais no CORS. Cookies em produção exigem HTTPS conforme a configuração existente do backend.
 
-`Header`, `Footer`, `FormField` e `Pagination` são componentes reutilizáveis, com estilos separados. Produtos leva ao catálogo em `/produtos`; Produtores leva a `/produtores`; Como funciona leva à apresentação do marketplace. Ajuda, termos e privacidade ainda exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
+`Header`, `Footer`, `FormField`, `Avatar` e `Pagination` são componentes reutilizáveis, com estilos separados. Produtos leva ao catálogo em `/produtos`; Produtores leva a `/produtores`. “Como funciona” foi removido do header; o menu da conta contém “Ver marketplace” e “Sair da conta”. Ajuda, termos e privacidade ainda exibem uma mensagem de indisponibilidade. Os textos jurídicos precisam ser fornecidos antes do uso em produção.
 
 ## Verificar
 

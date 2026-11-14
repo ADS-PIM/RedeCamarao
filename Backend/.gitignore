@@ -10,4 +10,5 @@ node_modules
 !/test/public-producers.test.cjs
 !/test/producer-dashboard.test.cjs
 !/test/offer-editor.test.cjs
+!/test/profile-photo.test.cjs
 /database/tests

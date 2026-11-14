@@ -8,6 +8,7 @@ function isProducer(value: unknown): value is Producer {
   const nullableText = (value: unknown) => value === null || typeof value === 'string'
   return typeof producer.id === 'string' && Boolean(producer.id) && typeof producer.name === 'string'
     && nullableText(producer.description) && nullableText(producer.location) && nullableText(producer.phone) && nullableText(producer.businessHours)
+    && (producer.profilePicture === undefined || producer.profilePicture === null || typeof producer.profilePicture === 'string' && /^https?:\/\//i.test(producer.profilePicture))
     && typeof producer.activeOfferCount === 'number' && Number.isInteger(producer.activeOfferCount) && producer.activeOfferCount >= 0
 }
 

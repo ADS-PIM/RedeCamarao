@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import { controllers } from '../../../../config/composition_root';
 import { authUser } from '../../../../../userAuthMiddleware'
+import { saveProfilePhoto } from '../controllers/profilePhoto.controller';
 
 import {
     registrationRateLimit,
@@ -20,6 +21,7 @@ router.post('/login', ...loginRateLimit, (req, res) => controllers.userControlle
 router.post('/refresh', (req, res) => controllers.userController.refresh(req, res));
 
 router.post('/logout', (req, res) => controllers.userController.logout(req, res));
+router.put('/me/photo', authUser, saveProfilePhoto);
 
 router
     .route('/me')

@@ -1,5 +1,24 @@
 # Banco de dados
 
+## Foto de perfil
+
+O SQL de referência inclui `users.profilePicture VARCHAR(2048) NULL`, com a URL
+da foto ou `NULL` quando não houver imagem. Bancos com histórico de migrations
+usam `20261114130000-add-user-profile-picture.js`.
+
+Em um banco existente criado manualmente, sem `SequelizeMeta`, confira
+`SHOW COLUMNS FROM users LIKE 'profilePicture';` e, somente se o campo não existir,
+aplique:
+
+```sql
+ALTER TABLE users ADD COLUMN profilePicture VARCHAR(2048) NULL DEFAULT NULL;
+```
+
+Os registros existentes são preservados, inicialmente sem foto. Não execute o
+histórico completo de migrations sobre uma instalação manual. O `down` recusa
+remover o campo enquanto existirem fotos salvas. As imagens ficam em
+`Backend/uploads/profiles`; o banco armazena apenas a URL.
+
 ## Rascunhos de ofertas
 
 O SQL de referência inclui `RASCUNHO` em `offers.status`. Para bancos com
