@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
+import { ProfilePhotoEditor } from '../components/ProfilePhotoEditor'
+import { useAuthenticatedAction } from '../hooks/useAuthenticatedAction'
 import { ProductCard } from '../components/ProductCard'
 import { formatPrice } from '../data/marketplace'
 import type { OfferDetail } from '../data/marketplace'
@@ -8,11 +10,11 @@ import { readSavedOffers, savedOffersKey, setOfferSaved } from '../data/offerDet
 import { producerHref } from '../data/producers'
 import { editOfferHref, myOffersHref, newOfferHref } from '../data/offerEditor'
 import { isPublishedOffer } from '../data/account'
-import { logoutUser, restoreSession } from '../services/auth'
+import { logoutUser } from '../services/auth'
 import type { UserSession } from '../services/auth'
 import { fetchOfferDetail } from '../services/offers'
 import {
-  fetchMyOffers, fetchMyProfile, updateMyProfile,
+  fetchMyOffers, fetchMyProfile, updateMyProfile, saveProfilePhoto,
 } from '../services/account'
 import type { ManagedOffer, ProfileUpdate, UserProfile } from '../services/account'
 import './AccountPage.css'
@@ -25,7 +27,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
   session: UserSession | null
   restoring?: boolean
   onSessionChange: (session: UserSession | null) => void
-  onProfileLoad?: (name: string) => void
+  onProfileLoad?: (name: string, profilePicture?: string | null) => void
 }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [offers, setOffers] = useState<ManagedOffer[]>([])
@@ -47,24 +49,12 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
   const pending = useRef(false)
   const savedIdsKey = savedOfferIds.join('\u0000')
   const savedRequestKey = `${savedAttempt}:${savedIdsKey}`
+  const userId = session?.userId
 
-  const withSession = useCallback(async <T,>(action: (token: string) => Promise<T>): Promise<T> => {
-    if (!session) throw new Error('Entre novamente para continuar.')
-    try { return await action(session.accessToken) }
-    catch (error) {
-      if (!(error instanceof Error) || !error.message.includes('sessão expirou')) throw error
-      const renewed = await restoreSession()
-      if (!renewed || renewed.userId !== session.userId || renewed.userType !== session.userType) {
-        onSessionChange(null)
-        throw new Error('Sua sessão expirou. Entre novamente para continuar.', { cause: error })
-      }
-      onSessionChange(renewed)
-      return action(renewed.accessToken)
-    }
-  }, [session, onSessionChange])
+  const withSession = useAuthenticatedAction(session, onSessionChange)
 
   const reload = useCallback(async () => {
-    if (!session) { setLoading(false); return }
+    if (!userId) { setLoading(false); return }
     setLoading(true)
     setLoadError('')
     try {
@@ -75,12 +65,12 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
         description: currentProfile.description ?? '', location: currentProfile.location ?? '',
         phone: currentProfile.phone ?? '', businessHours: currentProfile.businessHours ?? '',
       })
-      if (currentProfile.userType === 'PRODUCER') setOffers(await withSession(token => fetchMyOffers(token, session.userId)))
+      if (currentProfile.userType === 'PRODUCER') setOffers(await withSession(token => fetchMyOffers(token, userId)))
       else setOffers([])
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar sua conta.')
     } finally { setLoading(false) }
-  }, [session, withSession])
+  }, [userId, withSession])
 
   useEffect(() => { void Promise.resolve().then(reload) }, [reload])
   useEffect(() => {
@@ -113,13 +103,18 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
   }, [profile?.userType, savedOfferIds, savedRequestKey])
   useEffect(() => {
     document.title = `${profile?.name ?? 'Minha conta'} | RedeCamarão`
-    if (profile) onProfileLoad?.(profile.name)
+    if (profile) onProfileLoad?.(profile.name, profile.profilePicture ?? null)
   }, [profile, onProfileLoad])
 
   const activeCount = offers.filter(offer => isPublishedOffer(offer)).length
   const pausedCount = offers.filter(offer => offer.status === 'INACTIVE').length
   const completedCount = offers.filter(offer => ['EXPIRED', 'SOLD_OUT', 'CANCELLED'].includes(offer.status)).length
   const savedOffersLoading = profile?.userType === 'BUYER' && savedLoadedKey !== savedRequestKey
+
+  async function updatePhoto(data: string | null) {
+    const profilePicture = await withSession(token => saveProfilePhoto(token, data))
+    setProfile(current => current ? { ...current, profilePicture } : current)
+  }
 
   async function submitProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -235,6 +230,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
             <div className="account-section-actions">{profile.userType === 'PRODUCER' && <a className="button button-secondary" href={producerHref(session.userId)}>Ver perfil público</a>}
             {!profileEditing && <button type="button" className="button button-secondary" onClick={() => { setProfileEditing(true); requestAnimationFrame(() => profileNameRef.current?.focus()) }}><Icon name="edit" />Editar perfil</button>}</div>
           </div>
+          <ProfilePhotoEditor src={profile.profilePicture ?? null} onSave={updatePhoto} fallback={profile.userType === 'PRODUCER' ? 'farm' : 'bag'} />
           {profileEditing ? <form className="account-profile-form" onSubmit={submitProfile}>
             <label>Nome<input ref={profileNameRef} required maxLength={255} value={profileDraft.name} onChange={event => setProfileDraft(current => ({ ...current, name: event.target.value }))} /></label>
             <label>E-mail<input type="email" required maxLength={320} value={profileDraft.email} onChange={event => setProfileDraft(current => ({ ...current, email: event.target.value }))} /></label>

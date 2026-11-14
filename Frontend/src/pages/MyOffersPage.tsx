@@ -25,7 +25,7 @@ function SelectAll({ checked, partial, onChange }: { checked: boolean; partial: 
   return <input ref={ref} type="checkbox" checked={checked} onChange={onChange} aria-label="Selecionar ofertas desta página" />
 }
 export function MyOffersPage({ session, restoring, onSessionChange, onProfileLoad }: {
-  session: UserSession | null; restoring: boolean; onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string) => void
+  session: UserSession | null; restoring: boolean; onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string, profilePicture?: string | null) => void
 }) {
   const [offers, setOffers] = useState<ManagedOffer[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,18 +42,20 @@ export function MyOffersPage({ session, restoring, onSessionChange, onProfileLoa
   const pending = useRef(false)
   const [confirm, setConfirm] = useState<{ action: 'pause' | 'activate' | 'delete'; offers: ManagedOffer[] } | null>(null)
   const action = useAuthenticatedAction(session, onSessionChange)
+  const userId = session?.userId
+  const userType = session?.userType
   useEffect(() => {
     document.title = 'Minhas ofertas | RedeCamarão'
-    if (restoring || !session || session.userType !== 'PRODUCER') return
+    if (restoring || !userId || userType !== 'PRODUCER') return
     let active = true
     Promise.resolve().then(async () => {
       setLoading(true); setLoadError('')
-      const [data, profile] = await Promise.all([action(token => fetchMyOffers(token, session.userId)), action(fetchMyProfile)])
-      if (active) { setOffers(data); onProfileLoad(profile.name) }
+      const [data, profile] = await Promise.all([action(token => fetchMyOffers(token, userId)), action(fetchMyProfile)])
+      if (active) { setOffers(data); onProfileLoad(profile.name, profile.profilePicture ?? null) }
     }).catch(error => { if (active) setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar suas ofertas.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [session?.userId, session?.userType, restoring, attempt, action, onProfileLoad])
+  }, [userId, userType, restoring, attempt, action, onProfileLoad])
   useEffect(() => {
     const dismiss = (event: Event) => document.querySelectorAll<HTMLDetailsElement>('.account-more[open]').forEach(menu => {
       if (event instanceof KeyboardEvent && event.key !== 'Escape') return

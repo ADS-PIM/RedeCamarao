@@ -14,7 +14,7 @@ export function useAuthenticatedAction(session: UserSession | null, onSessionCha
       const renewed = await restoreSession()
       if (!renewed || renewed.userId !== identity.userId || renewed.userType !== identity.userType) {
         onSessionChange(null)
-        throw new Error('Sua sessão expirou. Entre novamente para continuar.')
+        throw new Error('Sua sessão expirou. Entre novamente para continuar.', { cause: error })
       }
       current.current = renewed
       onSessionChange(renewed)

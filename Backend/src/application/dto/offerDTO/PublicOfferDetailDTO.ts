@@ -14,6 +14,7 @@ export type PublicOfferDetailDTO = PublicOfferDTO & {
         location: string | null;
         phone: string | null;
         businessHours: string | null;
+        profilePicture: string | null;
         activeOfferCount: number;
     };
 };

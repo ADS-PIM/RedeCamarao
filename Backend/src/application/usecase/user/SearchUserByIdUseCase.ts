@@ -25,6 +25,7 @@ export class SearchByIdUser implements UseCase<string, UserSearchByIdDTO | null>
             location: user.location,
             phone: user.phone,
             businessHours: user.businessHours,
+            profilePicture: user.profilePicture,
             createdAt: user.createdAt
         };
     }

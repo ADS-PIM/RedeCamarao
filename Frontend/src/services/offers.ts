@@ -36,6 +36,7 @@ function isOfferDetail(value: unknown): value is OfferDetail {
       && typeof producer.id === 'string' && typeof producer.name === 'string'
       && nullableText(producer.description) && nullableText(producer.location)
       && nullableText(producer.phone) && nullableText(producer.businessHours)
+      && (producer.profilePicture === undefined || producer.profilePicture === null || typeof producer.profilePicture === 'string' && /^https?:\/\//i.test(producer.profilePicture))
       && typeof producer.activeOfferCount === 'number' && Number.isInteger(producer.activeOfferCount) && producer.activeOfferCount >= 0)
 }
 

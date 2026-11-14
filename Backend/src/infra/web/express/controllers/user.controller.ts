@@ -275,6 +275,7 @@ export class UserController {
             location: user.location,
             phone: user.phone,
             businessHours: user.businessHours,
+            profilePicture: user.profilePicture,
         });
         } catch (error: any) {
             console.error('Error searching public user:', error);

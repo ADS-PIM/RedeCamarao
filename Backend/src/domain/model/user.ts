@@ -17,6 +17,7 @@ export type propsUser = {
     description: string | null;
     businessHours: string | null;
     createdAt: Date;
+    profilePicture?: string | null;
 }
 
 export class User {
@@ -90,6 +91,8 @@ export class User {
     get businessHours(): string | null {
         return this.props.businessHours ?? null;
     }
+
+    get profilePicture(): string | null { return this.props.profilePicture ?? null; }
 
     get createdAt() {
         return this.props.createdAt;

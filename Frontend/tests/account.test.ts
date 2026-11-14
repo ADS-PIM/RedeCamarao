@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createOffer, deleteOffer, fetchMyOffers, fetchMyProfile, updateMyProfile, updateOffer } from '../src/services/account.ts'
+import { createOffer, deleteOffer, fetchMyOffers, fetchMyProfile, saveProfilePhoto, updateMyProfile, updateOffer } from '../src/services/account.ts'
 import { canActivateOffer, filterManagedOffers, isPublishedOffer } from '../src/data/account.ts'
 
 const profile = {
@@ -34,6 +34,41 @@ test('perfil e ofertas exigem os formatos de resposta da API', async t => {
   const badOffers = t.mock.method(globalThis, 'fetch', async () => Response.json([{ ...offer, status: 'PENDING' }]))
   await assert.rejects(fetchMyOffers('token', 'user-1', api), /dados de ofertas inválidos/)
   badOffers.mock.restore()
+})
+
+test('foto é enviada à conta autenticada e remoção usa null, sem ID de outro usuário', async t => {
+  const url = `${api}/uploads/profiles/foto.png`
+  const data = 'data:image/png;base64,test'
+  let call = 0
+  t.mock.method(globalThis, 'fetch', async (target: string, init?: RequestInit) => {
+    assert.equal(target, `${api}/users/me/photo`)
+    assert.equal(init?.method, 'PUT')
+    assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer token')
+    assert.deepEqual(JSON.parse(String(init?.body)), { data: call === 0 ? data : null })
+    return Response.json({ profilePicture: call++ === 0 ? url : null })
+  })
+  assert.equal(await saveProfilePhoto('token', data, api), url)
+  assert.equal(await saveProfilePhoto('token', null, api), null)
+})
+
+test('falhas no upload distinguem arquivo inválido, tamanho e sessão expirada', async t => {
+  for (const [status, message] of [[400, /não é válida/], [413, /3 MB/], [401, /sessão expirou/], [500, /salvar a foto de perfil/]] as const) {
+    const mock = t.mock.method(globalThis, 'fetch', async () => Response.json({}, { status }))
+    await assert.rejects(saveProfilePhoto('token', 'data', api), message)
+    mock.mock.restore()
+  }
+})
+
+test('perfil preserva foto salva e recusa respostas inválidas de imagem', async t => {
+  const profilePicture = `${api}/uploads/profiles/foto.png`
+  const mock = t.mock.method(globalThis, 'fetch', async () => Response.json({ ...profile, profilePicture }))
+  assert.equal((await fetchMyProfile('token', api)).profilePicture, profilePicture)
+  mock.mock.restore()
+  for (const value of [undefined, 42, 'javascript:invalid', 'data:image/png;base64,test']) {
+    const invalid = t.mock.method(globalThis, 'fetch', async () => Response.json({ profilePicture: value }))
+    await assert.rejects(saveProfilePhoto('token', 'data', api), /confirmar a foto salva/)
+    invalid.mock.restore()
+  }
 })
 
 test('escritas enviam métodos, corpo e IDs codificados', async t => {

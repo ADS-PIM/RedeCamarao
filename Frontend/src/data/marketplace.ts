@@ -25,6 +25,7 @@ export type OfferProducer = {
   location: string | null
   phone: string | null
   businessHours: string | null
+  profilePicture?: string | null
   activeOfferCount: number
 }
 export type OfferDetail = Offer & { createdAt: string; photos: OfferPhoto[]; producer: OfferProducer }

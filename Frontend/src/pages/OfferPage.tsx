@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
+import { Avatar } from '../components/Avatar'
 import { OfferGallery } from '../components/OfferGallery'
 import { ProductCard } from '../components/ProductCard'
 import { useOfferDetail } from '../hooks/useOfferDetail'
@@ -123,7 +124,7 @@ export function OfferPage({ offerId }: { offerId: string }) {
             </dl>
           </section>
           <aside className="offer-producer" aria-labelledby="offer-producer-name">
-            <div className="offer-producer-heading"><span className="offer-producer-avatar"><Icon name="farm" /></span><div><h2 id="offer-producer-name">{producer.name}</h2><p>{producer.location || 'Produtor na RedeCamarão'}</p></div></div>
+            <div className="offer-producer-heading"><Avatar className="offer-producer-avatar" src={producer.profilePicture} /><div><h2 id="offer-producer-name">{producer.name}</h2><p>{producer.location || 'Produtor na RedeCamarão'}</p></div></div>
             <p className="offer-producer-description">{producer.description || 'Este produtor ainda não adicionou uma apresentação.'}</p>
             <dl className="offer-producer-facts">
               <div><dt>Ofertas ativas</dt><dd>{producer.activeOfferCount}</dd></div>

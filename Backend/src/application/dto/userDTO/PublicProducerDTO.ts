@@ -16,6 +16,7 @@ export function toPublicProducerDTO(producer: PublicProducer): PublicProducerDTO
         location: producer.location,
         phone: producer.phone,
         businessHours: producer.businessHours,
+        profilePicture: producer.profilePicture ?? null,
         activeOfferCount: producer.activeOfferCount
     };
 }

@@ -1,0 +1,14 @@
+.profile-photo-editor { display: flex; align-items: flex-start; gap: 24px; padding-block: 6px 24px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.account-photo-avatar { width: 96px; height: 96px; border: 1px solid var(--border); }
+.account-photo-avatar > svg { width: 42px; height: 42px; }
+.profile-photo-content { flex: 1; min-width: 0; }
+.profile-photo-content h3 { margin: 0 0 6px; font-size: 17px; }
+.profile-photo-content > p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.profile-photo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+.profile-photo-remove, .profile-photo-cancel { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--primary); font-size: 13px; }
+.profile-photo-remove { color: #b7353b; }
+.profile-photo-remove > svg { width: 16px; height: 16px; }
+.profile-photo-content > .profile-photo-error { margin-top: 12px; color: #b7353b; }
+.profile-photo-content > .profile-photo-success { margin-top: 12px; color: #167752; }
+.profile-photo-content > .profile-photo-hint { margin-top: 12px; }
+@media (max-width: 600px) { .profile-photo-editor { flex-direction: column; gap: 16px; } .account-photo-avatar { width: 88px; height: 88px; } }
