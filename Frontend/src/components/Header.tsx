@@ -89,11 +89,11 @@ export function Header({ authenticated = false, marketplace = false, products = 
           </nav>
           <div className="header-actions">
             {authenticated && account && producer ? <details className="header-account-menu">
-              <summary className="header-account" aria-label="Menu da conta"><span className="header-avatar"><Icon name="waves" /></span><span>{accountName || 'Minha conta'}</span><span className="header-account-chevron" aria-hidden="true" /></summary>
+              <summary className="header-account" aria-label="Menu da conta"><span className="header-avatar"><Icon name="farm" /></span><span>{accountName || 'Minha conta'}</span><Icon name="chevron" className="header-account-chevron" /></summary>
               <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
                 <a href="/painel#perfil">Dados da conta</a>
                 <a href="/marketplace">Ver marketplace</a>
-                <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}>{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
+                <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}><Icon name="logout" />{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
                 {logoutError && <p className="header-logout-error" role="alert">{logoutError}</p>}
               </div>
             </details> : authenticated ? <a className="button button-primary" href="/painel" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>

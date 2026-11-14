@@ -102,7 +102,7 @@ export function RegisterPage() {
                 <fieldset className="profile-options" aria-labelledby="profile-title">
                   {([
                     { value: 'BUYER', name: 'Comprador', description: 'Encontrar ofertas e conversar com produtores', icon: 'bag' },
-                    { value: 'PRODUCER', name: 'Produtor', description: 'Publicar e administrar ofertas de camarão', icon: 'store' },
+                    { value: 'PRODUCER', name: 'Produtor', description: 'Publicar e administrar ofertas de camarão', icon: 'farm' },
                   ] as const).map(option => (
                     <label key={option.value} className={`profile-option ${profile === option.value ? 'is-selected' : ''}`}>
                       <input type="radio" name="profile" value={option.value} checked={profile === option.value} onChange={() => setProfile(option.value)} />

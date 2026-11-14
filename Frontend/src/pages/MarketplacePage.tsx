@@ -10,8 +10,8 @@ import { brazilianStates } from '../utils/registration'
 import './MarketplacePage.css'
 
 const categories: { id: Category; title: string; icon: IconName }[] = [
-  { id: 'gray', title: 'Camarão cinza', icon: 'waves' },
-  { id: 'white', title: 'Camarão branco', icon: 'sparkle' },
+  { id: 'gray', title: 'Camarão cinza', icon: 'shrimp' },
+  { id: 'white', title: 'Camarão branco', icon: 'shrimp' },
   { id: 'large', title: 'Tamanho grande', icon: 'ruler' },
   { id: 'bulk', title: 'Lotes acima de 50 kg', icon: 'box' },
 ]

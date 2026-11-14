@@ -109,7 +109,7 @@ export function OfferPage({ offerId }: { offerId: string }) {
               <div><dt><Icon name="pin" />Localização</dt><dd>{offer.location}</dd></div>
               <div><dt><Icon name="calendar" />Disponibilidade</dt><dd>Até {formatDate(offer.endDate)}</dd></div>
             </dl>
-            <div className="offer-contact-actions"><button type="button" className="button offer-contact-button" disabled aria-describedby="offer-contact-future"><Icon name="chat" />WhatsApp em breve</button></div>
+            <div className="offer-contact-actions"><button type="button" className="button offer-contact-button" disabled aria-describedby="offer-contact-future"><Icon name="whatsapp" />WhatsApp em breve</button></div>
             <p id="offer-contact-future" className="offer-contact-note"><Icon name="info" />Em breve, você poderá conversar diretamente com o produtor pelo WhatsApp para combinar preço, retirada e demais condições.</p>
           </section>
 
@@ -123,7 +123,7 @@ export function OfferPage({ offerId }: { offerId: string }) {
             </dl>
           </section>
           <aside className="offer-producer" aria-labelledby="offer-producer-name">
-            <div className="offer-producer-heading"><span className="offer-producer-avatar"><Icon name="waves" /></span><div><h2 id="offer-producer-name">{producer.name}</h2><p>{producer.location || 'Produtor na RedeCamarão'}</p></div></div>
+            <div className="offer-producer-heading"><span className="offer-producer-avatar"><Icon name="farm" /></span><div><h2 id="offer-producer-name">{producer.name}</h2><p>{producer.location || 'Produtor na RedeCamarão'}</p></div></div>
             <p className="offer-producer-description">{producer.description || 'Este produtor ainda não adicionou uma apresentação.'}</p>
             <dl className="offer-producer-facts">
               <div><dt>Ofertas ativas</dt><dd>{producer.activeOfferCount}</dd></div>

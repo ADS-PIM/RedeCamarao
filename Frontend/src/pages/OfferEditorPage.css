@@ -31,6 +31,7 @@
 .editor-add-photo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 170px; padding: 20px 12px; border: 1px dashed #67a6c0; border-radius: 10px; background: #eef7fb; color: var(--primary); text-align: center; }
 .editor-add-photo:hover { background: #e5f2f8; }
 .editor-add-photo > span { font-size: 38px; font-weight: 300; line-height: 1; }
+.editor-add-photo > svg { width: 32px; height: 32px; }
 .editor-add-photo strong { font-size: 14px; }
 .editor-add-photo small { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .editor-photo-hint { margin-top: 14px; color: var(--muted); font-size: 13px; line-height: 1.6; }

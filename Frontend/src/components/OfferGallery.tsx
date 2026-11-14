@@ -56,7 +56,7 @@ export function OfferGallery({ photos }: { photos: GalleryPhoto[] }) {
           aria-label={index === 2 && photos.length > 3 ? `Ver todas as ${photos.length} fotos` : `Ver foto ${index + 1}`}
           onClick={() => { setSelected(index); if (index === 2 && photos.length > 3) setExpanded(true) }}>
           <GalleryImage photo={item} />
-          {index === 2 && photos.length > 3 && <span className="offer-gallery-more"><Icon name="grid" />+{photos.length - 2} fotos</span>}
+          {index === 2 && photos.length > 3 && <span className="offer-gallery-more"><Icon name="images" />+{photos.length - 2} fotos</span>}
         </button>)}
       </div>}
       {photo.illustrative && <p className="offer-gallery-note">Imagens ilustrativas. Este anúncio ainda não tem fotos do lote.</p>}

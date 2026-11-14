@@ -19,13 +19,15 @@
 .header-account > span:nth-child(2) { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .header-account { cursor: pointer; list-style: none; }
 .header-account::-webkit-details-marker { display: none; }
-.header-account-chevron { width: 11px; height: 11px; margin: -5px 4px 0 0; border-right: 2px solid var(--primary); border-bottom: 2px solid var(--primary); transform: rotate(45deg); }
+.header-account .header-account-chevron { width: 13px; height: 13px; margin-left: 2px; color: var(--primary); }
 .header-account-menu { position: relative; }
 .header-account-options { position: absolute; z-index: 2; top: calc(100% + 10px); right: 0; display: grid; width: 210px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: white; box-shadow: 0 8px 24px #19334018; }
 .header-account-options a { display: flex; align-items: center; min-height: 44px; padding: 10px 12px; color: var(--primary); font-size: 14px; border-radius: 6px; }
 .header-account-options a:hover { background: #edf6fa; }
 .header-account-options .header-logout { display: flex; align-items: center; min-height: 44px; margin-top: 6px; padding: 10px 12px; border: 0; border-top: 1px solid var(--border); background: white; color: #b7353b; text-align: left; font-size: 14px; }
 .header-account-options .header-logout:hover { background: #fff5f5; }
+.header-logout { gap: 8px; }
+.header-logout > svg { width: 16px; height: 16px; }
 .header-logout-error { padding: 10px 12px; color: #b7353b; font-size: 12px; line-height: 1.6; }
 .header-avatar { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: #eaf5f9; color: var(--primary); }
 .header-avatar svg { width: 21px; height: 21px; }

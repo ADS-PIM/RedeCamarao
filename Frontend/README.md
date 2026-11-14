@@ -68,6 +68,8 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 
 ## Padrão visual e responsividade
 
+- Ícones do Font Awesome Free, com o componente React oficial e importação individual dos símbolos usados. O componente compartilhado Icon preserva os tamanhos, cores e rótulos acessíveis das ações. Camarão identifica produtos; fazenda identifica produtores; água representa aquicultura; fotos, cópia e logout têm símbolos específicos. Os pacotes e estilos ficam no bundle local, sem CDN ou Kit. Referência: [integração oficial com React](https://docs.fontawesome.com/web/use-with/react/add-icons).
+
 A Feira do Agricultor foi usada como referência de organização: estilos próximos dos componentes, cores compartilhadas, conteúdo com largura máxima e grids que se adaptam à tela. A identidade azul da RedeCamarão permanece como base para as próximas telas.
 
 - O container compartilhado ocupa 89% da tela, com largura máxima de 1800px, mantendo logo e ações próximos às laterais como no wireframe. As cores e o contraste dos textos secundários ficam em `src/index.css`.
