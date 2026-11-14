@@ -122,8 +122,7 @@ export function MarketplacePage() {
               <h2 id="offers-title">{filtering ? 'Ofertas encontradas' : 'Ofertas disponíveis'}</h2>
               <p className="section-description">{offersDescription}</p>
             </div>
-            {filtering ? <button className="button button-secondary view-all" type="button" onClick={clearFilters}><Icon name="close" />Limpar filtros</button>
-              : <a className="button button-secondary view-all" href="/produtos"><Icon name="arrow" />Ver todas</a>}
+            {!filtering && <a className="button button-secondary view-all" href="/produtos"><Icon name="arrow" />Ver todas</a>}
           </div>
           <div className="offer-grid" aria-live="polite" aria-atomic="true" aria-busy={loading}>
             {loading && <div className="offers-loading" role="status">Carregando ofertas...</div>}
