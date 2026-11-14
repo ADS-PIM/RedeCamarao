@@ -30,7 +30,9 @@ export class ListOffersByUserId implements UseCase<string, OfferSearchByUserIdDT
             startDate: offer.startDate,
             endDate: offer.endDate,
             status: offer.status,
-            createdAt: offer.createdAt
+            createdAt: offer.createdAt,
+            updatedAt: offer.updatedAt,
+            coverPhoto: offer.coverPhoto
         }));
     }
 }

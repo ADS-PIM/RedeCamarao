@@ -2,8 +2,8 @@ import type { Offer } from '../data/marketplace'
 import type { EditorPhoto, editorPayload } from '../data/offerEditor'
 
 const configuredUrl = import.meta.env?.VITE_API_URL
-export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED'
-export type ManagedOffer = Offer & { status: OfferStatus; createdAt: string }
+export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED' | 'DRAFT'
+export type ManagedOffer = Offer & { status: OfferStatus; createdAt: string; updatedAt?: string; coverPhoto?: string | null }
 export type UserProfile = {
   name: string
   email: string
@@ -64,7 +64,9 @@ function isManagedOffer(value: unknown): value is ManagedOffer {
     && typeof data.createdAt === 'string' && Number.isFinite(Date.parse(data.createdAt))
     && typeof data.location === 'string' && typeof data.startDate === 'string' && Number.isFinite(Date.parse(data.startDate))
     && typeof data.endDate === 'string' && Number.isFinite(Date.parse(data.endDate))
-    && ['ACTIVE', 'INACTIVE', 'EXPIRED', 'SOLD_OUT', 'CANCELLED'].includes(String(data.status))
+    && (data.updatedAt === undefined || typeof data.updatedAt === 'string' && Number.isFinite(Date.parse(data.updatedAt)))
+    && (data.coverPhoto === undefined || data.coverPhoto === null || typeof data.coverPhoto === 'string' && /^https?:\/\//i.test(data.coverPhoto))
+    && ['ACTIVE', 'INACTIVE', 'EXPIRED', 'SOLD_OUT', 'CANCELLED', 'DRAFT'].includes(String(data.status))
 }
 
 export async function fetchMyProfile(token: string, baseUrl = configuredUrl): Promise<UserProfile> {
@@ -127,4 +129,19 @@ export async function saveEditedOffer(token: string, id: string, data: ReturnTyp
   }
   const saved = await response.json().catch(() => null)
   return readEditorPhotos(saved?.photos)
+}
+
+export async function createOfferWithPhotos(token: string, data: ReturnType<typeof editorPayload>, baseUrl = configuredUrl): Promise<{ id: string; photos: EditorPhoto[] }> {
+  const response = await request('/offer/editor', token, 'POST', data, baseUrl)
+  if (!response.ok) {
+    if (response.status === 413) throw new Error('Use até 5 fotos de 3 MB cada.')
+    if (response.status === 400) {
+      const result = await response.json().catch(() => null)
+      throw new Error(typeof result?.error === 'string' ? result.error : 'Confira os campos da oferta.')
+    }
+    return responseError(response, 'Não foi possível cadastrar a oferta. Seus dados continuam nesta tela.')
+  }
+  const saved = await response.json().catch(() => null)
+  if (typeof saved?.id !== 'string' || !/^[a-z0-9_-]{1,36}$/i.test(saved.id)) throw new Error('Não foi possível confirmar o cadastro. Verifique Minhas ofertas antes de tentar novamente.')
+  return { id: saved.id, photos: readEditorPhotos(saved.photos) }
 }

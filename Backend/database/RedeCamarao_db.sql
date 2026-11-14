@@ -43,7 +43,7 @@ create table `offers` (
     `location` varchar(255) not null,
     `start_availability_date` date not null,
     `end_availability_date` date not null,
-    `status` enum('ATIVO', 'PAUSADO', 'VENDIDO', 'CANCELADO', 'EXPIRADO') not null,
+    `status` enum('ATIVO', 'PAUSADO', 'VENDIDO', 'CANCELADO', 'EXPIRADO', 'RASCUNHO') not null,
     `createdAt` timestamp not null default current_timestamp,
     `updatedAt` timestamp not null default current_timestamp on update current_timestamp,
     primary key (`id`),

@@ -1,56 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
-import { Dialog } from '../components/Dialog'
 import { ProductCard } from '../components/ProductCard'
-import { formatDate, formatPrice } from '../data/marketplace'
+import { formatPrice } from '../data/marketplace'
 import type { OfferDetail } from '../data/marketplace'
 import { readSavedOffers, savedOffersKey, setOfferSaved } from '../data/offerDetail'
 import { producerHref } from '../data/producers'
-import { editOfferHref } from '../data/offerEditor'
-import { offerHref, offerIllustration } from '../data/offerDetail'
-import { canActivateOffer, filterManagedOffers, isPublishedOffer, localDateString, offerStatusNames } from '../data/account'
+import { editOfferHref, myOffersHref, newOfferHref } from '../data/offerEditor'
+import { isPublishedOffer } from '../data/account'
 import { logoutUser, restoreSession } from '../services/auth'
 import type { UserSession } from '../services/auth'
 import { fetchOfferDetail } from '../services/offers'
 import {
-  createOffer, deleteOffer, fetchMyOffers, fetchMyProfile, updateMyProfile, updateOffer,
+  fetchMyOffers, fetchMyProfile, updateMyProfile,
 } from '../services/account'
-import type { ManagedOffer, NewOffer, OfferStatus, ProfileUpdate, UserProfile } from '../services/account'
+import type { ManagedOffer, ProfileUpdate, UserProfile } from '../services/account'
 import './AccountPage.css'
 
-const statusFilters: { value: OfferStatus | 'ALL'; label: string }[] = [
-  { value: 'ALL', label: 'Todos os status' },
-  { value: 'ACTIVE', label: 'Ativas' },
-  { value: 'INACTIVE', label: 'Pausadas' },
-  { value: 'EXPIRED', label: 'Expiradas' },
-  { value: 'SOLD_OUT', label: 'Vendidas' },
-  { value: 'CANCELLED', label: 'Canceladas' },
-]
-const dateField = (value: string) => value.slice(0, 10)
 const readBrowserSavedOffers = () => {
   try { return readSavedOffers(window.localStorage) } catch { return [] }
-}
-
-type OfferForm = {
-  title: string; type: string; size: string; price: string; weight: string
-  location: string; startDate: string; endDate: string; description: string
-  minimumQuantity: string; maximumQuantity: string
-}
-const emptyOffer: OfferForm = {
-  title: '', type: 'Camarão', size: '', price: '', weight: '', location: '',
-  startDate: localDateString(),
-  endDate: localDateString(7),
-  description: '', minimumQuantity: '1', maximumQuantity: '',
-}
-
-function initialOfferForm(offer: ManagedOffer): OfferForm {
-  return {
-    ...emptyOffer, title: offer.title, type: offer.type ?? '', size: offer.size,
-    price: String(offer.price), weight: String(offer.weight), location: offer.location,
-    startDate: dateField(offer.startDate), endDate: dateField(offer.endDate),
-    description: offer.description, minimumQuantity: String(offer.minimumQuantity), maximumQuantity: String(offer.maximumQuantity),
-  }
 }
 
 function AccountPage({ session, restoring = false, onSessionChange, onProfileLoad }: {
@@ -69,21 +37,13 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
   const [savedLoadedKey, setSavedLoadedKey] = useState('')
   const [savedAttempt, setSavedAttempt] = useState(0)
   const [feedback, setFeedback] = useState('')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<OfferStatus | 'ALL'>('ALL')
-  const [page, setPage] = useState(1)
   const [profileEditing, setProfileEditing] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileDraft, setProfileDraft] = useState<ProfileUpdate>({
     name: '', email: '', description: '', location: '', phone: '', businessHours: '',
   })
-  const [offerEditor, setOfferEditor] = useState<{ offer: ManagedOffer | null; values: OfferForm } | null>(null)
-  const [savingOffer, setSavingOffer] = useState(false)
-  const [busyOfferId, setBusyOfferId] = useState('')
   const [loggingOut, setLoggingOut] = useState(false)
-  const [confirmation, setConfirmation] = useState<{ offer: ManagedOffer; action: 'pause' | 'activate' | 'delete' } | null>(null)
   const profileNameRef = useRef<HTMLInputElement>(null)
-  const offerTitleRef = useRef<HTMLInputElement>(null)
   const pending = useRef(false)
   const savedIdsKey = savedOfferIds.join('\u0000')
   const savedRequestKey = `${savedAttempt}:${savedIdsKey}`
@@ -124,19 +84,6 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
 
   useEffect(() => { void Promise.resolve().then(reload) }, [reload])
   useEffect(() => {
-    const closeMenus = (event: Event) => {
-      document.querySelectorAll<HTMLDetailsElement>('.account-more[open]').forEach(menu => {
-        if (event instanceof KeyboardEvent && event.key !== 'Escape') return
-        if (event.type === 'pointerdown' && event.target instanceof Node && menu.contains(event.target)) return
-        menu.open = false
-        if (event instanceof KeyboardEvent) menu.querySelector<HTMLElement>('summary')?.focus()
-      })
-    }
-    document.addEventListener('pointerdown', closeMenus)
-    document.addEventListener('keydown', closeMenus)
-    return () => { document.removeEventListener('pointerdown', closeMenus); document.removeEventListener('keydown', closeMenus) }
-  }, [])
-  useEffect(() => {
     const syncSavedOffers = (event: StorageEvent) => {
       if (event.key === savedOffersKey || event.key === null) setSavedOfferIds(readBrowserSavedOffers())
     }
@@ -169,105 +116,10 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
     if (profile) onProfileLoad?.(profile.name)
   }, [profile, onProfileLoad])
 
-  const filteredOffers = useMemo(() => {
-    return filterManagedOffers(offers, search, statusFilter)
-  }, [offers, search, statusFilter])
-  const pageSize = 6
-  const totalPages = Math.max(1, Math.ceil(filteredOffers.length / pageSize))
-  const currentPage = Math.min(page, totalPages)
-  const visibleOffers = filteredOffers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const activeCount = offers.filter(offer => isPublishedOffer(offer)).length
   const pausedCount = offers.filter(offer => offer.status === 'INACTIVE').length
   const completedCount = offers.filter(offer => ['EXPIRED', 'SOLD_OUT', 'CANCELLED'].includes(offer.status)).length
   const savedOffersLoading = profile?.userType === 'BUYER' && savedLoadedKey !== savedRequestKey
-
-  function openCreateOffer() {
-    setOfferEditor({ offer: null, values: { ...emptyOffer, startDate: localDateString(), endDate: localDateString(7), location: profile?.location ?? '' } })
-    setFeedback('')
-    requestAnimationFrame(() => offerTitleRef.current?.focus())
-  }
-
-  function duplicateOffer(offer: ManagedOffer) {
-    setOfferEditor({ offer: null, values: { ...initialOfferForm(offer), title: `${offer.title} — cópia`.slice(0, 255), startDate: localDateString(), endDate: localDateString(7) } })
-    setFeedback('')
-  }
-
-  async function submitOffer(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!session || !offerEditor || pending.current) return
-    const { offer, values } = offerEditor
-    if (new Date(values.endDate) < new Date(values.startDate)) {
-      setFeedback('A data final não pode ser anterior à data inicial.')
-      return
-    }
-    if (Number(values.minimumQuantity) > Number(values.maximumQuantity)) {
-      setFeedback('A quantidade mínima não pode exceder a quantidade máxima.')
-      return
-    }
-    if (![values.title, values.type, values.size, values.location, values.description].every(value => value.trim())) {
-      setFeedback('Preencha os campos de texto antes de salvar.')
-      return
-    }
-    pending.current = true
-    setSavingOffer(true)
-    setFeedback('')
-    try {
-      if (offer) {
-        await withSession(token => updateOffer(token, offer.id, {
-          title: values.title.trim(), type: values.type.trim() || null, size: values.size.trim(),
-          price: Number(values.price), weight: Number(values.weight), location: values.location.trim(),
-          startDate: values.startDate, endDate: values.endDate,
-          description: values.description.trim(), minimumQuantity: Number(values.minimumQuantity), maximumQuantity: Number(values.maximumQuantity),
-        }))
-        setFeedback('Oferta atualizada com sucesso.')
-      } else {
-        const data: NewOffer = {
-          title: values.title.trim(), type: values.type.trim(), size: values.size.trim(),
-          price: Number(values.price), weight: Number(values.weight),
-          maximumQuantity: Number(values.maximumQuantity), minimumQuantity: Number(values.minimumQuantity),
-          location: values.location.trim(), startDate: values.startDate, endDate: values.endDate,
-          description: values.description.trim(),
-        }
-        await withSession(token => createOffer(token, data))
-        setFeedback('Oferta cadastrada como pausada. Ative-a na lista para publicá-la.')
-      }
-      setOfferEditor(null)
-      await reload()
-    } catch (error) {
-      setFeedback(error instanceof Error ? error.message : 'Não foi possível salvar a oferta.')
-    } finally { pending.current = false; setSavingOffer(false) }
-  }
-
-  async function changeOfferStatus(offer: ManagedOffer) {
-    if (!session || pending.current) return
-    pending.current = true
-    setBusyOfferId(offer.id)
-    setFeedback('')
-    try {
-      const status = offer.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-      await withSession(token => updateOffer(token, offer.id, { status }))
-      setOffers(current => current.map(item => item.id === offer.id ? { ...item, status } : item))
-      setConfirmation(null)
-      setFeedback(status === 'ACTIVE' ? 'Oferta ativada. Ela aparecerá no marketplace durante o período informado.' : 'Oferta pausada e removida do marketplace.')
-    } catch (error) {
-      setFeedback(error instanceof Error ? error.message : 'Não foi possível alterar o status da oferta.')
-    } finally { pending.current = false; setBusyOfferId('') }
-  }
-
-  async function removeOffer(offer: ManagedOffer) {
-    if (!session || pending.current) return
-    pending.current = true
-    setBusyOfferId(offer.id)
-    setFeedback('')
-    try {
-      await withSession(token => deleteOffer(token, offer.id))
-      setOffers(current => current.filter(item => item.id !== offer.id))
-      setConfirmation(null)
-      setFeedback('Oferta excluída.')
-    } catch (error) {
-      setFeedback(error instanceof Error ? error.message : 'Não foi possível excluir a oferta.')
-    } finally { pending.current = false; setBusyOfferId('') }
-  }
 
   async function submitProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -340,7 +192,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
           <div><p className="account-eyebrow">{profile.userType === 'PRODUCER' ? 'PAINEL DO PRODUTOR' : 'PERFIL DO COMPRADOR'}</p>
             <h1>Olá, {profile.name}!</h1>
             <p>{profile.userType === 'PRODUCER' ? 'Acompanhe e atualize suas ofertas publicadas.' : 'Encontre ofertas salvas e mantenha seus dados atualizados para comprar com mais facilidade.'}</p></div>
-          {profile.userType === 'PRODUCER' ? <button type="button" className="button button-primary account-create" onClick={openCreateOffer}><span aria-hidden="true">+</span>Cadastrar nova oferta</button> : <button type="button" className="button button-secondary account-logout" onClick={logout} disabled={loggingOut}>
+          {profile.userType === 'PRODUCER' ? <a className="button button-primary account-create" href={newOfferHref}><span aria-hidden="true">+</span>Cadastrar nova oferta</a> : <button type="button" className="button button-secondary account-logout" onClick={logout} disabled={loggingOut}>
             {loggingOut ? 'Saindo...' : 'Sair da conta'}
           </button>}
         </section>
@@ -353,54 +205,10 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
             <article><div><span>Total de ofertas</span><span className="account-metric-icon"><Icon name="grid" /></span></div><strong>{offers.length}</strong><small>Todas as suas publicações</small></article>
           </section>
 
-          <section id="ofertas" className="account-offers" aria-labelledby="account-offers-title">
-            <div className="account-section-heading">
-              <div><h2 id="account-offers-title">Minhas ofertas</h2><p>{offers.length} {offers.length === 1 ? 'oferta no total' : 'ofertas no total'}</p></div>
-              <div className="account-toolbar">
-              <label className="account-search search-field"><Icon name="search" /><span className="visually-hidden">Buscar oferta</span>
-                <input value={search} onChange={event => { setSearch(event.target.value); setPage(1) }} placeholder="Buscar oferta" /></label>
-              <label className="account-filter"><span className="visually-hidden">Filtrar por status</span>
-                <select value={statusFilter} onChange={event => { setStatusFilter(event.target.value as OfferStatus | 'ALL'); setPage(1) }}>
-                  {statusFilters.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select></label>
-              </div>
-            </div>
-            <p className="visually-hidden" role="status">{filteredOffers.length} ofertas encontradas</p>
-            {visibleOffers.length ? <div className="account-table-wrap"><table className="account-table">
-              <caption className="visually-hidden">Suas ofertas e ações de gerenciamento</caption>
-              <thead><tr><th scope="col">Oferta</th><th scope="col">Preço</th><th scope="col">Quantidade</th><th scope="col">Status</th><th scope="col">Publicação</th><th scope="col">Ações</th></tr></thead>
-              <tbody>{visibleOffers.map(offer => <tr key={offer.id}>
-                <td><div className="account-offer-name"><span className="account-offer-image"><img src={offerIllustration(offer)} alt="" width="64" height="56" loading="lazy" /><span>Ilustrativa</span></span>
-                  <div><strong>{offer.title}</strong><small>#{offer.id.slice(0, 8)}</small></div></div></td>
-                <td data-label="Preço"><strong>{formatPrice(offer.price)}</strong><small className="account-price-unit">/kg</small></td>
-                <td data-label="Quantidade">{offer.weight.toLocaleString('pt-BR')} kg</td>
-                <td data-label="Status"><span className={`offer-status status-${offer.status.toLowerCase()}`}>{offerStatusNames[offer.status]}</span></td>
-                <td data-label="Publicação"><time dateTime={offer.createdAt}>{formatDate(offer.createdAt)}</time></td>
-                <td><div className="account-row-actions">
-                  <a aria-label={`Editar ${offer.title}`} href={editOfferHref(offer.id)}><Icon name="edit" />Editar</a>
-                  {(offer.status === 'ACTIVE' || canActivateOffer(offer)) && <button type="button" aria-label={`${offer.status === 'ACTIVE' ? 'Pausar' : 'Ativar'} ${offer.title}`} disabled={Boolean(busyOfferId)} onClick={() => { setFeedback(''); setConfirmation({ offer, action: offer.status === 'ACTIVE' ? 'pause' : 'activate' }) }}>
-                    <Icon name={offer.status === 'ACTIVE' ? 'pause' : 'play'} />{offer.status === 'ACTIVE' ? 'Pausar' : 'Ativar'}</button>}
-                  <details className="account-more">
-                    <summary aria-label={`Mais ações para ${offer.title}`}><Icon name="more" /></summary>
-                    <div className="account-more-popover">
-                      <button type="button" onClick={event => { event.currentTarget.closest('details')?.removeAttribute('open'); duplicateOffer(offer) }}><Icon name="grid" />Duplicar oferta</button>
-                      {isPublishedOffer(offer) && <a href={offerHref(offer.id)}><Icon name="eye" />Visualizar página pública</a>}
-                      <button type="button" className="account-delete" disabled={Boolean(busyOfferId)} onClick={event => { event.currentTarget.closest('details')?.removeAttribute('open'); setFeedback(''); setConfirmation({ offer, action: 'delete' }) }}><Icon name="trash" />Remover oferta</button>
-                    </div>
-                  </details>
-                </div></td>
-              </tr>)}</tbody>
-            </table></div> : <div className="account-empty"><Icon name="box" /><h3>{offers.length ? 'Nenhuma oferta encontrada' : 'Você ainda não cadastrou ofertas'}</h3>
-              <p>{offers.length ? 'Ajuste a busca ou selecione outro status.' : 'Cadastre sua primeira oferta para apresentá-la aos compradores.'}</p>
-              {!offers.length ? <button type="button" className="button button-primary" onClick={openCreateOffer}>Cadastrar primeira oferta</button> : <button type="button" className="button button-secondary" onClick={() => { setSearch(''); setStatusFilter('ALL'); setPage(1) }}>Limpar busca e filtros</button>}
-            </div>}
-            {filteredOffers.length > 0 && <div className="account-pagination">
-              <span>Mostrando {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredOffers.length)} de {filteredOffers.length} ofertas</span>
-              <nav aria-label="Paginação de minhas ofertas"><button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Anterior</button>
-                <button type="button" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Próxima</button></nav>
-            </div>}
+          <section id="ofertas" className="account-offers" aria-labelledby="recent-offers-title">
+            <div className="account-section-heading"><div><h2 id="recent-offers-title">Ofertas recentes</h2><p>Veja seus últimos anúncios e continue o gerenciamento.</p></div><a className="button button-secondary" href={myOffersHref}>Gerenciar minhas ofertas<Icon name="arrow" /></a></div>
+            {offers.length ? <div className="account-recent-grid">{offers.slice(0, 3).map(offer => <article key={offer.id}><span className="account-eyebrow">{offer.type || 'Camarão'}</span><h3>{offer.title}</h3><p>{formatPrice(offer.price)} / kg · {offer.weight.toLocaleString('pt-BR')} kg</p><a className="button button-secondary" href={editOfferHref(offer.id)}>Editar oferta<Icon name="edit" /></a></article>)}</div> : <div className="account-empty"><Icon name="box" /><h3>Você ainda não cadastrou ofertas</h3><p>Adicione fotos e informações do seu lote para começar.</p><a className="button button-primary" href={newOfferHref}>Cadastrar primeira oferta</a></div>}
           </section>
-          <p className="account-management-note"><Icon name="info" />Editar abre os dados da oferta; pausar retira a publicação do marketplace. Você pode ativá-la novamente enquanto estiver no prazo.</p>
         </>}
 
         {profile.userType === 'BUYER' && <section id="salvas" className="buyer-saved" aria-labelledby="buyer-saved-title">
@@ -447,38 +255,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
           {profile.userType === 'PRODUCER' && <button type="button" className="account-signout" onClick={logout} disabled={loggingOut}>{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>}
         </section>
       </div>
-      {offerEditor && <Dialog titleId="offer-editor-title" onClose={() => setOfferEditor(null)} busy={savingOffer}>
-          <div className="account-modal-heading"><div><p className="account-eyebrow">{offerEditor.offer ? 'GERENCIAR OFERTA' : 'NOVA PUBLICAÇÃO'}</p>
-            <h2 id="offer-editor-title">{offerEditor.offer ? 'Editar oferta' : 'Cadastrar oferta'}</h2></div>
-            <button type="button" aria-label="Fechar" disabled={savingOffer} onClick={() => setOfferEditor(null)}>×</button></div>
-          <form onSubmit={submitOffer} className="account-offer-form">
-            <label className="offer-field-wide">Nome da oferta<input ref={offerTitleRef} autoFocus required maxLength={255} value={offerEditor.values.title} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, title: event.target.value } }))} /></label>
-            <label>Tipo<input required maxLength={255} value={offerEditor.values.type} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, type: event.target.value } }))} /></label>
-            <label>Tamanho<input required maxLength={255} value={offerEditor.values.size} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, size: event.target.value } }))} /></label>
-            <label>Preço por kg (R$)<input required type="number" min="0.01" step="0.01" value={offerEditor.values.price} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, price: event.target.value } }))} /></label>
-            <label>Quantidade (kg)<input required type="number" min="0.01" step="0.01" value={offerEditor.values.weight} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, weight: event.target.value } }))} /></label>
-            <label>Localização<input required maxLength={255} value={offerEditor.values.location} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, location: event.target.value } }))} /></label>
-            <label>Disponível a partir de<input required type="date" value={offerEditor.values.startDate} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, startDate: event.target.value } }))} /></label>
-            <label>Disponível até<input required type="date" value={offerEditor.values.endDate} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, endDate: event.target.value } }))} /></label>
-              <label>Quantidade mínima (kg)<input required type="number" min="0.01" step="0.01" value={offerEditor.values.minimumQuantity} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, minimumQuantity: event.target.value } }))} /></label>
-              <label>Quantidade máxima (kg)<input required type="number" min="0.01" step="0.01" value={offerEditor.values.maximumQuantity} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, maximumQuantity: event.target.value } }))} /></label>
-              <div className="offer-field-wide account-description-field"><label htmlFor="managed-offer-description">Descrição</label><textarea id="managed-offer-description" required maxLength={1000} rows={4} value={offerEditor.values.description} onChange={event => setOfferEditor(current => current && ({ ...current, values: { ...current.values, description: event.target.value } }))} /></div>
-            {!offerEditor.offer && <p className="account-modal-note offer-field-wide"><Icon name="info" />A nova oferta fica pausada até você ativá-la na lista.</p>}
-            {feedback && <p className="account-feedback offer-field-wide" role="alert">{feedback}</p>}
-            <div className="account-form-actions offer-field-wide"><button className="button button-secondary" type="button" onClick={() => setOfferEditor(null)} disabled={savingOffer}>Cancelar</button>
-              <button className="button button-primary" type="submit" disabled={savingOffer}>{savingOffer ? 'Salvando...' : offerEditor.offer ? 'Salvar alterações' : 'Cadastrar oferta'}</button></div>
-          </form>
-      </Dialog>}
-      {confirmation && <Dialog titleId="offer-confirm-title" onClose={() => { setConfirmation(null); setFeedback('') }} busy={Boolean(busyOfferId)}>
-        <div className={`account-confirm-icon confirm-${confirmation.action}`}><Icon name={confirmation.action === 'delete' ? 'trash' : confirmation.action === 'pause' ? 'pause' : 'play'} /></div>
-        <h2 id="offer-confirm-title">{confirmation.action === 'delete' ? 'Remover esta oferta?' : confirmation.action === 'pause' ? 'Pausar esta oferta?' : 'Ativar esta oferta?'}</h2>
-        <p className="account-confirm-description">{confirmation.action === 'delete' ? 'A oferta e suas fotos serão excluídas. Esta ação não pode ser desfeita.' : confirmation.action === 'pause' ? 'Ela deixará de aparecer no marketplace, mas você poderá ativá-la novamente enquanto estiver no prazo.' : 'A oferta aparecerá no marketplace durante o período de disponibilidade informado.'}</p>
-        <p className="account-confirm-offer">{confirmation.offer.title}</p>
-        {feedback && <p role="alert" className="account-feedback">{feedback}</p>}
-        <div className="account-form-actions"><button type="button" className="button button-secondary" disabled={Boolean(busyOfferId)} onClick={() => setConfirmation(null)}>Cancelar</button>
-          <button type="button" className={`button ${confirmation.action === 'delete' ? 'account-danger-button' : 'button-primary'}`} disabled={Boolean(busyOfferId)} onClick={() => void (confirmation.action === 'delete' ? removeOffer(confirmation.offer) : changeOfferStatus(confirmation.offer))}>{busyOfferId ? 'Salvando...' : confirmation.action === 'delete' ? 'Remover oferta' : confirmation.action === 'pause' ? 'Pausar oferta' : 'Ativar oferta'}</button></div>
-      </Dialog>}
-      {feedback && !offerEditor && !confirmation && <div className="account-toast" role="status">{feedback}<button type="button" aria-label="Fechar aviso" onClick={() => setFeedback('')}><Icon name="close" /></button></div>}
+      {feedback && <div className="account-toast" role="status">{feedback}<button type="button" aria-label="Fechar aviso" onClick={() => setFeedback('')}><Icon name="close" /></button></div>}
     </main>
   )
 }

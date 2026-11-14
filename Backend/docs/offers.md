@@ -42,9 +42,9 @@ Decimais, datas e status seguem as conversões descritas abaixo.
 
 `GET /offer/user/:userId`
 
-Requer `Authorization: Bearer <accessToken>`. O `userId` vem da URL:
-um usuário autenticado pode consultar as ofertas de outro usuário, assim como
-na consulta autenticada de perfil. A listagem inclui todos os status e retorna
+Requer `Authorization: Bearer <accessToken>`. O `userId` precisa ser o mesmo do
+token; outra conta recebe `403` antes de qualquer consulta. A listagem inclui
+todos os status, inclusive `DRAFT`, e retorna
 as ofertas da mais recente para a mais antiga (`createdAt DESC`, desempate por `id DESC`).
 
 Exemplo:
@@ -57,7 +57,8 @@ Authorization: Bearer <accessToken>
 O retorno `200` é um array de objetos no formato `OfferSearchByUserIdDTO`, com
 `id`, `title`, `description`, `type`, `size`, `price`, `weight`,
 `minimumQuantity`, `maximumQuantity`, `location`, `startDate`, `endDate`,
-`status` e `createdAt`. Descrição e limites permitem editar e duplicar ofertas
+`status`, `createdAt`, `updatedAt` e `coverPhoto` (URL da capa ou `null`).
+Descrição e limites permitem editar e duplicar ofertas
 sem perder dados; `createdAt` identifica a publicação, não a última atualização.
 Valores decimais são números JSON;
 datas são serializadas em ISO 8601. `type` e `size` são atributos separados;
@@ -72,6 +73,7 @@ Os status do banco são convertidos para o contrato da API:
 | VENDIDO | SOLD_OUT |
 | CANCELADO | CANCELLED |
 | EXPIRADO | EXPIRED |
+| RASCUNHO | DRAFT |
 
 - `200 []`: usuário existente sem ofertas.
 - `400`: ID vazio ou maior que 36 caracteres.

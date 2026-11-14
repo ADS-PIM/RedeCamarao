@@ -130,6 +130,7 @@ export class OfferController {
                 return res.status(400).json({ error: 'Invalid user ID' });
             }
 
+            if (userId !== req.user.userId) return res.status(403).json({ error: 'Acesso negado às ofertas de outra conta' });
             const offers = await this.listOffersByUserId.execute(userId);
             return res.status(200).json(offers);
         } catch (error: unknown) {

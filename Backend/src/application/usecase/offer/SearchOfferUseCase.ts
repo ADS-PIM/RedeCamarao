@@ -1,6 +1,7 @@
 import { OfferDAOInterface } from '../../../domain/interfaces/offer/OfferDAOInterface';
 import { OfferSearchDTO } from '../../dto/offerDTO/OfferSearchDTO';
 import { UseCase } from '../useCase';
+import { OfferStatus } from '../../../domain/model/offer';
 
 export type PublicOfferDTO = Omit<OfferSearchDTO, 'userId' | 'status'> & {
     description: string;
@@ -13,7 +14,7 @@ export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
 
     public async execute(): Promise<OfferSearchDTO[]> {
         const offers = await this.offerDAO.search();
-        return offers.map((offer): OfferSearchDTO => ({
+        return offers.filter(offer => offer.status !== OfferStatus.DRAFT).map((offer): OfferSearchDTO => ({
             id: offer.id,
             userId: offer.userId,
             title: offer.title,

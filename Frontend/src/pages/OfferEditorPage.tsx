@@ -4,19 +4,20 @@ import { FormField } from '../components/FormField'
 import { Icon } from '../components/Icon'
 import { Dialog } from '../components/Dialog'
 import { ProductCard } from '../components/ProductCard'
-import { editorPayload, initialEditorValues, validateEditor } from '../data/offerEditor'
+import { blankEditorValues, editOfferHref, editorPayload, initialEditorValues, validateEditor, myOffersHref } from '../data/offerEditor'
 import type { EditorPhoto, OfferEditorValues } from '../data/offerEditor'
 import type { ManagedOffer } from '../services/account'
-import { fetchMyOffers, fetchMyProfile, fetchEditorPhotos, saveEditedOffer } from '../services/account'
+import { createOfferWithPhotos, fetchMyOffers, fetchMyProfile, fetchEditorPhotos, saveEditedOffer } from '../services/account'
 import type { UserSession } from '../services/auth'
 import { useAuthenticatedAction } from '../hooks/useAuthenticatedAction'
 import { brazilianStates } from '../utils/registration'
 import { sizeOptions } from '../data/products'
 import './OfferEditorPage.css'
 
-export function OfferEditorPage({ offerId, session, restoring, onSessionChange, onProfileLoad }: {
-  offerId: string; session: UserSession | null; restoring: boolean;
+export function OfferEditorPage({ offerId, session, restoring, onSessionChange, onProfileLoad, onCreated }: {
+  offerId?: string; session: UserSession | null; restoring: boolean;
   onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string) => void
+  onCreated: (href: string) => void
 }) {
   const [values, setValues] = useState<OfferEditorValues | null>(null)
   const [original, setOriginal] = useState<ManagedOffer | null>(null)
@@ -28,7 +29,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
   const [attempt, setAttempt] = useState(0)
   const [errors, setErrors] = useState<ReturnType<typeof validateEditor>>({})
   const [feedback, setFeedback] = useState('')
-  const [success, setSuccess] = useState('')
+  const [success, setSuccess] = useState(() => new URLSearchParams(window.location.search).has('criada') ? 'Oferta cadastrada com sucesso.' : '')
   const [saving, setSaving] = useState(false)
   const [reading, setReading] = useState(false)
   const [preview, setPreview] = useState(false)
@@ -38,16 +39,26 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
   const action = useAuthenticatedAction(session, onSessionChange)
 
   useEffect(() => {
-    document.title = 'Editar oferta | RedeCamarão'
+    document.title = `${offerId ? 'Editar oferta' : 'Cadastrar oferta'} | RedeCamarão`
     if (restoring || !session || session.userType !== 'PRODUCER') return
     let active = true
     Promise.resolve().then(async () => {
       setLoading(true); setLoadError(''); setMissing(false)
+      const profile = await action(fetchMyProfile)
+      if (!active) return
+      setName(profile.name); onProfileLoad(profile.name)
+      if (!offerId) {
+        const duplicateId = new URLSearchParams(window.location.search).get('duplicar')
+        const source = duplicateId ? (await action(token => fetchMyOffers(token, session.userId))).find(item => item.id === duplicateId) : null
+        if (!active) return
+        setValues(source ? { ...initialEditorValues(source), title: `${source.title} — cópia`.slice(0, 255), startDate: blankEditorValues().startDate, endDate: blankEditorValues().endDate, available: false } : blankEditorValues(profile.location))
+        setPhotos([]); setDirty(false); return
+      }
       const offers = await action(token => fetchMyOffers(token, session.userId))
       const offer = offers.find(item => item.id === offerId)
       if (!active) return
       if (!offer) { setMissing(true); return }
-      const [currentPhotos, profile] = await Promise.all([action(token => fetchEditorPhotos(token, offerId)), action(fetchMyProfile)])
+      const currentPhotos = await action(token => fetchEditorPhotos(token, offerId))
       if (active) {
         setOriginal(offer); setValues(initialEditorValues(offer)); setPhotos(currentPhotos)
         setName(profile.name); onProfileLoad(profile.name); setDirty(false)
@@ -98,7 +109,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
   }
   function makeCover(key: string) { setPhotos(current => [...current.filter(photo => photo.key === key), ...current.filter(photo => photo.key !== key)]); setDirty(true); setSuccess('') }
 
-  async function save(publish: boolean) {
+  async function save(publish: boolean | 'DRAFT') {
     if (!values || pending.current || reading) return
     const invalid = validateEditor(values)
     setErrors(invalid); setFeedback(''); setSuccess('')
@@ -111,17 +122,21 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
     pending.current = true; setSaving(true)
     try {
       const payload = editorPayload(values, photos, publish)
+      if (!offerId) {
+        const created = await action(token => createOfferWithPhotos(token, payload))
+        setDirty(false); onCreated(`${editOfferHref(created.id)}?criada=1`); return
+      }
       const savedPhotos = await action(token => saveEditedOffer(token, offerId, payload))
-      setPhotos(savedPhotos); setValues(current => current && ({ ...current, available: publish })); setDirty(false)
-      setSuccess(publish ? 'Oferta salva e ativada. Ela será exibida durante o período de disponibilidade informado.' : 'Oferta salva como pausada. Ela não aparece no marketplace.')
+      setPhotos(savedPhotos); setValues(current => current && ({ ...current, available: publish === true })); setDirty(false)
+      setSuccess(publish === 'DRAFT' ? 'Rascunho salvo. Ele fica visível apenas na sua conta.' : publish ? 'Oferta salva e ativada. Ela será exibida durante o período de disponibilidade informado.' : 'Oferta salva como pausada. Ela não aparece no marketplace.')
     } catch (error) { setFeedback(error instanceof Error ? error.message : 'Não foi possível salvar esta oferta.') }
     finally { setSaving(false); pending.current = false }
   }
 
-  const blocked = restoring || !session || session.userType !== 'PRODUCER' || loading || loadError || missing || !values || !original
+  const blocked = restoring || !session || session.userType !== 'PRODUCER' || loading || loadError || missing || !values || (offerId && !original)
   if (blocked) return <main id="main-content" className="offer-editor-main"><section className="container editor-state" role={loadError ? 'alert' : 'status'}>
     <Icon name={restoring || (session?.userType === 'PRODUCER' && loading) ? 'waves' : 'info'} />
-    <h1>{restoring ? 'Carregando sua conta...' : !session ? 'Entre para editar suas ofertas' : session.userType !== 'PRODUCER' ? 'Área exclusiva do produtor' : loading ? 'Carregando oferta...' : loadError ? 'Não foi possível carregar a oferta' : 'Oferta não encontrada'}</h1>
+    <h1>{restoring ? 'Carregando sua conta...' : !session ? 'Entre para gerenciar suas ofertas' : session.userType !== 'PRODUCER' ? 'Área exclusiva do produtor' : loading ? 'Carregando formulário...' : loadError ? 'Não foi possível carregar a oferta' : 'Oferta não encontrada'}</h1>
     <p>{loadError || (missing ? 'Esta oferta não pertence à sua conta ou foi removida.' : 'Gerencie as ofertas da sua própria fazenda com sua conta de produtor.')}</p>
     {loadError && <button type="button" className="button button-secondary" onClick={() => setAttempt(current => current + 1)}>Tentar novamente</button>}
     {!session && !restoring ? <a className="button button-primary" href="/entrar">Entrar</a> : !loading && <a className="button button-secondary" href="/painel">Acessar painel</a>}
@@ -140,8 +155,8 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
   const select = (key: 'type' | 'size' | 'state', label: string, options: { value: string; label: string }[]) => <div className="form-field"><label htmlFor={`editor-${key}`}>{label} *</label><select id={`editor-${key}`} disabled={busy} value={values[key]} aria-invalid={Boolean(errors[key])} aria-describedby={errors[key] ? `editor-${key}-error` : undefined} onChange={event => change(key, event.target.value)}><option value="">Selecione</option>{values[key] && !options.some(option => option.value === values[key]) && <option value={values[key]}>{values[key]}</option>}{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>{errors[key] && <p className="field-error" id={`editor-${key}-error`}>{errors[key]}</p>}</div>
 
   return <main id="main-content" className="offer-editor-main">
-    <section className="editor-heading"><div className="container editor-heading-inner"><div><p className="editor-eyebrow">Minhas ofertas</p><h1>Editar oferta</h1><p>Atualize os dados e as fotos do seu lote.</p></div>
-      <div className="editor-heading-actions"><button type="button" className="button button-secondary" disabled={busy} onClick={() => void save(false)}>Salvar como pausada</button><button type="button" className="button button-secondary" disabled={busy} onClick={() => setPreview(true)}><Icon name="eye" />Visualizar</button><button type="submit" form="offer-editor-form" className="button button-primary" disabled={busy}>{saving ? 'Salvando...' : values.available ? 'Salvar e publicar' : 'Salvar alterações'}</button></div>
+    <section className="editor-heading"><div className="container editor-heading-inner"><div><p className="editor-eyebrow">Minhas ofertas</p><h1>{offerId ? 'Editar oferta' : 'Cadastrar oferta'}</h1><p>{offerId ? 'Atualize os dados e as fotos do seu lote.' : 'Apresente seu lote com fotos e informações para os compradores.'}</p></div>
+      <div className="editor-heading-actions"><button type="button" className="button button-secondary" disabled={busy} onClick={() => void save('DRAFT')}>Salvar rascunho</button><button type="button" className="button button-secondary" disabled={busy} onClick={() => setPreview(true)}><Icon name="eye" />Visualizar</button><button type="submit" form="offer-editor-form" className="button button-primary" disabled={busy}>{saving ? 'Salvando...' : values.available ? offerId ? 'Salvar e publicar' : 'Cadastrar e publicar' : 'Salvar como pausada'}</button></div>
     </div></section>
     <div className="container editor-save-feedback" aria-live="polite">{feedback && <p className="editor-error" role="alert"><Icon name="info" />{feedback}</p>}{success && <p className="editor-success" role="status"><Icon name="check" />{success}</p>}</div>
     <div className="container editor-layout">
@@ -160,7 +175,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
           <div className="editor-fields">{field('city', 'Cidade')}{select('state', 'Estado', brazilianStates.map(state => ({ value: state.code, label: `${state.name} (${state.code})` })))}{field('startDate', 'Disponível a partir de', 'date')}{field('endDate', 'Disponível até', 'date', 'Após esta data, a oferta deixa de aparecer no marketplace.')}</div>
           <label className="editor-available"><input type="checkbox" checked={values.available} disabled={busy} onChange={event => change('available', event.target.checked)} /><span><strong>Oferta disponível para negociação</strong><small>Desmarque para salvar como pausada.</small></span></label>
         </section>
-        <div className="editor-bottom-actions"><a className="button button-secondary" href="/painel#ofertas">Voltar às minhas ofertas</a><button type="submit" className="button button-primary" disabled={busy}>{saving ? 'Salvando...' : values.available ? 'Salvar e publicar' : 'Salvar alterações'}</button></div>
+        <div className="editor-bottom-actions"><a className="button button-secondary" href={myOffersHref}>Voltar às minhas ofertas</a><button type="submit" className="button button-primary" disabled={busy}>{saving ? 'Salvando...' : values.available ? offerId ? 'Salvar e publicar' : 'Cadastrar e publicar' : 'Salvar como pausada'}</button></div>
       </form>
       <aside className="editor-sidebar" aria-label="Orientações para o anúncio"><section className="editor-panel"><h2>Preenchimento do anúncio</h2><progress value={completeness} max={100} aria-label="Preenchimento do anúncio" /><strong className="editor-completeness">{completeness}% completo</strong><ul>{checks.map(check => <li key={check.label}><Icon name={check.done ? 'check' : 'info'} className={check.done ? 'editor-check-done' : ''} /><span>{check.label}</span></li>)}</ul></section>
         <section className="editor-panel"><h2>Antes de publicar</h2><ul><li><Icon name="info" /><span>Confirme se a quantidade e o período estão atualizados.</span></li><li><Icon name="info" /><span>Use fotos reais e uma descrição clara do lote.</span></li><li><Icon name="info" /><span>Combine os detalhes da negociação diretamente com o comprador.</span></li></ul></section>
@@ -168,7 +183,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
       </aside>
     </div>
     {preview && <Dialog titleId="editor-preview-title" onClose={() => setPreview(false)}><div className="editor-preview-heading"><div><p className="editor-eyebrow">Prévia das alterações</p><h2 id="editor-preview-title">Sua oferta</h2></div><button type="button" className="button button-secondary" onClick={() => setPreview(false)} aria-label="Fechar prévia"><Icon name="close" /></button></div>
-      <div className="editor-preview-card"><ProductCard offer={{ ...original, ...editorPayload(values, photos, values.available).offer, title: values.title || 'Título da oferta', price: Number.isFinite(editorPayload(values, photos, values.available).offer.price) ? editorPayload(values, photos, values.available).offer.price : 0 }} producerName={name} photo={photos[0]} preview available={values.available} /><p className="editor-note">Esta é uma prévia. As alterações ainda precisam ser salvas.</p></div>
+      <div className="editor-preview-card"><ProductCard offer={{ ...editorPayload(values, photos, values.available).offer, id: offerId ?? 'preview', title: values.title || 'Título da oferta', price: Number(editorPayload(values, photos, values.available).offer.price) || 0, weight: Number(editorPayload(values, photos, values.available).offer.weight) || 0, size: values.size || 'Tamanho a informar' }} producerName={name} photo={photos[0]} preview available={values.available} /><p className="editor-note">Esta é uma prévia. As alterações ainda precisam ser salvas.</p></div>
     </Dialog>}
   </main>
 }

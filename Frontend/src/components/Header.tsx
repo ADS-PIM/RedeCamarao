@@ -75,7 +75,7 @@ export function Header({ authenticated = false, marketplace = false, products = 
           <nav aria-label="Navegação principal">
             {account && producer ? <>
               <a href="/painel" aria-current={!editingOffer ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Painel</a>
-              <a href="/painel#ofertas" aria-current={editingOffer ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Minhas ofertas</a>
+              <a href="/painel/ofertas" aria-current={editingOffer ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Minhas ofertas</a>
               <a href={`/produtores/${encodeURIComponent(userId ?? '')}`} onClick={() => setMenuOpen(false)}>Perfil público</a>
             </> : account ? <>
               <a href="/painel" aria-current="page" onClick={() => setMenuOpen(false)}>Minha conta</a>

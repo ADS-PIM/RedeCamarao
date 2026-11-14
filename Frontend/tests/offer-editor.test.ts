@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { editOfferHref, editOfferIdFromPath, initialEditorValues, validateEditor, editorPayload } from '../src/data/offerEditor.ts'
-import { fetchEditorPhotos, saveEditedOffer } from '../src/services/account.ts'
+import { blankEditorValues, editOfferHref, editOfferIdFromPath, initialEditorValues, validateEditor, editorPayload } from '../src/data/offerEditor.ts'
+import { createOfferWithPhotos, fetchEditorPhotos, saveEditedOffer } from '../src/services/account.ts'
+import { selectManagedOffers } from '../src/data/account.ts'
 const offer = { id: 'offer-1', title: 'Camarão fresco', description: 'Lote selecionado', type: 'Camarão cinza', size: 'Médio', price: 34.9, weight: 80, minimumQuantity: 20, maximumQuantity: 80, location: 'Fortim, CE', startDate: '2026-11-01', endDate: '2027-01-01', status: 'ACTIVE' as const, createdAt: '2026-11-01' }
 
 test('rota de edição é privada e aceita somente um identificador válido', () => {
@@ -49,4 +50,28 @@ test('fotos e salvamento distinguem sessão expirada, tamanho excessivo e dados 
   unauthorized.mock.restore()
   t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 413 }))
   await assert.rejects(saveEditedOffer('token', 'offer-1', editorPayload(initialEditorValues(offer), [], false), 'https://api.example.test'), /limite de envio/)
+})
+
+test('cadastro começa vazio com localização do produtor e envia rascunho com fotos numa única chamada', async t => {
+  const blank = blankEditorValues('Mossoró, RN')
+  assert.equal(blank.title, ''); assert.equal(blank.city, 'Mossoró'); assert.equal(blank.state, 'RN')
+  assert.equal(blank.available, true)
+  const payload = editorPayload(initialEditorValues(offer), [{ key: 'new', data: 'data:image/png;base64,AA==', imageUrl: 'data:image/png;base64,AA==', description: '' }], 'DRAFT')
+  assert.equal(payload.offer.status, 'DRAFT')
+  t.mock.method(globalThis, 'fetch', async (url: string, init?: RequestInit) => {
+    assert.equal(url, 'https://api.example.test/offer/editor'); assert.equal(init?.method, 'POST')
+    assert.deepEqual(JSON.parse(String(init?.body)), payload)
+    return Response.json({ id: 'created-1', photos: [{ id: 'photo-1', imageUrl: 'https://api.example.test/a.png', description: '' }] }, { status: 201 })
+  })
+  assert.equal((await createOfferWithPhotos('token', payload, 'https://api.example.test')).id, 'created-1')
+})
+
+test('Minhas ofertas combina busca/status e ordena por atualização, preço e estoque sem alterar a lista', () => {
+  const offers = [offer, { ...offer, id: 'draft-2', status: 'DRAFT' as const, price: 20, updatedAt: '2026-12-01' }, { ...offer, id: 'closed-3', status: 'EXPIRED' as const, weight: 100 }]
+  assert.equal(selectManagedOffers(offers, 'CAMARAO', 'DRAFT', 'recent')[0].id, 'draft-2')
+  assert.equal(selectManagedOffers(offers, '', 'ALL', 'recent')[0].id, 'draft-2')
+  assert.equal(selectManagedOffers(offers, '', 'ALL', 'price-asc')[0].id, 'draft-2')
+  assert.equal(selectManagedOffers(offers, '', 'ALL', 'quantity-desc')[0].id, 'closed-3')
+  assert.deepEqual(selectManagedOffers(offers, '', 'CLOSED', 'recent').map(offer => offer.id), ['closed-3'])
+  assert.equal(offers[0].id, 'offer-1')
 })

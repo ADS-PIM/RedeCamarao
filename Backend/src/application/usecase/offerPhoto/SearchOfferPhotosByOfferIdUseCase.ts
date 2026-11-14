@@ -3,6 +3,7 @@ import { OfferPhotoDAOInterface } from '../../../domain/interfaces/offerPhoto/Of
 import { OfferPhotoSearchDTO } from '../../dto/offerPhotoDTO/OfferPhotoSearchDTO';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { UseCase } from '../useCase';
+import { OfferStatus } from '../../../domain/model/offer';
 
 export class SearchOfferPhotosByOfferId implements UseCase<string, OfferPhotoSearchDTO[]> {
     constructor(
@@ -10,10 +11,12 @@ export class SearchOfferPhotosByOfferId implements UseCase<string, OfferPhotoSea
         private readonly offerDAO: OfferDAOInterface
     ) {}
 
-    public async execute(offerId: string): Promise<OfferPhotoSearchDTO[]> {
-        if (!(await this.offerDAO.searchById(offerId))) {
+    public async execute(offerId: string, userId?: string): Promise<OfferPhotoSearchDTO[]> {
+        const offer = await this.offerDAO.searchById(offerId);
+        if (!offer) {
             throw new ApplicationError('OFFER_NOT_FOUND', 'Oferta não encontrada');
         }
+        if (offer.status === OfferStatus.DRAFT && offer.userId !== userId) throw new ApplicationError('FORBIDDEN', 'Acesso negado');
 
         const photos = await this.offerPhotoDAO.searchByOfferId(offerId);
         return photos.map(OfferPhotoSearchDTO.fromModel);

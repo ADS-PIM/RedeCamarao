@@ -5,9 +5,11 @@ const fs = require('node:fs/promises');
 const { parseOfferEditor } = require('../src/application/dto/offerDTO/OfferEditorDTO.ts');
 const { connection } = require('../src/util/connection.ts');
 const app = require('../src/app.ts').default;
+const { SearchOffer } = require('../src/application/usecase/offer/SearchOfferUseCase.ts');
+const { SearchOfferPhotosByOfferId } = require('../src/application/usecase/offerPhoto/SearchOfferPhotosByOfferIdUseCase.ts');
 const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j9XcAAAAASUVORK5CYII=';
 const data = () => ({ offer: { title: 'Camarão fresco', description: 'Lote de teste', type: 'Camarão cinza', size: 'Médio', price: 34.9, weight: 80, minimumQuantity: 20, maximumQuantity: 80, location: 'Fortim, CE', startDate: '2026-11-01', endDate: '2027-01-01', status: 'ACTIVE' }, photos: [{ id: 'photo-1', description: 'Atual' }, { data: png, description: 'Nova' }] });
-let server, origin, token, db, calls, fail, owner, written;
+let server, origin, token, db, calls, fail, owner, written, userType;
 const previousSecret = process.env.JWT_ACCESS_SECRET;
 before(async () => {
   process.env.JWT_ACCESS_SECRET = 'offer-editor-test-secret';
@@ -16,9 +18,10 @@ before(async () => {
   origin = 'http://127.0.0.1:' + server.address().port;
 });
 beforeEach(() => {
-  calls = []; written = []; fail = false; owner = 'producer-1';
+  calls = []; written = []; fail = false; owner = 'producer-1'; userType = 'PRODUCER';
   db = { beginTransaction: async () => calls.push('begin'), commit: async () => calls.push('commit'), rollback: async () => calls.push('rollback'), release: () => calls.push('release'), query: async (sql, values) => {
     calls.push({ sql, values });
+    if (sql.startsWith('SELECT user_type')) return [[{ user_type: userType }]];
     if (sql.startsWith('SELECT userId')) return [[{ userId: owner }]];
     if (sql.startsWith('SELECT id, imageUrl')) return [[{ id: 'photo-1', imageUrl: 'https://example.test/old.png' }]];
     if (fail && sql.startsWith('INSERT INTO')) throw new Error('Sensitive database error');
@@ -80,4 +83,38 @@ test('endpoint aceita o tamanho das fotos além do JSON padrão e mantém o limi
   assert.equal(written.length, 1);
   body.photos[0].data = 'data:image/png;base64,' + Buffer.concat([raw, Buffer.alloc(3 * 1024 * 1024)]).toString('base64');
   assert.throws(() => parseOfferEditor(body));
+});
+
+const create = body => fetch(origin + '/offer/editor', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(body) });
+test('rascunhos não aparecem na busca geral e suas fotos só podem ser lidas pelo dono', async () => {
+  const draft = { ...data().offer, id: 'draft-1', userId: 'producer-1', status: 'DRAFT' };
+  const search = new SearchOffer({ search: async () => [draft, { ...draft, id: 'active-1', status: 'ACTIVE' }] });
+  assert.deepEqual((await search.execute()).map(offer => offer.id), ['active-1']);
+  let reads = 0;
+  const photos = new SearchOfferPhotosByOfferId({ searchByOfferId: async () => { reads++; return []; } }, { searchById: async () => draft });
+  await assert.rejects(photos.execute('draft-1', 'other-producer'), error => error.code === 'FORBIDDEN');
+  assert.equal(reads, 0); assert.deepEqual(await photos.execute('draft-1', 'producer-1'), []);
+});
+test('listagem de outra conta é bloqueada antes de consultar o banco', async () => {
+  const response = await fetch(origin + '/offer/user/other-producer', { headers: { Authorization: 'Bearer ' + token } });
+  assert.equal(response.status, 403); assert.equal(calls.length, 0);
+});
+test('cadastro gera ID, salva rascunho com fotos na mesma transação e usa o dono do token', async () => {
+  const body = data(); body.offer.status = 'DRAFT'; body.photos = [{ data: png, description: 'Capa' }];
+  const response = await create(body); assert.equal(response.status, 201);
+  const created = await response.json(); assert.match(created.id, /^[a-f0-9-]{36}$/);
+  assert.equal(created.photos.length, 1);
+  const insert = calls.find(call => call.sql?.startsWith('INSERT INTO offers'));
+  assert.equal(insert.values.at(-1), 'producer-1'); assert(insert.values.includes('RASCUNHO'));
+  assert.equal((insert.sql.match(/\?/g) || []).length, insert.values.length);
+  assert(calls.includes('commit'));
+});
+test('cadastro rejeita comprador e IDs de fotos de outra oferta sem deixar arquivos ou oferta parcial', async () => {
+  userType = 'BUYER'; const body = data(); body.photos = [{ data: png, description: '' }];
+  assert.equal((await create(body)).status, 403); assert.equal(written.length, 0);
+  userType = 'PRODUCER';
+  assert.equal((await create(data())).status, 400); assert.equal(written.length, 0);
+  fail = true; mock.method(console, 'error', () => {});
+  assert.equal((await create(body)).status, 500);
+  assert(!calls.includes('commit')); assert(calls.includes('rollback'));
 });

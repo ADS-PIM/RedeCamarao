@@ -49,20 +49,21 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 
 ## Painel do produtor
 
-- `/painel` usa a sessão autenticada. Produtores veem resumo, busca sem acentos, filtro por status e paginação de seis ofertas. O header mantém a altura compartilhada, identifica o perfil Produtor e oferece acesso ao painel, às ofertas e ao perfil público. Compradores continuam com ofertas salvas e dados pessoais.
-- A tabela vira cartões em telas menores; miniaturas são explicitamente ilustrativas. Os indicadores usam dados reais: ofertas disponíveis no período, pausadas, encerradas e total. Conversas, visualizações, tempo de resposta e rascunhos separados não são inventados, pois não existem no contrato atual.
-- Cadastrar, editar e duplicar abrem um formulário com descrição, limites do lote e disponibilidade. Duplicar preenche uma nova oferta, sem publicar automaticamente. O backend cria ofertas com status `INACTIVE`; a ativação posterior é explícita.
-- Pausar, ativar e remover usam confirmação em diálogo nativo, com foco contido, Escape e retorno de foco. Falhas mantêm o diálogo aberto e permitem nova tentativa. Remover exclui a oferta e suas fotos conforme o contrato existente.
-- `GET /offer/user/:userId` inclui descrição, limites de quantidade e `createdAt`, necessários para editar e duplicar sem perder dados. A coluna mostra **Publicação**; não existe data de última atualização no modelo. O contrato público do catálogo não muda.
+- `/painel` mostra indicadores, até três ofertas recentes e os dados do perfil. Os botões levam ao cadastro com fotos ou à página de gerenciamento. Compradores continuam com ofertas salvas e dados pessoais.
+- `/painel/ofertas` é a página **Minhas ofertas**, com abas Todas, Ativas, Pausadas, Rascunhos e Encerradas quando houver, contagens reais, busca sem acentos por nome/código, ordenação e paginação de seis itens. No celular, as linhas viram cartões.
+- A lista usa a capa cadastrada, com fallback identificado como ilustrativo, e a data real de atualização. `GET /offer/user/:userId` retorna `updatedAt` e `coverPhoto` e exige o ID do dono do token. Rascunhos são omitidos da busca geral e suas fotos são restritas ao dono.
+- Pausar, ativar e remover usam confirmação em diálogo nativo. A seleção da página permite pausar ofertas ativas em lote. Duplicar abre o cadastro com campos copiados e novas datas; as fotos do novo lote devem ser adicionadas.
 - `npm.cmd run test:producer-dashboard`, no backend, verifica esses campos sem banco. O frontend valida o contrato e testa busca, status e limites do período em `npm.cmd test`.
 
-## Edição de ofertas
+## Cadastro e edição de ofertas
 
 - “Editar” no painel abre `/painel/ofertas/:id/editar`, mantendo header, footer e a navegação sem recarregamento. A página exige conta de produtor e carrega apenas ofertas da própria conta; “Minhas ofertas” fica ativo no header.
+- “Cadastrar nova oferta” abre `/painel/ofertas/nova`, usando o mesmo formulário, galeria e prévia da edição. Cidade e estado começam com a localização do produtor; após o sucesso, a edição da nova oferta é aberta sem recarregar o documento.
 - Formulário com fotos, título, descrição, tipo, tamanho, preço em formato brasileiro, quantidades mínima/máxima, cidade, estado e disponibilidade. A validação mantém os campos preenchidos e destaca o primeiro erro. A prévia reflete os dados locais e a capa escolhida, sem gravar.
 - Até cinco fotos JPG/PNG de até 3 MB cada, com seleção de capa e remoção antes de salvar. O indicador de preenchimento verifica cinco critérios objetivos; não avalia nitidez ou qualidade visual das fotos.
-- “Salvar como pausada” salva os dados com status `INACTIVE`; “Salvar e publicar” salva com `ACTIVE`. Desmarcar a disponibilidade também salva como pausada. O período controla a exibição no marketplace.
-- `PUT /offer/:id/editor` salva os campos e a galeria em uma transação. Imagens novas ficam em `Backend/uploads/offers`, servidas pelo backend. Falhas preservam as alterações na tela; a renovação do token não recarrega o formulário. O recurso não requer migration.
+- “Salvar rascunho” usa `DRAFT`, separado de `INACTIVE` (pausada). Os campos obrigatórios do lote são validados antes de salvar. Publicar usa `ACTIVE`; desmarcar a disponibilidade salva como pausada. O período controla a exibição no marketplace.
+- `POST /offer/editor` cadastra e `PUT /offer/:id/editor` atualiza os campos e a galeria em uma transação. Imagens novas ficam em `Backend/uploads/offers`. Falhas preservam as alterações e não deixam ofertas parcialmente criadas; a renovação do token não recarrega o formulário.
+- O SQL inclui `RASCUNHO`. Bancos com histórico usam `20261114120000-add-draft-offer-status.js`; instalações manuais acrescentam esse valor ao enum conforme `Backend/database/README.md`, sem recriar o banco.
 - O menu do ícone do produtor inclui “Sair da conta” tanto no painel quanto na edição. O logout usa o endpoint existente, só limpa a sessão após sucesso e leva a `/entrar` sem recarregar o documento; falhas permitem nova tentativa no menu.
 
 ## Padrão visual e responsividade
