@@ -14,6 +14,8 @@
   --white: #fff;
   --danger: #df4247;
   --success: #149566;
+  --field-focus-border: #5b9db8;
+  --field-focus-ring: inset 0 0 0 1px var(--field-focus-border), 0 0 0 2px #08729d14;
 }
 * { box-sizing: border-box; }
 html { scrollbar-gutter: stable; }
@@ -35,4 +37,8 @@ h1, h2, p { margin: 0; }
 .button-secondary:hover { background: #edf6fa; }
 .skip-link { position: absolute; left: 20px; top: -100px; z-index: 30; padding: 12px; background: white; }
 .skip-link:focus { top: 10px; }
+.app-shell :where(input:not([type='checkbox'], [type='radio']), select, textarea):enabled:focus { border-color: var(--field-focus-border); outline: none; box-shadow: var(--field-focus-ring); }
+.app-shell :where(input, select, textarea)[aria-invalid='true']:enabled:focus { border-color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 2px #df424714; }
+.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field):has(input:focus) { outline: none; border-color: var(--field-focus-border); box-shadow: var(--field-focus-ring); }
+.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field) input:focus { outline: none; border-color: transparent; box-shadow: none; }
 @media (max-width: 600px) { .container { width: calc(100% - 36px); } }

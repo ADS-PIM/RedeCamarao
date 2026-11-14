@@ -3,10 +3,12 @@ import { Icon } from '../components/Icon'
 import { Pagination } from '../components/Pagination'
 import { ProductCard } from '../components/ProductCard'
 import { useProducerProfile } from '../hooks/useProducerProfile'
-import { filterProducerOffers, producerIllustration, producerLocation, producerWhatsAppHref } from '../data/producers'
+import { filterProducerOffers, producerIllustration, producerLocation } from '../data/producers'
 import type { ProducerOfferFilter } from '../data/producers'
-import { productsPerPage } from '../data/products'
 import './ProducersPage.css'
+import './ProducerProfilePage.css'
+
+const productsPerPage = 4
 
 export function ProducerProfilePage({ producerId }: { producerId: string }) {
   const { profile, loading, error, reloadProfile } = useProducerProfile(producerId)
@@ -20,7 +22,7 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
     const missing = !loading && !error && !profile
     return (
       <main id="main-content" className="producer-profile-main">
-        <div className="container producer-profile-container">
+        <div className="container producer-profile-loading">
           <section className="producers-state" role={error ? 'alert' : 'status'}>
             <Icon name={loading ? 'waves' : 'info'} />
             <h1>{loading ? 'Carregando produtor...' : error ? 'Não foi possível carregar este produtor' : 'Produtor não encontrado'}</h1>
@@ -36,7 +38,7 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
 
   const { producer, offers } = profile
   const location = producerLocation(producer.location).label
-  const whatsappHref = producerWhatsAppHref(producer.phone)
+  const mapHref = producer.location?.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(producer.location.trim())}` : null
   const grayCount = filterProducerOffers(offers, 'gray').length
   const whiteCount = filterProducerOffers(offers, 'white').length
   const otherCount = filterProducerOffers(offers, 'other').length
@@ -66,7 +68,6 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
         <img src={producerIllustration(producer.id)} alt="" width="1600" height="600" decoding="async"
           onError={event => { if (!event.currentTarget.src.endsWith('/images/shrimp-farm.jpg')) event.currentTarget.src = '/images/shrimp-farm.jpg' }} />
         <div className="container producer-profile-banner-content">
-          <nav aria-label="Trilha de navegação"><a href="/">Início</a><span aria-hidden="true">/</span><a href="/produtores">Produtores</a><span aria-hidden="true">/</span><span aria-current="page">{producer.name}</span></nav>
           <span className="producer-profile-image-note">Imagem ilustrativa</span>
         </div>
       </section>
@@ -80,9 +81,7 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
             <p className="producer-location"><Icon name="pin" /><span>{location}</span></p>
           </div>
           <div className="producer-profile-actions" aria-label="Opções de contato">
-            {whatsappHref
-              ? <a className="button producer-whatsapp-button" href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp, abre em nova aba"><Icon name="chat" />WhatsApp</a>
-              : <button type="button" className="button button-secondary" disabled aria-describedby="producer-contact-note"><Icon name="chat" />WhatsApp</button>}
+            <button type="button" className="button producer-whatsapp-button" disabled aria-describedby="producer-contact-note"><Icon name="chat" />WhatsApp em breve</button>
           </div>
         </div>
       </section>
@@ -103,7 +102,12 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
               <div><dt>Atendimento</dt><dd>{producer.businessHours || 'Horário não informado'}</dd></div>
               <div><dt>Telefone</dt><dd>{producer.phone || 'Telefone não informado'}</dd></div>
             </dl>
-            <p id="producer-contact-note" className="producer-profile-contact"><Icon name="info" />{whatsappHref ? 'Você será direcionado ao WhatsApp para falar diretamente com este produtor. A negociação e o pagamento acontecem fora da plataforma.' : 'Este produtor não informou um telefone válido para contato pelo WhatsApp.'}</p>
+            <p id="producer-contact-note" className="producer-profile-contact"><Icon name="info" />A integração com WhatsApp estará disponível em uma próxima etapa. A negociação e o pagamento acontecem fora da plataforma.</p>
+          </section>
+          <section className="producer-profile-card" aria-labelledby="producer-location-title">
+            <h2 id="producer-location-title">Localização</h2>
+            <div className="producer-region"><Icon name="pin" /><strong>{location}</strong><span>Região informada pelo produtor</span></div>
+            {mapHref && <a className="button button-secondary producer-map-link" href={mapHref} target="_blank" rel="noopener noreferrer">Ver região no mapa<Icon name="arrow" /><span className="visually-hidden"> (abre em nova aba)</span></a>}
           </section>
         </aside>
 
@@ -116,7 +120,7 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
             {availableFilters.map(filter => <button key={filter.id} type="button" className="producer-offer-filter" aria-pressed={offerFilter === filter.id} onClick={() => changeFilter(filter.id)}>{filter.label} ({filter.count})</button>)}
           </div>}
           {filteredOffers.length > 0
-            ? <><div className="producer-profile-offer-grid">{visible.map(offer => <ProductCard key={offer.id} offer={offer} />)}</div><Pagination currentPage={currentPage} totalPages={totalPages} onChange={changePage} label="Paginação de ofertas do produtor" /></>
+            ? <><div className="producer-profile-offer-grid">{visible.map(offer => <ProductCard key={offer.id} offer={offer} producerName={producer.name} />)}</div><Pagination currentPage={currentPage} totalPages={totalPages} onChange={changePage} label="Paginação de ofertas do produtor" /></>
             : <div className="producers-state">
               <Icon name="box" />
               <h2>{offers.length ? 'Nenhuma oferta nesta categoria' : 'Sem ofertas ativas no momento'}</h2>

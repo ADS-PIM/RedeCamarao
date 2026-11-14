@@ -1,6 +1,6 @@
 ﻿import { Header } from './components/Header'
 import { Footer } from './components/Footer'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { LoginPage } from './pages/LoginPage'
 import { restoreSession } from './services/auth'
 import type { UserSession } from './services/auth'
@@ -20,6 +20,8 @@ function App() {
   const { pathname, handleLinkClick } = useNavigation()
   const [session, setSession] = useState<UserSession | null>(null)
   const [restoring, setRestoring] = useState(true)
+  const [accountIdentity, setAccountIdentity] = useState({ id: '', name: '' })
+  const updateAccountName = useCallback((name: string) => setAccountIdentity({ id: session?.userId ?? '', name }), [session?.userId])
   const isMarketplace = ['/', '/marketplace', '/marketplace/'].includes(pathname)
   const isProducts = ['/produtos', '/produtos/'].includes(pathname)
   const offerId = offerIdFromPath(pathname)
@@ -44,8 +46,8 @@ function App() {
   return (
     <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount} producer={session?.userType === 'PRODUCER'} />
-      {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : isAccount ? <AccountPage session={session} onSessionChange={setSession} /> : (
+      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount} producer={session?.userType === 'PRODUCER'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} />
+      {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

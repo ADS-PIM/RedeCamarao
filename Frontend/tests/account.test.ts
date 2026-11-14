@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createOffer, deleteOffer, fetchMyOffers, fetchMyProfile, updateMyProfile, updateOffer } from '../src/services/account.ts'
+import { canActivateOffer, filterManagedOffers, isPublishedOffer } from '../src/data/account.ts'
 
 const profile = {
   name: 'Fazenda Mar Azul', email: 'contato@example.test', userType: 'PRODUCER' as const,
@@ -10,6 +11,7 @@ const offer = {
   id: 'offer-1', title: 'Camarão fresco', type: 'Camarão cinza', size: 'Médio',
   price: 34.9, weight: 80, location: 'Fortim, CE', startDate: '2026-11-01',
   endDate: '2026-12-01', status: 'ACTIVE' as const,
+  description: 'Lote de teste', minimumQuantity: 10, maximumQuantity: 80, createdAt: '2026-11-01T10:00:00.000Z',
 }
 const api = 'https://api.example.test'
 
@@ -61,4 +63,33 @@ test('erros de autenticação e servidor ficam explícitos', async t => {
   unauthorized.mock.restore()
   t.mock.method(globalThis, 'fetch', async () => Response.json({}, { status: 500 }))
   await assert.rejects(deleteOffer('token', 'offer-1', api), /excluir a oferta/)
+})
+
+test('busca combina palavras sem acentos, identificador e status sem modificar as ofertas', () => {
+  const offers = [offer, { ...offer, id: 'offer-2', title: 'Lote resfriado', location: 'Mossoró, RN', status: 'INACTIVE' as const }]
+  assert.deepEqual(filterManagedOffers(offers, 'CAMARAO fortim', 'ACTIVE').map(item => item.id), ['offer-1'])
+  assert.deepEqual(filterManagedOffers(offers, 'mossoro', 'INACTIVE').map(item => item.id), ['offer-2'])
+  assert.deepEqual(filterManagedOffers(offers, 'offer-2', 'ACTIVE'), [])
+  assert.equal(offers.length, 2)
+})
+
+test('disponibilidade considera limites do período e não oferece reativação para ofertas encerradas', () => {
+  assert.equal(isPublishedOffer(offer, '2026-11-01'), true)
+  assert.equal(isPublishedOffer(offer, '2026-12-01'), true)
+  assert.equal(isPublishedOffer(offer, '2026-12-02'), false)
+  assert.equal(isPublishedOffer(offer, '2026-10-31'), false)
+  assert.equal(isPublishedOffer({ ...offer, status: 'INACTIVE' }, '2026-11-13'), false)
+  assert.equal(canActivateOffer({ ...offer, status: 'INACTIVE' }, '2026-12-01'), true)
+  assert.equal(canActivateOffer({ ...offer, status: 'INACTIVE' }, '2026-12-02'), false)
+  assert.equal(canActivateOffer({ ...offer, status: 'SOLD_OUT' }, '2026-11-13'), false)
+})
+
+test('edição e duplicação exigem descrição, limites do lote e data de publicação reais', async t => {
+  for (const missing of ['description', 'minimumQuantity', 'maximumQuantity', 'createdAt']) {
+    const invalid: Record<string, unknown> = { ...offer }
+    delete invalid[missing]
+    const mock = t.mock.method(globalThis, 'fetch', async () => Response.json([invalid]))
+    await assert.rejects(fetchMyOffers('token', 'user-1', api), /dados de ofertas inválidos/)
+    mock.mock.restore()
+  }
 })

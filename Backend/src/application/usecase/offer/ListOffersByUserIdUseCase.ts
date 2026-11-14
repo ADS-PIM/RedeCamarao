@@ -19,14 +19,18 @@ export class ListOffersByUserId implements UseCase<string, OfferSearchByUserIdDT
         return offers.map((offer): OfferSearchByUserIdDTO => ({
             id: offer.id,
             title: offer.title,
+            description: offer.description,
             type: offer.type,
             size: offer.size,
             price: offer.price,
             weight: offer.weight,
+            minimumQuantity: offer.minimumQuantity,
+            maximumQuantity: offer.maximumQuantity,
             location: offer.location,
             startDate: offer.startDate,
             endDate: offer.endDate,
-            status: offer.status
+            status: offer.status,
+            createdAt: offer.createdAt
         }));
     }
 }

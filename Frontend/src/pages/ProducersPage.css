@@ -11,7 +11,6 @@
 .producers-search-input > svg { width: 20px; height: 20px; flex-shrink: 0; }
 .producers-search-input input { width: 100%; min-height: 48px; padding: 10px 0; border: 0; background: transparent; color: #193340; font-size: 16px; line-height: 1.5; }
 .producers-search-input input::placeholder { color: var(--muted); opacity: 1; }
-.producers-search-input:focus-within { outline: 3px solid #1388b7; outline-offset: 3px; }
 .producers-search-input input:focus-visible { outline: none; }
 .producers-search-select, .producers-sort select { width: 100%; min-height: 50px; padding: 11px 32px 11px 14px; border: 1px solid var(--border); border-radius: 9px; background-color: white; color: #304956; font-size: 16px; line-height: 1.5; }
 .producers-search-select:disabled { color: var(--muted); opacity: .7; cursor: default; }

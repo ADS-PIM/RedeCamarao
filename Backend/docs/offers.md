@@ -55,8 +55,11 @@ Authorization: Bearer <accessToken>
 ```
 
 O retorno `200` é um array de objetos no formato `OfferSearchByUserIdDTO`, com
-`id`, `title`, `type`, `size`, `price`, `weight`, `location`,
-`startDate`, `endDate` e `status`. Valores decimais são números JSON;
+`id`, `title`, `description`, `type`, `size`, `price`, `weight`,
+`minimumQuantity`, `maximumQuantity`, `location`, `startDate`, `endDate`,
+`status` e `createdAt`. Descrição e limites permitem editar e duplicar ofertas
+sem perder dados; `createdAt` identifica a publicação, não a última atualização.
+Valores decimais são números JSON;
 datas são serializadas em ISO 8601. `type` e `size` são atributos separados;
 `type` pode ser `null` em registros legados.
 
@@ -80,6 +83,8 @@ O banco deve ter as migrations existentes aplicadas, incluindo a restauração
 de `offers.type` e `20261104120000-add-expired-offer-status.js` para suportar `EXPIRED`.
 
 Validação automatizada: `npm.cmd run build` e `npm.cmd run test:offer-list`.
+O contrato necessário ao painel também é verificado sem banco por
+`npm.cmd run test:producer-dashboard`.
 Os testes exercitam a rota HTTP com consultas MySQL simuladas.
 
 ## Atualizar oferta
