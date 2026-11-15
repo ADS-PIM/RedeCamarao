@@ -69,14 +69,6 @@ export function MarketplacePage() {
               <input type="search" aria-label="Buscar camarão, tamanho ou região" placeholder="Buscar camarão, tamanho ou região" value={input} onChange={event => setInput(event.target.value)} />
               <button className="button button-primary" type="submit">Buscar</button>
             </form>
-            <div className="popular-searches">
-              <span>Buscas populares:</span>
-              <button type="button" onClick={() => { selectCategory('large'); scrollToOffers() }}>camarão grande</button>
-              <span aria-hidden="true">·</span>
-              <button type="button" onClick={() => { setRegion('CE'); scrollToOffers() }}>Ceará</button>
-              <span aria-hidden="true">·</span>
-              <button type="button" onClick={() => { selectCategory('bulk'); scrollToOffers() }}>acima de 50 kg</button>
-            </div>
           </div>
           <aside className="how-card" id="como-funciona" aria-labelledby="how-title">
             <img className="farm-image" src="/images/shrimp-farm.jpg" alt="Vista aérea de viveiros de camarão próximos ao litoral" width="1200" height="675" fetchPriority="high" />

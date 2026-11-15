@@ -16,9 +16,6 @@
 .market-search input::placeholder { color: #607783; opacity: 1; }
 .market-search input:focus-visible { outline: none; }
 .market-search .button { flex-shrink: 0; padding-inline: 18px; }
-.popular-searches { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 14px; color: #b7d1dd; font-size: 13px; line-height: 1.5; }
-.popular-searches button { min-height: 44px; padding: 8px 0; color: #e2f1f7; border: 0; background: transparent; font: inherit; text-underline-offset: 4px; }
-.popular-searches button:hover { color: white; text-decoration: underline; }
 .how-card { overflow: hidden; min-width: 0; border: 1px solid #d7e6ec; background: white; color: #193340; border-radius: 18px; scroll-margin-top: 24px; }
 .farm-image { display: block; width: 100%; height: clamp(190px, 17vw, 250px); object-fit: cover; object-position: center 52%; }
 .how-card-content { padding: clamp(20px, 2vw, 28px); }
@@ -107,8 +104,6 @@
   .market-search { flex-wrap: wrap; padding: 10px 12px; gap: 6px 10px; }
   .market-search input { flex-basis: 0; }
   .market-search .button { width: 100%; }
-  .popular-searches { gap: 2px 10px; }
-  .popular-searches > span:first-child { flex-basis: 100%; }
   .how-card-content { padding: 20px; }
   .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .category-region-card { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: stretch; min-height: 90px; padding: 14px; }
