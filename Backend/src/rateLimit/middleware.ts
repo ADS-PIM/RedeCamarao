@@ -4,7 +4,7 @@ import ipaddr from 'ipaddr.js';
 import jwt from 'jsonwebtoken';
 import type { AuthRequest } from '../../authMiddleware';
 import { connection } from '../util/connection';
-import { MySQLTokenBucketStore } from './mysqlTokenBucketStore';
+import { PostgresTokenBucketStore } from './postgresTokenBucketStore';
 import { MemoryTokenBucketStore, type BucketPolicy, type TokenBucketStore } from './tokenBucket';
 
 export const RATE_LIMIT_DEFAULTS = {
@@ -21,7 +21,7 @@ export const RATE_LIMIT_DEFAULTS = {
 
 type PolicyName = keyof typeof RATE_LIMIT_DEFAULTS;
 type Policies = Record<PolicyName, BucketPolicy>;
-const mysqlStore = new MySQLTokenBucketStore(connection);
+const postgresStore = new PostgresTokenBucketStore(connection);
 
 export function readPolicies(env: NodeJS.ProcessEnv = process.env): Policies {
     return Object.fromEntries(Object.entries(RATE_LIMIT_DEFAULTS).map(([name, capacity]) => {
@@ -39,13 +39,13 @@ export function configureRateLimiting(app: Express, env: NodeJS.ProcessEnv = pro
     if (proxy === 'true') throw new Error('TRUST_PROXY must specify trusted proxy hops or addresses, not true');
     app.set('trust proxy', !proxy ? (env.VERCEL === '1' ? 1 : false)
         : proxy === 'false' ? false : /^\d+$/.test(proxy) ? Number(proxy) : proxy.split(',').map(value => value.trim()));
-    const store = env.RATE_LIMIT_STORE || 'mysql';
-    if (store !== 'mysql' && store !== 'memory') throw new Error('RATE_LIMIT_STORE must be mysql or memory');
+    const store = env.RATE_LIMIT_STORE || 'postgres';
+    if (store !== 'postgres' && store !== 'memory') throw new Error('RATE_LIMIT_STORE must be postgres or memory');
     if (store === 'memory' && (env.NODE_ENV === 'production' || env.VERCEL === '1')) {
-        throw new Error('Production rate limiting requires the shared MySQL store');
+        throw new Error('Production rate limiting requires the shared Postgres store');
     }
     app.locals.rateLimitPolicies = readPolicies(env);
-    app.locals.rateLimitStore = store === 'memory' ? new MemoryTokenBucketStore() : mysqlStore;
+    app.locals.rateLimitStore = store === 'memory' ? new MemoryTokenBucketStore() : postgresStore;
 }
 
 export function normalizeIp(value: string): string {
@@ -87,7 +87,7 @@ export function rateLimit(name: PolicyName, scope: string, identify: (req: AuthR
         const identity = identify(req);
         if (identity === undefined) { next(); return; }
         const policy = (req.app.locals.rateLimitPolicies as Policies | undefined)?.[name] ?? readPolicies({})[name];
-        const store = (req.app.locals.rateLimitStore as TokenBucketStore | undefined) ?? mysqlStore;
+        const store = (req.app.locals.rateLimitStore as TokenBucketStore | undefined) ?? postgresStore;
         // Identifiers (including email addresses) are never stored as plaintext.
         // Policy versioning avoids interpreting old balances with a new capacity.
         const key = createHash('sha256').update(JSON.stringify(['v1', scope, policy, identity])).digest('hex');

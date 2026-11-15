@@ -19,15 +19,19 @@ before(async () => {
 });
 beforeEach(() => {
   calls = []; written = []; fail = false; owner = 'producer-1'; userType = 'PRODUCER';
-  db = { beginTransaction: async () => calls.push('begin'), commit: async () => calls.push('commit'), rollback: async () => calls.push('rollback'), release: () => calls.push('release'), query: async (sql, values) => {
-    calls.push({ sql, values });
-    if (sql.startsWith('SELECT user_type')) return [[{ user_type: userType }]];
-    if (sql.startsWith('SELECT userId')) return [[{ userId: owner }]];
-    if (sql.startsWith('SELECT id, imageUrl')) return [[{ id: 'photo-1', imageUrl: 'https://example.test/old.png' }]];
+  db = {  release: () => calls.push('release'), query: async (sql, values) => {
+        sql = sql.replaceAll('"', '');
+    if (sql === 'BEGIN') { calls.push('begin'); return { rows: [] }; }
+      if (sql === 'COMMIT') { calls.push('commit');  return { rows: [] }; }
+      if (sql === 'ROLLBACK') { calls.push('rollback');  return { rows: [] }; }
+      calls.push({ sql, values });
+    if (sql.startsWith('SELECT user_type')) return { rows: [{ user_type: userType }] };
+    if (sql.startsWith('SELECT userId')) return { rows: [{ userId: owner }] };
+    if (sql.startsWith('SELECT id, imageUrl')) return { rows: [{ id: 'photo-1', imageUrl: 'https://example.test/old.png' }] };
     if (fail && sql.startsWith('INSERT INTO')) throw new Error('Sensitive database error');
-    return [{ affectedRows: 1 }];
+    return { rowCount: 1 };
   } };
-  mock.method(connection, 'getConnection', async () => db);
+  mock.method(connection, 'connect', async () => db);
   mock.method(connection, 'query', async () => { throw new Error('Unexpected real DB access'); });
   mock.method(fs, 'mkdir', async () => {});
   mock.method(fs, 'writeFile', async target => written.push(target));
@@ -106,7 +110,7 @@ test('cadastro gera ID, salva rascunho com fotos na mesma transação e usa o do
   assert.equal(created.photos.length, 1);
   const insert = calls.find(call => call.sql?.startsWith('INSERT INTO offers'));
   assert.equal(insert.values.at(-1), 'producer-1'); assert(insert.values.includes('RASCUNHO'));
-  assert.equal((insert.sql.match(/\?/g) || []).length, insert.values.length);
+  assert.equal((insert.sql.match(/\$\d+/g) || []).length, insert.values.length);
   assert(calls.includes('commit'));
 });
 test('cadastro rejeita comprador e IDs de fotos de outra oferta sem deixar arquivos ou oferta parcial', async () => {

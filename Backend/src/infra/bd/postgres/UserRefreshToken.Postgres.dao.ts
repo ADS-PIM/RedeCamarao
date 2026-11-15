@@ -1,15 +1,15 @@
 import { ConsumableRefreshTokenInterface, RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../../../util/connection';
-import type { RowDataPacket } from 'mysql2';
+import type { QueryResultRow } from 'pg';
 import { createHash } from 'node:crypto';
 
 const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
 
-export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface {
+export class UserRefreshTokenDAOPostgres implements ConsumableRefreshTokenInterface {
     async create(id: string, token: string, userId: string, expiresAt: Date): Promise<void> {
         try {
             await connection.query(
-                'INSERT INTO user_refresh_tokens (id, tokenHash, userId, expiresAt) VALUES (?, ?, ?, ?)',
+                'INSERT INTO user_refresh_tokens (id, "tokenHash", "userId", "expiresAt") VALUES ($1, $2, $3, $4)',
                 [id, hashToken(token), userId, expiresAt]
             );
         } catch (error) {
@@ -20,8 +20,8 @@ export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface
 
     async findByToken(token: string): Promise<RefreshTokenRow | null> {
         try {
-            const [rows] = await connection.query<RowDataPacket[]>(
-                'SELECT id, userId FROM user_refresh_tokens WHERE tokenHash = ? AND revokedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP',
+            const { rows } = await connection.query<QueryResultRow>(
+                'SELECT id, "userId" FROM user_refresh_tokens WHERE "tokenHash" = $1 AND "revokedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP',
                 [hashToken(token)]
             );
             if (rows.length === 0) return null;
@@ -33,31 +33,31 @@ export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface
     }
 
     async consume(token: string): Promise<RefreshTokenRow | null> {
-        const db = await connection.getConnection();
+        const db = await connection.connect();
 
         try {
-            await db.beginTransaction();
+            await db.query('BEGIN');
 
-            const [rows] = await db.query<RowDataPacket[]>(
-                'SELECT id, userId FROM user_refresh_tokens WHERE tokenHash = ? AND revokedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP FOR UPDATE',
+            const { rows } = await db.query<QueryResultRow>(
+                'SELECT id, "userId" FROM user_refresh_tokens WHERE "tokenHash" = $1 AND "revokedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP FOR UPDATE',
                 [hashToken(token)]
             );
 
             if (rows.length === 0) {
-                await db.rollback();
+                await db.query('ROLLBACK');
                 return null;
             }
 
             await db.query(
-                'UPDATE user_refresh_tokens SET revokedAt = CURRENT_TIMESTAMP WHERE id = ?',
+                'UPDATE user_refresh_tokens SET "revokedAt" = CURRENT_TIMESTAMP WHERE id = $1',
                 [rows[0].id]
             );
 
-            await db.commit();
+            await db.query('COMMIT');
 
             return { id: String(rows[0].id), userId: String(rows[0].userId) };
         } catch (error) {
-            await db.rollback();
+            await db.query('ROLLBACK');
             console.error('Error consuming user refresh token:', error);
             throw new Error('Failed to consume user refresh token');
         } finally {
@@ -68,7 +68,7 @@ export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface
     async deleteByToken(token: string): Promise<void> {
         try {
             await connection.query(
-                'UPDATE user_refresh_tokens SET revokedAt = CURRENT_TIMESTAMP WHERE tokenHash = ? AND revokedAt IS NULL',
+                'UPDATE user_refresh_tokens SET "revokedAt" = CURRENT_TIMESTAMP WHERE "tokenHash" = $1 AND "revokedAt" IS NULL',
                 [hashToken(token)]
             );
         } catch (error) {
@@ -80,7 +80,7 @@ export class UserRefreshTokenDAOMySQL implements ConsumableRefreshTokenInterface
     async deleteByUserId(userId: string): Promise<void> {
         try {
             await connection.query(
-                'UPDATE user_refresh_tokens SET revokedAt = CURRENT_TIMESTAMP WHERE userId = ? AND revokedAt IS NULL',
+                'UPDATE user_refresh_tokens SET "revokedAt" = CURRENT_TIMESTAMP WHERE "userId" = $1 AND "revokedAt" IS NULL',
                 [userId]
             );
         } catch (error) {

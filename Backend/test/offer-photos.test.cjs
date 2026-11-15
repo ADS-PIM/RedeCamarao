@@ -38,45 +38,46 @@ beforeEach(() => {
     };
     // All database access is intercepted; the test runs the real HTTP/DTO/use-case/DAO flow.
     db.query = mock.method(connection, 'query', async (sql, values) => {
+        sql = sql.replaceAll('"', '');
         if (db.readFailure && sql.startsWith('SELECT')) throw new Error('Sensitive SQL details');
-        if (sql.startsWith('SELECT') && sql.includes('FROM offers WHERE id = ?')) {
+        if (sql.startsWith('SELECT') && sql.includes('FROM offers WHERE id = $1')) {
             const offer = db.offers.get(values[0]);
-            return [offer ? [{ ...offer }] : [], []];
+            return { rows: offer ? [{ ...offer }] : [] };
         }
-        if (sql.startsWith('SELECT') && sql.includes('FROM offerPhotos WHERE id = ?')) {
+        if (sql.startsWith('SELECT') && sql.includes('FROM offerPhotos WHERE id = $1')) {
             const photo = db.photos.get(values[0]);
-            return [photo ? [{ ...photo, internal: 'not exposed' }] : [], []];
+            return { rows: photo ? [{ ...photo, internal: 'not exposed' }] : [] };
         }
-        if (sql.startsWith('SELECT') && sql.includes('FROM offerPhotos WHERE offerId = ?')) {
+        if (sql.startsWith('SELECT') && sql.includes('FROM offerPhotos WHERE offerId = $1')) {
             assert.match(sql, /ORDER BY id ASC$/);
-            return [[...db.photos.values()].filter(photo => photo.offerId === values[0])
-                .sort((a, b) => a.id.localeCompare(b.id)).map(photo => ({ ...photo, internal: 'not exposed' })), []];
+            return { rows: [...db.photos.values()].filter(photo => photo.offerId === values[0])
+                .sort((a, b) => a.id.localeCompare(b.id)).map(photo => ({ ...photo, internal: 'not exposed' })) };
         }
         if (db.writeFailure) throw new Error('Sensitive SQL details');
         db.beforeWrite?.();
         if (sql.startsWith('INSERT INTO offerPhotos')) {
             assert.match(sql, /\(id, offerId, imageUrl, description\)/);
-            assert.match(sql, /SELECT \?, offers.id, \?, \? FROM offers WHERE offers.id = \? AND offers.userId = \?/);
+            assert.match(sql, /SELECT \$\d+, offers.id, \$\d+, \$\d+ FROM offers WHERE offers.id = \$\d+ AND offers.userId = \$\d+/);
             const [id, url, description, parentId, ownerId] = values;
-            if (db.offers.get(parentId)?.userId !== ownerId) return [{ affectedRows: 0 }, []];
+            if (db.offers.get(parentId)?.userId !== ownerId) return { rowCount: 0 };
             db.photos.set(id, { id, offerId: parentId, imageUrl: url, description });
-            return [{ affectedRows: 1 }, []];
+            return { rowCount: 1 };
         }
-        assert.match(sql, /^(UPDATE offerPhotos AS photo|DELETE photo FROM offerPhotos AS photo)/);
-        assert.match(sql, /INNER JOIN offers ON offers.id = photo.offerId/);
-        assert.match(sql, /WHERE photo.id = \? AND photo.offerId = \? AND offers.userId = \?/);
+        assert.match(sql, /^(UPDATE offerPhotos AS photo|DELETE FROM offerPhotos AS photo)/);
+        assert.match(sql, /offers.id = photo.offerId/);
+        assert.match(sql, /photo.id = \$\d+ AND photo.offerId = \$\d+\s+AND offers.userId = \$\d+/);
         const [id, parentId, ownerId] = values.slice(-3);
         const photo = db.photos.get(id);
         if (!photo || photo.offerId !== parentId || db.offers.get(parentId)?.userId !== ownerId) {
-            return [{ affectedRows: 0 }, []];
+            return { rowCount: 0 };
         }
         if (sql.startsWith('DELETE')) db.photos.delete(id);
         else {
-            const fields = [...sql.matchAll(/photo\.(imageUrl|description) = \?/g)].map(match => match[1]);
+            const fields = [...sql.matchAll(/(imageUrl|description) = \$\d+/g)].map(match => match[1]);
             assert.equal(fields.length, values.length - 3);
             fields.forEach((field, index) => { photo[field] = values[index]; });
         }
-        return [{ affectedRows: 1, changedRows: 0 }, []];
+        return { rowCount: 1, changedRows: 0 };
     });
 });
 
@@ -176,7 +177,7 @@ test('update changes only supplied fields and accepts a repeated value and an em
         assert.equal(response.status, 200);
         assert.deepEqual(await response.json(), { message: 'Foto da oferta atualizada com sucesso' });
         const [sql, values] = db.query.mock.calls.at(-1).arguments;
-        assert.match(sql, new RegExp(`SET photo.${Object.keys(data)[0]} = \\?\\s+WHERE`));
+        assert.match(sql, new RegExp(`SET "${Object.keys(data)[0]}" = \\$1\\s+FROM offers`));
         assert.deepEqual(values, [...Object.values(data), photoId, offerId, userId]);
     }
     assert.deepEqual(db.photos.get(photoId), { id: photoId, offerId, imageUrl, description: '' });
@@ -186,7 +187,7 @@ test('update accepts both mutable fields with parameterized SQL', async () => {
     const data = { imageUrl: 'http://localhost:3000/uploads/photo.jpg', description: "Foto d'água" };
     assert.equal((await request('PATCH', `/${photoId}`, data)).status, 200);
     const [sql, values] = db.query.mock.calls.at(-1).arguments;
-    assert.match(sql, /SET photo.imageUrl = \?, photo.description = \?/);
+    assert.match(sql, /SET "imageUrl" = \$1, "description" = \$2/);
     assert.ok(!sql.includes(data.description));
     assert.deepEqual(values, [data.imageUrl, data.description, photoId, offerId, userId]);
 });

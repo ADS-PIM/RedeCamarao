@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import type { UserAuthRequest } from '../../../../../userAuthMiddleware';
 import { parseOfferEditor } from '../../../../application/dto/offerDTO/OfferEditorDTO';
-import { OfferEditorDAOMySQL } from '../../../bd/mySql/offerEditor.MySQL.dao';
+import { OfferEditorDAOPostgres } from '../../../bd/postgres/offerEditor.Postgres.dao';
 import { applicationErrorResponse } from '../applicationErrorResponse';
 
 export async function saveOfferEditor(req: UserAuthRequest, res: Response) {
@@ -13,7 +13,7 @@ export async function saveOfferEditor(req: UserAuthRequest, res: Response) {
         if (!req.user?.userId) return res.status(401).json({ error: 'Não autorizado' });
         const { offer, photos } = parseOfferEditor(req.body);
         const origin = (process.env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
-        const savedPhotos = await new OfferEditorDAOMySQL().save(id, req.user.userId, offer, photos, origin, creating);
+        const savedPhotos = await new OfferEditorDAOPostgres().save(id, req.user.userId, offer, photos, origin, creating);
         return res.status(creating ? 201 : 200).json({ message: 'Oferta e fotos salvas com sucesso', id, photos: savedPhotos });
     } catch (error) {
         const response = applicationErrorResponse(error, res);

@@ -2,21 +2,21 @@ import { connection } from '../../../util/connection';
 import { OfferDAOInterface, OfferUpdateData } from '../../../domain/interfaces/offer/OfferDAOInterface';
 import { Offer, OfferStatus } from '../../../domain/model/offer';
 import type { propsOffer } from '../../../domain/model/offer';
-import type { ResultSetHeader, RowDataPacket } from 'mysql2';
+import type { QueryResultRow } from 'pg';
 
 const databaseOfferStatuses: Record<OfferStatus, string> = {
     ACTIVE: 'ATIVO', INACTIVE: 'PAUSADO', SOLD_OUT: 'VENDIDO', CANCELLED: 'CANCELADO', EXPIRED: 'EXPIRADO', DRAFT: 'RASCUNHO'
 };
 
-const offerColumns = `id, userId, title, description, type, size, price, weight,
-    max_quantity AS maximumQuantity, min_quantity AS minimumQuantity,
-    location, start_availability_date AS startDate,
-    end_availability_date AS endDate,
+const offerColumns = `id, "userId", title, description, type, size, price, weight,
+    max_quantity AS "maximumQuantity", min_quantity AS "minimumQuantity",
+    location, start_availability_date AS "startDate",
+    end_availability_date AS "endDate",
     CASE status ${Object.entries(databaseOfferStatuses)
         .map(([status, stored]) => `WHEN '${stored}' THEN '${status}'`).join(' ')}
-    END AS status, createdAt, updatedAt`;
+    END AS status, "createdAt", "updatedAt"`;
 
-const reconstructOffer = (row: RowDataPacket & propsOffer): Offer => Offer.reconstruct({
+const reconstructOffer = (row: QueryResultRow & propsOffer): Offer => Offer.reconstruct({
     ...row,
     price: Number(row.price),
     weight: Number(row.weight),
@@ -24,31 +24,31 @@ const reconstructOffer = (row: RowDataPacket & propsOffer): Offer => Offer.recon
     minimumQuantity: Number(row.minimumQuantity)
 });
 
-export class OfferDAOMySQL implements OfferDAOInterface {
+export class OfferDAOPostgres implements OfferDAOInterface {
     public async search(): Promise<Offer[]> {
-        const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
-            `SELECT ${offerColumns} FROM offers ORDER BY createdAt DESC, id DESC`
+        const { rows } = await connection.query<QueryResultRow & propsOffer>(
+            `SELECT ${offerColumns} FROM offers ORDER BY "createdAt" DESC, id DESC`
         );
 
         return rows.map(reconstructOffer);
     }
 
     public async searchActive(): Promise<Offer[]> {
-        const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
+        const { rows } = await connection.query<QueryResultRow & propsOffer>(
             `SELECT ${offerColumns} FROM offers
             WHERE status = 'ATIVO'
                 AND start_availability_date <= CURRENT_DATE
                 AND end_availability_date >= CURRENT_DATE
-            ORDER BY createdAt DESC, id DESC`
+            ORDER BY "createdAt" DESC, id DESC`
         );
 
         return rows.map(reconstructOffer);
     }
 
     public async listByUserId(userId: string): Promise<Offer[]> {
-        const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
-            `SELECT ${offerColumns}, (SELECT imageUrl FROM offerPhotos WHERE offerId = offers.id ORDER BY id ASC LIMIT 1) AS coverPhoto
-            FROM offers WHERE userId = ? ORDER BY createdAt DESC, id DESC`,
+        const { rows } = await connection.query<QueryResultRow & propsOffer>(
+            `SELECT ${offerColumns}, (SELECT "imageUrl" FROM "offerPhotos" WHERE "offerId" = offers.id ORDER BY id ASC LIMIT 1) AS "coverPhoto"
+            FROM offers WHERE "userId" = $1 ORDER BY "createdAt" DESC, id DESC`,
             [userId]
         );
 
@@ -56,8 +56,8 @@ export class OfferDAOMySQL implements OfferDAOInterface {
     }
 
     public async searchById(id: string): Promise<Offer | null> {
-        const [rows] = await connection.query<(RowDataPacket & propsOffer)[]>(
-            `SELECT ${offerColumns} FROM offers WHERE id = ?`, [id]
+        const { rows } = await connection.query<QueryResultRow & propsOffer>(
+            `SELECT ${offerColumns} FROM offers WHERE id = $1`, [id]
         );
         return rows.length === 0 ? null : reconstructOffer(rows[0]);
     }
@@ -74,37 +74,37 @@ export class OfferDAOMySQL implements OfferDAOInterface {
         for (const key of Object.keys(columns) as (keyof OfferUpdateData)[]) {
             const value = data[key];
             if (value === undefined) continue;
-            fields.push(`${columns[key]} = ?`);
+            fields.push(`"${columns[key]}" = $${values.length + 1}`);
             values.push(key === 'status' ? databaseOfferStatuses[data.status!] : value);
         }
         if (fields.length === 0) return false;
 
         // Check ownership and merged ranges again atomically, in case another PATCH ran.
-        const [result] = await connection.query<ResultSetHeader>(
-            `UPDATE offers SET ${fields.join(', ')} WHERE id = ? AND userId = ?
-                AND COALESCE(?, min_quantity) <= COALESCE(?, max_quantity)
-                AND COALESCE(?, start_availability_date) <= COALESCE(?, end_availability_date)`,
+        const result = await connection.query(
+            `UPDATE offers SET ${fields.join(', ')} WHERE id = $${values.length + 1} AND "userId" = $${values.length + 2}
+                AND COALESCE($${values.length + 3}::numeric, min_quantity) <= COALESCE($${values.length + 4}::numeric, max_quantity)
+                AND COALESCE($${values.length + 5}::date, start_availability_date) <= COALESCE($${values.length + 6}::date, end_availability_date)`,
             [...values, id, userId, data.minimumQuantity ?? null, data.maximumQuantity ?? null,
                 data.startDate ?? null, data.endDate ?? null]
         );
-        return result.affectedRows > 0;
+        return (result.rowCount ?? 0) > 0;
     }
 
     public async delete(id: string, userId: string): Promise<boolean> {
         // Ownership is checked again in the write; the FK removes the offer's photos.
-        const [result] = await connection.query<ResultSetHeader>(
-            'DELETE FROM offers WHERE id = ? AND userId = ?', [id, userId]
+        const result = await connection.query(
+            'DELETE FROM offers WHERE id = $1 AND "userId" = $2', [id, userId]
         );
-        return result.affectedRows > 0;
+        return (result.rowCount ?? 0) > 0;
     }
 
     public async create(offer: Offer): Promise<void> {
         await connection.query(
             `INSERT INTO offers (
-                id, userId, title, description, type, size, price, weight,
+                id, "userId", title, description, type, size, price, weight,
                 max_quantity, min_quantity, location,
-                start_availability_date, end_availability_date, status, createdAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                start_availability_date, end_availability_date, status, "createdAt"
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
             [
                 offer.id, offer.userId, offer.title, offer.description, offer.type, offer.size,
                 offer.price, offer.weight, offer.maximumQuantity, offer.minimumQuantity,

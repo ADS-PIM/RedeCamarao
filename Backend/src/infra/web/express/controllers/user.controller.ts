@@ -94,7 +94,7 @@ export class UserController {
 
             if (
                 error.message === 'Email already registered' ||
-                error.code === 'ER_DUP_ENTRY'
+                error.code === '23505'
             ) {
                 return res.status(409).json({
                     error: 'Email already registered'
@@ -392,7 +392,7 @@ export class UserController {
 
             if (
                 error.message === 'Email already registered' ||
-                error.code === 'ER_DUP_ENTRY'
+                error.code === '23505'
             ) {
                 return res.status(409).json({
                     error: 'Email already registered'
@@ -442,8 +442,7 @@ export class UserController {
 
         if (
             error.message === 'User has related records' ||
-            error.code === 'ER_ROW_IS_REFERENCED_2' ||
-            error.code === 'ER_ROW_IS_REFERENCED'
+            error.code === '23503'
         ) {
             return res.status(409).json({
                 error: 'User has related records and cannot be deleted'

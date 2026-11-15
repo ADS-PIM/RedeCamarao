@@ -5,11 +5,11 @@ import { AdminSearchDTO } from '../../../application/dto/adminDTO/AdminSearchDTO
 import { AdminDAOInterface } from '../../../domain/interfaces/admin/AdminDAOInterface';
 import { AdminUpdateData } from '../../../domain/interfaces/admin/AdminDAOInterface';
 
-export class AdminDAOMySQL implements AdminDAOInterface{
+export class AdminDAOPostgres implements AdminDAOInterface{
     public async register(admin: Admin): Promise<void> {
         try {
-            const [result]: any = await connection.query(
-                'INSERT INTO administrators (id, name, email, hashPassword, role, active, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            const result = await connection.query(
+                'INSERT INTO administrators (id, name, email, "hashPassword", role, active, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, $7)',
                 [admin.id, admin.name, admin.email, admin.password, admin.role, admin.active, admin.createdAt]
             );
         } catch (error: any) {
@@ -19,8 +19,8 @@ export class AdminDAOMySQL implements AdminDAOInterface{
 
     async searchByEmail(email: string): Promise<Admin | null> {
         try {
-            const [admin]: any = await connection.query(
-                'SELECT id, name, email, hashPassword AS password, role, active, createdAt, profilePicture AS profile_picture FROM administrators WHERE email = ?',
+            const { rows: admin } = await connection.query(
+                'SELECT id, name, email, "hashPassword" AS password, role, active, "createdAt", "profilePicture" AS profile_picture FROM administrators WHERE LOWER(email) = LOWER($1)',
                 [email]
             );
             if (admin.length == 0) {
@@ -34,8 +34,8 @@ export class AdminDAOMySQL implements AdminDAOInterface{
 
     async searchById(id: string): Promise<Admin | null> {
         try {
-            const [admins]: any = await connection.query(
-                'SELECT id, name, email, hashPassword AS password, role, active, createdAt, profilePicture AS profile_picture FROM administrators WHERE id = ?',
+            const { rows: admins } = await connection.query(
+                'SELECT id, name, email, "hashPassword" AS password, role, active, "createdAt", "profilePicture" AS profile_picture FROM administrators WHERE id = $1',
                 [id]
             );
             return admins.length === 0 ? null : admins[0];
@@ -46,8 +46,8 @@ export class AdminDAOMySQL implements AdminDAOInterface{
 
     async searchPublicById(id: string): Promise<AdminSearchByIdDTO | null> {
         try {
-            const [admins]: any = await connection.query(
-                'SELECT id, name, email, role, active, createdAt, profilePicture AS profile_picture FROM administrators WHERE id = ?',
+            const { rows: admins } = await connection.query(
+                'SELECT id, name, email, role, active, "createdAt", "profilePicture" AS profile_picture FROM administrators WHERE id = $1',
                 [id]
             );
             return admins.length === 0 ? null : admins[0];
@@ -58,8 +58,8 @@ export class AdminDAOMySQL implements AdminDAOInterface{
 
     async searchAll(): Promise<AdminSearchDTO[] | null> {
         try {
-            const [admins]: any = await connection.query(
-                'SELECT id, name, email, role, active, profilePicture AS profile_picture, createdAt FROM administrators ORDER BY createdAt DESC'
+            const { rows: admins } = await connection.query(
+                'SELECT id, name, email, role, active, "profilePicture" AS profile_picture, "createdAt" FROM administrators ORDER BY "createdAt" DESC'
             );
             return admins.length === 0 ? [] : admins;
         } catch (error: any) {
@@ -72,27 +72,27 @@ export class AdminDAOMySQL implements AdminDAOInterface{
         const values: (string | boolean | null)[] = [];
 
         if (data.name !== undefined) {
-            fields.push('name = ?');
+            fields.push(`name = $${values.length + 1}`);
             values.push(data.name);
         }
         if (data.email !== undefined) {
-            fields.push('email = ?');
+            fields.push(`email = $${values.length + 1}`);
             values.push(data.email);
         }
         if (data.password !== undefined) {
-            fields.push('hashPassword = ?');
+            fields.push(`"hashPassword" = $${values.length + 1}`);
             values.push(data.password);
         }
         if (data.role !== undefined) {
-            fields.push('role = ?');
+            fields.push(`role = $${values.length + 1}`);
             values.push(data.role);
         }
         if (data.active !== undefined) {
-            fields.push('active = ?');
+            fields.push(`active = $${values.length + 1}`);
             values.push(data.active);
         }
         if (data.profile_picture !== undefined) {
-            fields.push('profilePicture = ?');
+            fields.push(`"profilePicture" = $${values.length + 1}`);
             values.push(data.profile_picture);
         }
 
@@ -102,7 +102,7 @@ export class AdminDAOMySQL implements AdminDAOInterface{
 
         try {
             await connection.query(
-                `UPDATE administrators SET ${fields.join(', ')} WHERE id = ?`,
+                `UPDATE administrators SET ${fields.join(', ')} WHERE id = $${values.length + 1}`,
                 [...values, id]
             );
         } catch (error: any) {
@@ -112,7 +112,7 @@ export class AdminDAOMySQL implements AdminDAOInterface{
 
     async delete(id: string): Promise<void> {
         try {
-            await connection.query('DELETE FROM administrators WHERE id = ?', [id]);
+            await connection.query('DELETE FROM administrators WHERE id = $1', [id]);
         } catch (error: any) {
             throw new Error('Error deleting admin: ' + error.message);
         }

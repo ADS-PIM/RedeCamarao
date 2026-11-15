@@ -47,14 +47,15 @@ function request(method = 'DELETE', { id = offerId, accessToken = token, body, q
 
 function mockQueries({ offer = storedOffer, affectedRows = 1, failWrite = false } = {}) {
     return mock.method(connection, 'query', async (sql, values) => {
+        sql = sql.replaceAll('"', '');
         if (sql.startsWith('SELECT')) {
-            assert.match(sql, /FROM offers WHERE id = \?/);
-            return [offer ? [{ ...offer }] : [], []];
+            assert.match(sql, /FROM offers WHERE id = \$\d+/);
+            return { rows: offer ? [{ ...offer }] : [] };
         }
         if (failWrite) throw new Error('Sensitive database details');
-        assert.equal(sql, 'DELETE FROM offers WHERE id = ? AND userId = ?');
+        assert.equal(sql, 'DELETE FROM offers WHERE id = $1 AND userId = $2');
         assert.deepEqual(values, [offerId, userId]);
-        return [{ affectedRows }, []];
+        return { rowCount: affectedRows };
     });
 }
 
@@ -95,10 +96,11 @@ test('update rejects changing the owner through the body', async () => {
 
 test('owner update is also guarded by userId in the SQL write', async () => {
     const query = mock.method(connection, 'query', async (sql, values) => {
-        if (sql.startsWith('SELECT')) return [[storedOffer], []];
-        assert.match(sql, /^UPDATE offers SET title = \? WHERE id = \? AND userId = \?/);
+        sql = sql.replaceAll('"', '');
+        if (sql.startsWith('SELECT')) return { rows: [storedOffer] };
+        assert.match(sql, /^UPDATE offers SET title = \$\d+ WHERE id = \$\d+ AND userId = \$\d+/);
         assert.deepEqual(values.slice(0, 3), ['Nova', offerId, userId]);
-        return [{ affectedRows: 1 }, []];
+        return { rowCount: 1 };
     });
     assert.equal((await request('PATCH', { body: { title: 'Nova' } })).status, 200);
     assert.equal(query.mock.callCount(), 2);
@@ -150,13 +152,14 @@ test('delete conflict status does not depend on its translated message', () => {
 
 test('DELETE /users/me derives the account ID exclusively from the token', async () => {
     const query = mock.method(connection, 'query', async (sql, values) => {
+        sql = sql.replaceAll('"', '');
         assert.deepEqual(values, [userId]);
         if (sql.startsWith('SELECT')) {
-            assert.match(sql, /FROM users WHERE id = \?/);
-            return [[{ id: userId }], []];
+            assert.match(sql, /FROM users\s+WHERE id = \$1/);
+            return { rows: [{ id: userId }] };
         }
-        assert.equal(sql, 'DELETE FROM users WHERE id = ?');
-        return [{ affectedRows: 1 }, []];
+        assert.equal(sql, 'DELETE FROM users WHERE id = $1');
+        return { rowCount: 1 };
     });
     const response = await fetch(`${baseUrl}/users/me?userId=${otherUserId}`, {
         method: 'DELETE', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

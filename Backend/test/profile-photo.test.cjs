@@ -19,24 +19,26 @@ beforeEach(() => {
   stored = origin + '/uploads/profiles/' + oldFilename;
   pendingValue = stored; exists = true; fail = false; failFile = false; calls = []; written = []; type = 'PRODUCER';
   const db = {
-    beginTransaction: async () => calls.push('begin'),
-    commit: async () => { calls.push('commit'); stored = pendingValue; },
-    rollback: async () => { calls.push('rollback'); pendingValue = stored; },
     release: () => calls.push('release'),
     query: async (sql, values) => {
+        sql = sql.replaceAll('"', '');
+      if (sql === 'BEGIN') { calls.push('begin'); return { rows: [] }; }
+      if (sql === 'COMMIT') { calls.push('commit'); stored = pendingValue; return { rows: [] }; }
+      if (sql === 'ROLLBACK') { calls.push('rollback'); pendingValue = stored; return { rows: [] }; }
       calls.push({ sql, values });
-      if (sql.startsWith('SELECT profilePicture')) return [exists ? [{ profilePicture: stored }] : []];
+      if (sql.startsWith('SELECT profilePicture')) return { rows: exists ? [{ profilePicture: stored }] : [] };
       if (sql.startsWith('UPDATE users')) {
         if (fail) throw new Error('Sensitive database failure');
-        pendingValue = values[0]; return [{ affectedRows: 1 }];
+        pendingValue = values[0]; return { rowCount: 1 };
       }
       throw new Error('Unexpected query');
     },
   };
-  mock.method(connection, 'getConnection', async () => db);
+  mock.method(connection, 'connect', async () => db);
   mock.method(connection, 'query', async (sql, values) => {
+        sql = sql.replaceAll('"', '');
     assert.match(sql, /profilePicture/); assert.equal(values[0], 'owner-1');
-    return [[{ id: 'owner-1', name: 'Test user', email: 'private@example.test', password: 'private-hash', cpf_cnpj: 'private-document', userType: type, description: null, location: null, phone: null, businessHours: null, profilePicture: stored, createdAt: new Date('2026-01-01') }]];
+    return { rows: [{ id: 'owner-1', name: 'Test user', email: 'private@example.test', password: 'private-hash', cpf_cnpj: 'private-document', userType: type, description: null, location: null, phone: null, businessHours: null, profilePicture: stored, createdAt: new Date('2026-01-01') }] };
   });
   mock.method(fs, 'mkdir', async () => {});
   mock.method(fs, 'writeFile', async (target, buffer, options) => {

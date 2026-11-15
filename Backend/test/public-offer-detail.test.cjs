@@ -2,9 +2,9 @@ const assert = require('node:assert/strict');
 const { test, before, beforeEach, after, afterEach, mock } = require('node:test');
 const app = require('../src/app.ts').default;
 const { connection } = require('../src/util/connection.ts');
-const { OfferDAOMySQL } = require('../src/infra/bd/mySql/offer.MySQL.dao.ts');
-const { UserDAOMySQL } = require('../src/infra/bd/mySql/user.MySQL.dao.ts');
-const { OfferPhotoDAOMySQL } = require('../src/infra/bd/mySql/offerPhoto.MySQL.dao.ts');
+const { OfferDAOPostgres } = require('../src/infra/bd/postgres/offer.Postgres.dao.ts');
+const { UserDAOPostgres } = require('../src/infra/bd/postgres/user.Postgres.dao.ts');
+const { OfferPhotoDAOPostgres } = require('../src/infra/bd/postgres/offerPhoto.Postgres.dao.ts');
 const { Offer, OfferStatus } = require('../src/domain/model/offer.ts');
 const { User, UserType } = require('../src/domain/model/user.ts');
 const { OfferPhoto } = require('../src/domain/model/offerPhoto.ts');
@@ -58,12 +58,12 @@ beforeEach(() => {
         id: photoId, offerId, imageUrl: 'https://example.test/lote.jpg', description: 'Foto do lote'
     })];
     // No database is contacted: only the DAO boundaries are replaced, keeping HTTP/controller/use-case real.
-    activeQuery = mock.method(OfferDAOMySQL.prototype, 'searchActive', async () => activeOffers);
-    userQuery = mock.method(UserDAOMySQL.prototype, 'searchById', async id => {
+    activeQuery = mock.method(OfferDAOPostgres.prototype, 'searchActive', async () => activeOffers);
+    userQuery = mock.method(UserDAOPostgres.prototype, 'searchById', async id => {
         assert.equal(id, producerId);
         return producer;
     });
-    photoQuery = mock.method(OfferPhotoDAOMySQL.prototype, 'searchByOfferId', async id => {
+    photoQuery = mock.method(OfferPhotoDAOPostgres.prototype, 'searchByOfferId', async id => {
         assert.equal(id, offerId);
         return photos;
     });

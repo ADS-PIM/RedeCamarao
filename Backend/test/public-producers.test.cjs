@@ -2,15 +2,15 @@ const assert = require('node:assert/strict');
 const { test, before, beforeEach, after, afterEach, mock } = require('node:test');
 const app = require('../src/app.ts').default;
 const { connection } = require('../src/util/connection.ts');
-const { OfferDAOMySQL } = require('../src/infra/bd/mySql/offer.MySQL.dao.ts');
-const { UserDAOMySQL } = require('../src/infra/bd/mySql/user.MySQL.dao.ts');
+const { OfferDAOPostgres } = require('../src/infra/bd/postgres/offer.Postgres.dao.ts');
+const { UserDAOPostgres } = require('../src/infra/bd/postgres/user.Postgres.dao.ts');
 const { UserType } = require('../src/domain/model/user.ts');
 const { Offer, OfferStatus } = require('../src/domain/model/offer.ts');
 
 const producerId = 'bd9fb70b-af5f-4f72-9e18-a841db772d81';
 const otherProducerId = '96f175ad-4ec3-4d8c-8848-36d35c02da47';
-const listFromDatabase = UserDAOMySQL.prototype.listPublicProducers;
-const producerFromDatabase = UserDAOMySQL.prototype.searchPublicProducerById;
+const listFromDatabase = UserDAOPostgres.prototype.listPublicProducers;
+const producerFromDatabase = UserDAOPostgres.prototype.searchPublicProducerById;
 let server;
 let baseUrl;
 let producers;
@@ -53,10 +53,10 @@ beforeEach(() => {
         location: null, businessHours: null, activeOfferCount: 0
     })];
     activeOffers = [offer('offer-1'), offer('offer-2'), offer('other-offer', otherProducerId)];
-    listQuery = mock.method(UserDAOMySQL.prototype, 'listPublicProducers', async () => producers);
-    producerQuery = mock.method(UserDAOMySQL.prototype, 'searchPublicProducerById', async () => producer);
-    offerQuery = mock.method(OfferDAOMySQL.prototype, 'searchActive', async () => activeOffers);
-    mock.method(UserDAOMySQL.prototype, 'searchById', async () => { throw new Error('Private user query must not be used'); });
+    listQuery = mock.method(UserDAOPostgres.prototype, 'listPublicProducers', async () => producers);
+    producerQuery = mock.method(UserDAOPostgres.prototype, 'searchPublicProducerById', async () => producer);
+    offerQuery = mock.method(OfferDAOPostgres.prototype, 'searchActive', async () => activeOffers);
+    mock.method(UserDAOPostgres.prototype, 'searchById', async () => { throw new Error('Private user query must not be used'); });
     mock.method(connection, 'query', async () => { throw new Error('Unexpected database access'); });
 });
 
@@ -178,6 +178,7 @@ test('directory DAO uses one producer-only public query with aggregated currentl
         publicProducer({ id: otherProducerId, description: null, location: null, businessHours: null, activeOfferCount: '0' })
     ];
     connection.query.mock.mockImplementation(async (sql, params) => {
+        sql = sql.replaceAll('"', '');
         assert.deepEqual(params, [UserType.PRODUCER]);
         assert.match(sql, /LEFT JOIN/i);
         assert.match(sql, /COUNT\(\*\) AS activeOfferCount/i);
@@ -186,13 +187,13 @@ test('directory DAO uses one producer-only public query with aggregated currentl
         assert.match(sql, /status = 'ATIVO'/i);
         assert.match(sql, /start_availability_date <= CURRENT_DATE/i);
         assert.match(sql, /end_availability_date >= CURRENT_DATE/i);
-        assert.match(sql, /WHERE u\.user_type = \?/i);
+        assert.match(sql, /WHERE u\.user_type = \$\d+/i);
         assert.match(sql, /ORDER BY u\.name ASC, u\.id ASC/i);
         assert.match(sql, /u\.phone/i);
         assert.doesNotMatch(sql, /email|hashPassword|CPF_CNPJ|SELECT\s+\*/i);
-        return [rows, []];
+        return { rows: rows };
     });
-    const result = await listFromDatabase.call(new UserDAOMySQL());
+    const result = await listFromDatabase.call(new UserDAOPostgres());
     assert.deepEqual(result, [publicProducer(), publicProducer({
         id: otherProducerId, description: null, location: null, businessHours: null, activeOfferCount: 0
     })]);
@@ -203,14 +204,15 @@ test('directory DAO uses one producer-only public query with aggregated currentl
 test('public producer DAO binds the identifier and excludes buyer rows without private columns', async () => {
     const id = "id' OR 1=1 --";
     connection.query.mock.mockImplementation(async (sql, params) => {
+        sql = sql.replaceAll('"', '');
         assert.deepEqual(params, [UserType.PRODUCER, id]);
-        assert.match(sql, /WHERE u\.user_type = \?\s+AND u\.id = \? LIMIT 1/i);
+        assert.match(sql, /WHERE u\.user_type = \$\d+\s+AND u\.id = \$\d+ LIMIT 1/i);
         assert.ok(!sql.includes(id));
         assert.match(sql, /u\.phone/i);
         assert.doesNotMatch(sql, /email|hashPassword|CPF_CNPJ|SELECT\s+\*/i);
-        return [[], []];
+        return { rows: [] };
     });
-    assert.equal(await producerFromDatabase.call(new UserDAOMySQL(), id), null);
-    connection.query.mock.mockImplementation(async () => [[{ ...publicProducer(), activeOfferCount: '2' }], []]);
-    assert.deepEqual(await producerFromDatabase.call(new UserDAOMySQL(), producerId), publicProducer());
+    assert.equal(await producerFromDatabase.call(new UserDAOPostgres(), id), null);
+    connection.query.mock.mockImplementation(async () => ({ rows: [{ ...publicProducer(), activeOfferCount: '2' }] }));
+    assert.deepEqual(await producerFromDatabase.call(new UserDAOPostgres(), producerId), publicProducer());
 });

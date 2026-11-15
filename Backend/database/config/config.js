@@ -1,28 +1,13 @@
-require('dotenv').config();
+const { databaseOptions } = require('./connection');
 
-module.exports = {
-  development: {
-    username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'redecamarao',
-    host: process.env.DB_HOST || '127.0.0.1',
-    dialect: 'mysql',
-    logging: false
-  },
-  test: {
-    username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'redecamarao_test',
-    host: process.env.DB_HOST || '127.0.0.1',
-    dialect: 'mysql',
-    logging: false
-  },
-  production: {
-    username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'redecamarao_prod',
-    host: process.env.DB_HOST || '127.0.0.1',
-    dialect: 'mysql',
-    logging: false
-  }
-};
+function config() {
+  const { user, password, database, host, port, ssl, max } = databaseOptions();
+  return {
+    username: user, password, database, host, port,
+    dialect: 'postgres', dialectOptions: { ssl },
+    pool: { max, min: 0, acquire: 10000, idle: 30000 },
+    logging: false,
+  };
+}
+
+module.exports = { development: config(), test: config(), production: config() };

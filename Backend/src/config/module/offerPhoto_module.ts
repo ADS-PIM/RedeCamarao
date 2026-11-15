@@ -2,12 +2,12 @@ import { CreateOfferPhoto } from '../../application/usecase/offerPhoto/CreateOff
 import { UpdateOfferPhoto } from '../../application/usecase/offerPhoto/UpdateOfferPhotoUseCase';
 import { SearchOfferPhotosByOfferId } from '../../application/usecase/offerPhoto/SearchOfferPhotosByOfferIdUseCase';
 import { DeleteOfferPhoto } from '../../application/usecase/offerPhoto/DeleteOfferPhotoUseCase';
-import { OfferDAOMySQL } from '../../infra/bd/mySql/offer.MySQL.dao';
-import { OfferPhotoDAOMySQL } from '../../infra/bd/mySql/offerPhoto.MySQL.dao';
+import { OfferDAOPostgres } from '../../infra/bd/postgres/offer.Postgres.dao';
+import { OfferPhotoDAOPostgres } from '../../infra/bd/postgres/offerPhoto.Postgres.dao';
 import { OfferPhotoController } from '../../infra/web/express/controllers/offerPhoto.controller';
 
-const offerPhotoDAO = new OfferPhotoDAOMySQL();
-const offerDAO = new OfferDAOMySQL();
+const offerPhotoDAO = new OfferPhotoDAOPostgres();
+const offerDAO = new OfferDAOPostgres();
 
 export const offerPhotoController = new OfferPhotoController(
     new CreateOfferPhoto(offerPhotoDAO, offerDAO),
