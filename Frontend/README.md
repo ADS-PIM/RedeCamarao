@@ -1,4 +1,4 @@
-﻿# RedeCamarão — Frontend
+# RedeCamarão — Frontend
 
 Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e `/marketplace`; os produtos, em `/produtos`; cada oferta, em `/produtos/:id`; os produtores, em `/produtores`; cada perfil, em `/produtores/:id`; o cadastro, em `/registro`; o login, em `/entrar` e `/login`.
 
@@ -126,3 +126,16 @@ npm.cmd test
 ```
 
 Os testes cobrem validação de documentos, máscaras, confirmação de senha, aceite, contatos opcionais, navegação interna e o contrato de login/refresh/logout com respostas simuladas. A integração real depende do backend configurado e de seu banco de dados.
+# Hospedagem na Vercel
+
+Configure o projeto do front com Root Directory `Frontend`, framework Vite,
+comando de build `npm run build` e diretório de saída `dist`.
+`vercel.json` encaminha acessos diretos como `/entrar`, `/registro` e
+`/produtos/:id` ao React, evitando 404 ao abrir links ou atualizar a página.
+
+Defina `VITE_API_URL` no painel com a URL pública do backend, sem rotas no final,
+e refaça o deploy após alterar a variável. Use o domínio de produção do frontend
+em `FRONTEND_URL` no backend; o código permite vários endereços separados por
+vírgula. Atualize o ambiente do backend e faça seu redeploy quando mudar essa lista.
+Um endereço que redireciona ao login da Vercel está protegido pela hospedagem;
+o rewrite não remove essa proteção.
