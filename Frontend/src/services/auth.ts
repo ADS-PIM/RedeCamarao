@@ -1,11 +1,11 @@
 import type { LoginData } from '../utils/login.ts'
+import { apiBaseUrl } from './api'
 
 export type UserSession = { accessToken: string; userId: string; userType: 'BUYER' | 'PRODUCER' }
 
-const configuredUrl = import.meta.env?.VITE_API_URL
 let refreshRequest: Promise<UserSession | null> | undefined
 
-async function request(endpoint: string, data?: LoginData, baseUrl = configuredUrl) {
+async function request(endpoint: string, data?: LoginData, baseUrl = apiBaseUrl) {
   if (!baseUrl) throw new Error('O acesso está temporariamente indisponível. Tente novamente mais tarde.')
   try {
     return await fetch(`${baseUrl.replace(/\/+$/, '')}/users/${endpoint}`, {
@@ -29,7 +29,7 @@ async function readSession(response: Response): Promise<UserSession> {
   return { accessToken: data.accessToken, userId: data.userId, userType: data.userType }
 }
 
-export async function loginUser(data: LoginData, baseUrl = configuredUrl): Promise<UserSession> {
+export async function loginUser(data: LoginData, baseUrl = apiBaseUrl): Promise<UserSession> {
   const response = await request('login', data, baseUrl)
   if (response.status === 401) throw new Error('E-mail ou senha incorretos. Confira seus dados e tente novamente.')
   if (response.status === 429) throw new Error('Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente.')
@@ -38,7 +38,7 @@ export async function loginUser(data: LoginData, baseUrl = configuredUrl): Promi
   return readSession(response)
 }
 
-export function restoreSession(baseUrl = configuredUrl): Promise<UserSession | null> {
+export function restoreSession(baseUrl = apiBaseUrl): Promise<UserSession | null> {
   if (!baseUrl) return Promise.resolve(null)
   // Share the request so React Strict Mode does not rotate the same cookie twice.
   refreshRequest ??= (async () => {
@@ -50,7 +50,7 @@ export function restoreSession(baseUrl = configuredUrl): Promise<UserSession | n
   return refreshRequest
 }
 
-export async function logoutUser(baseUrl = configuredUrl) {
+export async function logoutUser(baseUrl = apiBaseUrl) {
   const response = await request('logout', undefined, baseUrl)
   if (!response.ok) throw new Error('Não foi possível sair agora. Tente novamente.')
 }

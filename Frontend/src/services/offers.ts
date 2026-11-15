@@ -1,6 +1,5 @@
 import type { Offer, OfferDetail } from '../data/marketplace'
-
-const configuredUrl = import.meta.env?.VITE_API_URL
+import { apiBaseUrl } from './api'
 
 export function isOffer(value: unknown): value is Offer {
   if (!value || typeof value !== 'object') return false
@@ -40,7 +39,7 @@ function isOfferDetail(value: unknown): value is OfferDetail {
       && typeof producer.activeOfferCount === 'number' && Number.isInteger(producer.activeOfferCount) && producer.activeOfferCount >= 0)
 }
 
-export async function fetchOfferDetail(id: string, baseUrl = configuredUrl): Promise<OfferDetail | null> {
+export async function fetchOfferDetail(id: string, baseUrl = apiBaseUrl): Promise<OfferDetail | null> {
   if (!baseUrl) throw new Error('O acesso à oferta está temporariamente indisponível.')
   let response: Response
   try {
@@ -53,7 +52,7 @@ export async function fetchOfferDetail(id: string, baseUrl = configuredUrl): Pro
   return data
 }
 
-export async function fetchMarketplaceOffers(baseUrl = configuredUrl): Promise<Offer[]> {
+export async function fetchMarketplaceOffers(baseUrl = apiBaseUrl): Promise<Offer[]> {
   if (!baseUrl) throw new Error('O acesso às ofertas está temporariamente indisponível.')
 
   let response: Response
