@@ -1,7 +1,7 @@
 import type { Offer } from '../data/marketplace'
 import type { EditorPhoto, editorPayload } from '../data/offerEditor'
+import { apiBaseUrl } from './api'
 
-const configuredUrl = import.meta.env?.VITE_API_URL
 export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED' | 'DRAFT'
 export type ManagedOffer = Offer & { status: OfferStatus; createdAt: string; updatedAt?: string; coverPhoto?: string | null }
 export type UserProfile = {
@@ -19,7 +19,7 @@ export type ProfileUpdate = Pick<UserProfile, 'name' | 'email' | 'description' |
 export type NewOffer = Omit<Offer, 'id'>
 export type OfferUpdate = Partial<Omit<ManagedOffer, 'id' | 'status'>> & { status?: OfferStatus }
 
-async function request(path: string, token: string, method = 'GET', body?: object, baseUrl = configuredUrl): Promise<Response> {
+async function request(path: string, token: string, method = 'GET', body?: object, baseUrl = apiBaseUrl): Promise<Response> {
   if (!baseUrl) throw new Error('O acesso à sua conta está temporariamente indisponível.')
   try {
     return await fetch(`${baseUrl.replace(/\/+$/, '')}${path}`, {
@@ -71,7 +71,7 @@ function isManagedOffer(value: unknown): value is ManagedOffer {
     && ['ACTIVE', 'INACTIVE', 'EXPIRED', 'SOLD_OUT', 'CANCELLED', 'DRAFT'].includes(String(data.status))
 }
 
-export async function fetchMyProfile(token: string, baseUrl = configuredUrl): Promise<UserProfile> {
+export async function fetchMyProfile(token: string, baseUrl = apiBaseUrl): Promise<UserProfile> {
   const response = await request('/users/me', token, 'GET', undefined, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível carregar os dados da conta.')
   const data: unknown = await response.json().catch(() => null)
@@ -79,12 +79,12 @@ export async function fetchMyProfile(token: string, baseUrl = configuredUrl): Pr
   return data
 }
 
-export async function updateMyProfile(token: string, data: ProfileUpdate, baseUrl = configuredUrl): Promise<void> {
+export async function updateMyProfile(token: string, data: ProfileUpdate, baseUrl = apiBaseUrl): Promise<void> {
   const response = await request('/users/me', token, 'PATCH', data, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível atualizar o perfil.')
 }
 
-export async function saveProfilePhoto(token: string, data: string | null, baseUrl = configuredUrl): Promise<string | null> {
+export async function saveProfilePhoto(token: string, data: string | null, baseUrl = apiBaseUrl): Promise<string | null> {
   const response = await request('/users/me/photo', token, 'PUT', { data }, baseUrl)
   if (!response.ok) {
     if (response.status === 413) throw new Error('Escolha uma foto JPG ou PNG de até 3 MB.')
@@ -96,7 +96,7 @@ export async function saveProfilePhoto(token: string, data: string | null, baseU
   return result.profilePicture
 }
 
-export async function fetchMyOffers(token: string, userId: string, baseUrl = configuredUrl): Promise<ManagedOffer[]> {
+export async function fetchMyOffers(token: string, userId: string, baseUrl = apiBaseUrl): Promise<ManagedOffer[]> {
   const response = await request(`/offer/user/${encodeURIComponent(userId)}`, token, 'GET', undefined, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível carregar suas ofertas.')
   const data: unknown = await response.json().catch(() => null)
@@ -104,22 +104,22 @@ export async function fetchMyOffers(token: string, userId: string, baseUrl = con
   return data
 }
 
-export async function createOffer(token: string, data: NewOffer, baseUrl = configuredUrl): Promise<void> {
+export async function createOffer(token: string, data: NewOffer, baseUrl = apiBaseUrl): Promise<void> {
   const response = await request('/offer/create', token, 'POST', data, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível cadastrar a oferta.')
 }
 
-export async function updateOffer(token: string, id: string, data: OfferUpdate, baseUrl = configuredUrl): Promise<void> {
+export async function updateOffer(token: string, id: string, data: OfferUpdate, baseUrl = apiBaseUrl): Promise<void> {
   const response = await request(`/offer/${encodeURIComponent(id)}`, token, 'PATCH', data, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível atualizar a oferta.')
 }
 
-export async function deleteOffer(token: string, id: string, baseUrl = configuredUrl): Promise<void> {
+export async function deleteOffer(token: string, id: string, baseUrl = apiBaseUrl): Promise<void> {
   const response = await request(`/offer/${encodeURIComponent(id)}`, token, 'DELETE', undefined, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível excluir a oferta.')
 }
 
-export async function fetchEditorPhotos(token: string, offerId: string, baseUrl = configuredUrl): Promise<EditorPhoto[]> {
+export async function fetchEditorPhotos(token: string, offerId: string, baseUrl = apiBaseUrl): Promise<EditorPhoto[]> {
   const response = await request(`/offerPhotos/offer/${encodeURIComponent(offerId)}`, token, 'GET', undefined, baseUrl)
   if (!response.ok) return responseError(response, 'Não foi possível carregar as fotos da oferta.')
   const data: unknown = await response.json().catch(() => null)
@@ -131,7 +131,7 @@ function readEditorPhotos(data: unknown): EditorPhoto[] {
   return data.map(photo => ({ ...photo, key: photo.id }))
 }
 
-export async function saveEditedOffer(token: string, id: string, data: ReturnType<typeof editorPayload>, baseUrl = configuredUrl): Promise<EditorPhoto[]> {
+export async function saveEditedOffer(token: string, id: string, data: ReturnType<typeof editorPayload>, baseUrl = apiBaseUrl): Promise<EditorPhoto[]> {
   const response = await request(`/offer/${encodeURIComponent(id)}/editor`, token, 'PUT', data, baseUrl)
   if (!response.ok) {
     if (response.status === 413) throw new Error('As fotos excedem o limite de envio. Use até 5 imagens de 3 MB cada.')
@@ -145,7 +145,7 @@ export async function saveEditedOffer(token: string, id: string, data: ReturnTyp
   return readEditorPhotos(saved?.photos)
 }
 
-export async function createOfferWithPhotos(token: string, data: ReturnType<typeof editorPayload>, baseUrl = configuredUrl): Promise<{ id: string; photos: EditorPhoto[] }> {
+export async function createOfferWithPhotos(token: string, data: ReturnType<typeof editorPayload>, baseUrl = apiBaseUrl): Promise<{ id: string; photos: EditorPhoto[] }> {
   const response = await request('/offer/editor', token, 'POST', data, baseUrl)
   if (!response.ok) {
     if (response.status === 413) throw new Error('Use até 5 fotos de 3 MB cada.')

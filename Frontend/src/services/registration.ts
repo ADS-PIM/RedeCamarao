@@ -1,8 +1,9 @@
 import { digitsOnly, formatLocation } from '../utils/registration'
 import type { RegistrationData } from '../utils/registration'
+import { apiBaseUrl } from './api'
 
 export async function registerUser(data: RegistrationData, userType: 'BUYER' | 'PRODUCER') {
-  const baseUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '')
+  const baseUrl = apiBaseUrl?.replace(/\/+$/, '')
   if (!baseUrl) throw new Error('O cadastro está temporariamente indisponível. Tente novamente mais tarde.')
   let response: Response
   try {

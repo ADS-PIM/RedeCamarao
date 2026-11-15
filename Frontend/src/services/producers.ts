@@ -1,7 +1,7 @@
 import type { Producer, ProducerProfile } from '../data/producers'
 import { isOffer } from './offers.ts'
+import { apiBaseUrl } from './api'
 
-const configuredUrl = import.meta.env?.VITE_API_URL
 function isProducer(value: unknown): value is Producer {
   if (!value || typeof value !== 'object') return false
   const producer = value as Record<string, unknown>
@@ -18,7 +18,7 @@ async function request(path: string, baseUrl?: string) {
   catch { throw new Error('Não foi possível conectar ao servidor. Tente novamente mais tarde.') }
 }
 
-export async function fetchProducers(baseUrl = configuredUrl): Promise<Producer[]> {
+export async function fetchProducers(baseUrl = apiBaseUrl): Promise<Producer[]> {
   const response = await request('', baseUrl)
   if (!response.ok) throw new Error('Não foi possível carregar os produtores. Tente novamente mais tarde.')
   const data: unknown = await response.json().catch(() => null)
@@ -26,7 +26,7 @@ export async function fetchProducers(baseUrl = configuredUrl): Promise<Producer[
   return data
 }
 
-export async function fetchProducerProfile(id: string, baseUrl = configuredUrl): Promise<ProducerProfile | null> {
+export async function fetchProducerProfile(id: string, baseUrl = apiBaseUrl): Promise<ProducerProfile | null> {
   const response = await request(`/${encodeURIComponent(id)}`, baseUrl)
   if (response.status === 404) return null
   if (!response.ok) throw new Error('Não foi possível carregar este produtor. Tente novamente mais tarde.')
