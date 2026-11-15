@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import type { UserAuthRequest } from '../../../../../userAuthMiddleware';
-import { ProfilePhotoDAOMySQL } from '../../../bd/mySql/profilePhoto.MySQL.dao';
+import { ProfilePhotoDAOPostgres } from '../../../bd/postgres/profilePhoto.Postgres.dao';
 import { applicationErrorResponse } from '../applicationErrorResponse';
 
 export async function saveProfilePhoto(req: UserAuthRequest, res: Response) {
@@ -11,7 +11,7 @@ export async function saveProfilePhoto(req: UserAuthRequest, res: Response) {
             return res.status(400).json({ error: 'Envie uma foto JPG/PNG válida ou remova a foto atual.' });
         }
         const origin = (process.env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
-        const profilePicture = await new ProfilePhotoDAOMySQL().save(req.user.userId, body.data, origin);
+        const profilePicture = await new ProfilePhotoDAOPostgres().save(req.user.userId, body.data, origin);
         return res.status(200).json({ profilePicture });
     } catch (error) {
         const response = applicationErrorResponse(error, res);

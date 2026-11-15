@@ -2,9 +2,9 @@ import { PasswordResetController } from '../../infra/web/express/controllers/pas
 import { PasswordResetService } from '../../service/passwordReset.service';
 import { AdminController } from "../../infra/web/express/controllers/admin.controller";
 // 
-import { AdminDAOMySQL } from "../../infra/bd/mySql/admin.MySQL.dao";
-import { PasswordResetDAOMySQL } from '../../infra/bd/mySql/passwordReset.MySQL.dao';
-import { RefreshTokenDAOMySQL } from "../../infra/bd/mySql/adminRefreshToken.MySQL.dao";
+import { AdminDAOPostgres } from "../../infra/bd/postgres/admin.Postgres.dao";
+import { PasswordResetDAOPostgres } from '../../infra/bd/postgres/passwordReset.Postgres.dao';
+import { RefreshTokenDAOPostgres } from "../../infra/bd/postgres/adminRefreshToken.Postgres.dao";
 
 import { CreateRefreshToken } from "../../application/usecase/refresh_token/CreateRefreshTokenUseCase";
 import { DeleteByToken } from "../../application/usecase/refresh_token/DeleteByTokenUseCase";
@@ -17,9 +17,9 @@ import { SearchAllAdmins } from '../../application/usecase/admin/SearchAllAdmins
 import { SearchPublicById } from '../../application/usecase/admin/PublicSearchAdminById';
 import { CreateAdmin } from '../../application/usecase/admin/CreateAdminUseCase';
 
-const adminDAO = new AdminDAOMySQL();
-const refreshTokenDAO = new RefreshTokenDAOMySQL();
-const passwordResetDAO = new PasswordResetDAOMySQL();
+const adminDAO = new AdminDAOPostgres();
+const refreshTokenDAO = new RefreshTokenDAOPostgres();
+const passwordResetDAO = new PasswordResetDAOPostgres();
 
 const createAdmin = new CreateAdmin(adminDAO);
 const searchByEmailAdmin = new SearchByEmailAdmin(adminDAO);

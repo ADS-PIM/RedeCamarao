@@ -43,7 +43,7 @@ export function consumeToken(state: BucketState | undefined, policy: BucketPolic
     };
 }
 
-// For isolated tests and single-process development only. Production uses MySQL.
+// For isolated tests and single-process development only. Production uses Postgres.
 export class MemoryTokenBucketStore implements TokenBucketStore {
     private buckets = new Map<string, BucketState & { expiresAt: number }>();
     private nextCleanupAt = 0;

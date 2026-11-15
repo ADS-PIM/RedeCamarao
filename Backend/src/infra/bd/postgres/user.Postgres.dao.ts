@@ -3,41 +3,41 @@ import { User, UserType } from '../../../domain/model/user';
 import type { propsUser } from '../../../domain/model/user';
 import {UserDAOInterface,UserUpdateData} from '../../../domain/interfaces/user/UserDAOInterface';
 import type { PublicProducer, PublicProducerDAOInterface } from '../../../domain/interfaces/user/PublicProducerDAOInterface';
-import type { RowDataPacket } from 'mysql2';
+import type { QueryResultRow } from 'pg';
 
 
 const userColumns = `
     id,
     name,
     email,
-    hashPassword AS password,
-    user_type AS userType,
-    CPF_CNPJ AS cpf_cnpj,
+    "hashPassword" AS password,
+    user_type AS "userType",
+    "CPF_CNPJ" AS cpf_cnpj,
     description,
     location,
     phone,
-    businessHours,
-    profilePicture,
-    createdAt
+    "businessHours",
+    "profilePicture",
+    "createdAt"
 `;
 
 
 const publicProducerQuery = `
-    SELECT u.id, u.name, u.description, u.location, u.phone, u.businessHours, u.profilePicture,
-        COALESCE(activeOffers.activeOfferCount, 0) AS activeOfferCount
+    SELECT u.id, u.name, u.description, u.location, u.phone, u."businessHours", u."profilePicture",
+        COALESCE("activeOffers"."activeOfferCount", 0) AS "activeOfferCount"
     FROM users AS u
     LEFT JOIN (
-        SELECT userId, COUNT(*) AS activeOfferCount
+        SELECT "userId", COUNT(*) AS "activeOfferCount"
         FROM offers
         WHERE status = 'ATIVO'
             AND start_availability_date <= CURRENT_DATE
             AND end_availability_date >= CURRENT_DATE
-        GROUP BY userId
-    ) AS activeOffers ON activeOffers.userId = u.id
-    WHERE u.user_type = ?
+        GROUP BY "userId"
+    ) AS "activeOffers" ON "activeOffers"."userId" = u.id
+    WHERE u.user_type = $1
 `;
 
-type PublicProducerRow = RowDataPacket & Omit<PublicProducer, 'activeOfferCount'> & {
+type PublicProducerRow = QueryResultRow & Omit<PublicProducer, 'activeOfferCount'> & {
     activeOfferCount: number | string;
 };
 
@@ -52,10 +52,10 @@ const publicProducerFromRow = (row: PublicProducerRow): PublicProducer => ({
     activeOfferCount: Number(row.activeOfferCount)
 });
 
-export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterface {
+export class UserDAOPostgres implements UserDAOInterface, PublicProducerDAOInterface {
 
     public async listPublicProducers(): Promise<PublicProducer[]> {
-        const [rows] = await connection.query<PublicProducerRow[]>(
+        const { rows } = await connection.query<PublicProducerRow>(
             `${publicProducerQuery} ORDER BY u.name ASC, u.id ASC`,
             [UserType.PRODUCER]
         );
@@ -63,8 +63,8 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
     }
 
     public async searchPublicProducerById(id: string): Promise<PublicProducer | null> {
-        const [rows] = await connection.query<PublicProducerRow[]>(
-            `${publicProducerQuery} AND u.id = ? LIMIT 1`,
+        const { rows } = await connection.query<PublicProducerRow>(
+            `${publicProducerQuery} AND u.id = $2 LIMIT 1`,
             [UserType.PRODUCER, id]
         );
         return rows.length === 0 ? null : publicProducerFromRow(rows[0]);
@@ -77,13 +77,13 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
                 id,
                 name,
                 email,
-                hashPassword,
-                CPF_CNPJ,
+                "hashPassword",
+                "CPF_CNPJ",
                 user_type,
                 location,
                 phone,
-                createdAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                "createdAt"
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
             [
                 user.id,
                 user.name,
@@ -101,12 +101,12 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
 
     public async searchByEmail(email: string): Promise<User | null> {
 
-        const [users] = await connection.query<
-            (RowDataPacket & propsUser)[]
+        const { rows: users } = await connection.query<
+            QueryResultRow & propsUser
         >(
             `SELECT ${userColumns}
             FROM users
-            WHERE email = ?`,
+            WHERE LOWER(email) = LOWER($1)`,
             [email]
         );
 
@@ -120,12 +120,12 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
 
     public async searchById(id: string): Promise<User | null> {
 
-        const [users] = await connection.query<
-            (RowDataPacket & propsUser)[]
+        const { rows: users } = await connection.query<
+            QueryResultRow & propsUser
         >(
             `SELECT ${userColumns}
             FROM users
-            WHERE id = ?`,
+            WHERE id = $1`,
             [id]
         );
 
@@ -147,37 +147,37 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
         const values: (string | null)[] = [];
 
         if (data.name !== undefined) {
-            fields.push('name = ?');
+            fields.push(`name = $${values.length + 1}`);
             values.push(data.name);
         }
 
         if (data.email !== undefined) {
-            fields.push('email = ?');
+            fields.push(`email = $${values.length + 1}`);
             values.push(data.email.trim().toLowerCase());
         }
 
         if (data.password !== undefined) {
-            fields.push('hashPassword = ?');
+            fields.push(`"hashPassword" = $${values.length + 1}`);
             values.push(data.password);
         }
 
         if (data.description !== undefined) {
-            fields.push('description = ?');
+            fields.push(`description = $${values.length + 1}`);
             values.push(data.description);
         }
 
         if (data.location !== undefined) {
-            fields.push('location = ?');
+            fields.push(`location = $${values.length + 1}`);
             values.push(data.location);
         }
 
         if (data.phone !== undefined) {
-            fields.push('phone = ?');
+            fields.push(`phone = $${values.length + 1}`);
             values.push(data.phone);
         }
 
         if (data.businessHours !== undefined) {
-            fields.push('businessHours = ?');
+            fields.push(`"businessHours" = $${values.length + 1}`);
             values.push(data.businessHours);
         }
 
@@ -188,7 +188,7 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
         await connection.query(
             `UPDATE users
             SET ${fields.join(', ')}
-            WHERE id = ?`,
+            WHERE id = $${values.length + 1}`,
             [...values, id]
         );
     }
@@ -197,7 +197,7 @@ export class UserDAOMySQL implements UserDAOInterface, PublicProducerDAOInterfac
     public async delete(id: string): Promise<void> {
 
         await connection.query(
-            'DELETE FROM users WHERE id = ?',
+            'DELETE FROM users WHERE id = $1',
             [id]
         );
     }

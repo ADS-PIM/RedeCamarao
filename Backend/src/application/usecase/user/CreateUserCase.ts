@@ -44,7 +44,7 @@ export class CreateUser implements UseCase<UserCreateDTO, null>{
 
         await this.userDAO.register(user)
         } catch (error: any) {
-            if (error instanceof ApplicationError || error.code === 'ER_DUP_ENTRY') throw error;
+            if (error instanceof ApplicationError || error.code === '23505') throw error;
             throw new Error('Erro registrando usuário: ' + error.message);
         }
     }

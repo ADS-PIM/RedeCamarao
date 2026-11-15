@@ -1,12 +1,12 @@
 import { UserController } from '../../infra/web/express/controllers/user.controller';
 import { PublicProducerController } from '../../infra/web/express/controllers/publicProducer.controller';
-import { OfferDAOMySQL } from '../../infra/bd/mySql/offer.MySQL.dao';
+import { OfferDAOPostgres } from '../../infra/bd/postgres/offer.Postgres.dao';
 import { SearchPublicProducers } from '../../application/usecase/user/SearchPublicProducersUseCase';
 import { SearchPublicProducerById } from '../../application/usecase/user/SearchPublicProducerByIdUseCase';
 
-import { UserDAOMySQL } from '../../infra/bd/mySql/user.MySQL.dao';
+import { UserDAOPostgres } from '../../infra/bd/postgres/user.Postgres.dao';
 
-import { UserRefreshTokenDAOMySQL } from '../../infra/bd/mySql/UserRefreshToken.MySQL.dao';
+import { UserRefreshTokenDAOPostgres } from '../../infra/bd/postgres/UserRefreshToken.Postgres.dao';
 
 
 import { CreateUser } from '../../application/usecase/user/CreateUserCase';
@@ -22,14 +22,14 @@ import { DeleteByUserId } from '../../application/usecase/refresh_token/DeleteBy
 
 
 
-const userDAO = new UserDAOMySQL();
+const userDAO = new UserDAOPostgres();
 
 export const publicProducerController = new PublicProducerController(
     new SearchPublicProducers(userDAO),
-    new SearchPublicProducerById(userDAO, new OfferDAOMySQL())
+    new SearchPublicProducerById(userDAO, new OfferDAOPostgres())
 );
 
-const userRefreshTokenDAO = new UserRefreshTokenDAOMySQL();
+const userRefreshTokenDAO = new UserRefreshTokenDAOPostgres();
 
 
 

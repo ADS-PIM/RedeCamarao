@@ -1,12 +1,12 @@
 import { RefreshTokenInterface } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../../../util/connection';
-import type { RowDataPacket } from 'mysql2';
+import type { QueryResultRow } from 'pg';
 import { RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
-export class RefreshTokenDAOMySQL implements RefreshTokenInterface {
+export class RefreshTokenDAOPostgres implements RefreshTokenInterface {
     async create(id: string, token: string, adminId: string, expiresAt: Date): Promise<void> {
         try {
             await connection.query(
-                `INSERT INTO refresh_tokens (id, tokenHash, adminId, expiresAt, createdAt) VALUES (?, ?, ?, ?, ?)`,
+                `INSERT INTO refresh_tokens (id, "tokenHash", "adminId", "expiresAt", "createdAt") VALUES ($1, $2, $3, $4, $5)`,
                 [id, token, adminId, expiresAt, new Date()]
             );
         } catch (error) {
@@ -17,8 +17,8 @@ export class RefreshTokenDAOMySQL implements RefreshTokenInterface {
 
     async findByToken(token: string): Promise<RefreshTokenRow | null> {
         try {
-            const [rows] = await connection.query<RowDataPacket[]>(
-                'SELECT id FROM refresh_tokens WHERE tokenHash = ?',
+            const { rows } = await connection.query<QueryResultRow>(
+                'SELECT id FROM refresh_tokens WHERE "tokenHash" = $1',
                 [token]
             );
             if (rows.length === 0) return null;
@@ -31,7 +31,7 @@ export class RefreshTokenDAOMySQL implements RefreshTokenInterface {
 
     async deleteByToken(token: string): Promise<void> {
         try {
-            await connection.query('DELETE FROM refresh_tokens WHERE tokenHash = ?', [token]);
+            await connection.query('DELETE FROM refresh_tokens WHERE "tokenHash" = $1', [token]);
         } catch (error) {
             console.error('Error deleting refresh token:', error);
             throw new Error('Failed to delete refresh token');
@@ -40,7 +40,7 @@ export class RefreshTokenDAOMySQL implements RefreshTokenInterface {
 
     async deleteByUserId(userId: string): Promise<void> {
         try {
-            await connection.query('DELETE FROM refresh_tokens WHERE adminId = ?', [userId]);
+            await connection.query('DELETE FROM refresh_tokens WHERE "adminId" = $1', [userId]);
         } catch (error) {
             console.error('Error deleting refresh tokens for user:', error);
             throw new Error('Failed to delete refresh tokens for user');
