@@ -35,6 +35,7 @@ export class SearchPublicOfferById implements UseCase<string, PublicOfferDetailD
             weight: offer.weight,
             maximumQuantity: offer.maximumQuantity,
             minimumQuantity: offer.minimumQuantity,
+            coverPhoto: photos[0]?.imageUrl ?? null,
             location: offer.location,
             startDate: offer.startDate,
             endDate: offer.endDate,

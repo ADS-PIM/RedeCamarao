@@ -127,3 +127,5 @@
   .editor-measure-input input { padding-left: 10px; padding-right: 57px; }
   .editor-measure-suffix { right: 10px; font-size: 12px; }
 }
+.editor-photo-notice { display: flex; align-items: flex-start; gap: 10px; margin-top: 18px; padding: 12px 14px; border: 1px solid #cfe3ed; border-radius: 8px; background: #f0f8fb; color: #365b6d; font-size: 13px; line-height: 1.6; }
+.editor-photo-notice > svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: 2px; color: var(--primary); }

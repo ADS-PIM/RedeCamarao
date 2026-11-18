@@ -17,6 +17,8 @@ const offerColumns = `id, "userId", title, description, type, size, price, weigh
         .map(([status, stored]) => `WHEN '${stored}' THEN '${status}'`).join(' ')}
     END AS status, "createdAt", "updatedAt"`;
 
+const coverPhotoColumn = `(SELECT "imageUrl" FROM "offerPhotos" WHERE "offerId" = offers.id ORDER BY id ASC LIMIT 1) AS "coverPhoto"`;
+
 const reconstructOffer = (row: QueryResultRow & propsOffer): Offer => Offer.reconstruct({
     ...row,
     price: Number(row.price),
@@ -36,7 +38,7 @@ export class OfferDAOPostgres implements OfferDAOInterface {
 
     public async searchActive(): Promise<Offer[]> {
         const { rows } = await connection.query<QueryResultRow & propsOffer>(
-            `SELECT ${offerColumns} FROM offers
+            `SELECT ${offerColumns}, ${coverPhotoColumn} FROM offers
             WHERE status = 'ATIVO'
                 AND start_availability_date <= CURRENT_DATE
                 AND end_availability_date >= CURRENT_DATE
@@ -48,7 +50,7 @@ export class OfferDAOPostgres implements OfferDAOInterface {
 
     public async listByUserId(userId: string): Promise<Offer[]> {
         const { rows } = await connection.query<QueryResultRow & propsOffer>(
-            `SELECT ${offerColumns}, (SELECT "imageUrl" FROM "offerPhotos" WHERE "offerId" = offers.id ORDER BY id ASC LIMIT 1) AS "coverPhoto"
+            `SELECT ${offerColumns}, ${coverPhotoColumn}
             FROM offers WHERE "userId" = $1 ORDER BY "createdAt" DESC, id DESC`,
             [userId]
         );

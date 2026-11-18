@@ -1,6 +1,7 @@
 import { getOfferState } from './products.ts'
 
 export type Offer = {
+  coverPhoto?: string | null
   id: string
   title: string
   description: string

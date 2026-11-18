@@ -7,6 +7,7 @@ export type PublicOfferDTO = Omit<OfferSearchDTO, 'userId' | 'status'> & {
     description: string;
     maximumQuantity: number;
     minimumQuantity: number;
+    coverPhoto: string | null;
 };
 
 export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
@@ -41,6 +42,7 @@ export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
             weight: offer.weight,
             maximumQuantity: offer.maximumQuantity,
             minimumQuantity: offer.minimumQuantity,
+            coverPhoto: offer.coverPhoto,
             location: offer.location,
             startDate: offer.startDate,
             endDate: offer.endDate
