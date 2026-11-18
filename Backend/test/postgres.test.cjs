@@ -26,6 +26,7 @@ test('PostgreSQL migration and real DAO flows in an isolated temporary schema', 
   const { Pool } = require('pg');
   const { Sequelize } = require('sequelize');
   const migration = require('../database/migrations/20261115120000-initialize-postgres');
+  const gramMigration = require('../database/migrations/20261118120000-support-gram-quantities');
   const { connection } = require('../src/util/connection.ts');
   const { UserDAOPostgres } = require('../src/infra/bd/postgres/user.Postgres.dao.ts');
   const { OfferDAOPostgres } = require('../src/infra/bd/postgres/offer.Postgres.dao.ts');
@@ -54,6 +55,7 @@ test('PostgreSQL migration and real DAO flows in an isolated temporary schema', 
     await adminPool.query(`CREATE SCHEMA "${schema}"`);
     created = true;
     await migration.up(sequelize.getQueryInterface());
+    await gramMigration.up(sequelize.getQueryInterface());
     const tables = await pool.query('SELECT tablename FROM pg_tables WHERE schemaname = $1', [schema]);
     assert.equal(tables.rowCount, 8);
     mock.method(connection, 'query', (...args) => pool.query(...args));
@@ -89,6 +91,14 @@ test('PostgreSQL migration and real DAO flows in an isolated temporary schema', 
       assert.equal(await offers.update(offer.id, user.id, { minimumQuantity: 50 }), false);
       assert.equal((await offers.searchActive()).length, 1);
       assert.equal((await offers.search()).length, 1);
+    });
+
+    await t.test('gram quantities persist without rounding and unsafe rollback is refused', async () => {
+      assert.equal(await offers.update(offer.id, user.id, { weight: 0.501, minimumQuantity: 0.001, maximumQuantity: 0.499 }), true);
+      const saved = await offers.searchById(offer.id);
+      assert.equal(saved.weight, 0.501); assert.equal(saved.minimumQuantity, 0.001); assert.equal(saved.maximumQuantity, 0.499);
+      await assert.rejects(gramMigration.down(sequelize.getQueryInterface()), /gram quantities/);
+      await offers.update(offer.id, user.id, { weight: 1, minimumQuantity: 1, maximumQuantity: 10 });
     });
 
     await t.test('photo INSERT, UPDATE FROM, DELETE USING and public producer aggregation', async () => {
@@ -207,6 +217,7 @@ test('PostgreSQL migration and real DAO flows in an isolated temporary schema', 
       }
     });
 
+    await gramMigration.down(sequelize.getQueryInterface());
     await migration.down(sequelize.getQueryInterface());
     const remaining = await pool.query('SELECT tablename FROM pg_tables WHERE schemaname = $1', [schema]);
     assert.equal(remaining.rowCount, 0);

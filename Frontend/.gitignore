@@ -31,3 +31,6 @@ node_modules
 /tests/
 *.test.*
 *.spec.*
+!/tests/
+/tests/*
+!/tests/offer-units.test.ts

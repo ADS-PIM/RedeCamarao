@@ -21,7 +21,8 @@ export function parseOfferEditor(body: unknown): { offer: OfferEditorData; photo
     }
     for (const key of ['price', 'weight', 'minimumQuantity', 'maximumQuantity'] as const) {
         const value = offer[key];
-        if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > 99999999.99 || Math.abs(value * 100 - Math.round(value * 100)) > .00001) return invalid('Preços e quantidades devem ser positivos, com até duas casas decimais');
+        const scale = key === 'price' ? 100 : 1000;
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 1 / scale || value > 99999999.99 || Math.abs(value * scale - Math.round(value * scale)) > .00001) return invalid(key === 'price' ? 'O preço por kg deve ser positivo, com até duas casas decimais' : 'As quantidades devem ser positivas, com até três casas decimais em kg (mínimo de 1 g)');
         data[key] = value;
     }
     if (data.minimumQuantity > data.maximumQuantity || data.maximumQuantity > data.weight) return invalid('A quantidade mínima deve ser menor ou igual à máxima, e a máxima não pode exceder o lote disponível');

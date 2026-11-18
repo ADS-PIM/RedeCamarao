@@ -1,3 +1,4 @@
+import { formatQuantity } from '../data/offerUnits'
 import type { Offer } from '../data/marketplace'
 import { formatPrice } from '../data/marketplace'
 import { offerHref } from '../data/offerDetail'
@@ -17,7 +18,7 @@ export function ProductCard({ offer, producerName, photo, preview = false, avail
         </div>
         <h3>{offer.title}</h3>
         <p className="product-description">{producerName ?? offer.description}</p>
-        <div className="product-specs"><span>{offer.size} · {offer.weight} kg</span><span><Icon name="pin" />{offer.location}</span></div>
+        <div className="product-specs"><span>{offer.size} · {formatQuantity(offer.weight)}</span><span><Icon name="pin" />{offer.location}</span></div>
         <div className="product-card-bottom">
           <p className="product-price">{formatPrice(offer.price)} <small>/ kg</small></p>
           {preview ? <span className="button button-secondary">Prévia</span> : <a className="button button-secondary" aria-label={`Ver oferta: ${offer.title}`} href={offerHref(offer.id)}>Ver oferta</a>}

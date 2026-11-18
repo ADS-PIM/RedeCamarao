@@ -1,3 +1,4 @@
+import { formatQuantity } from '../data/offerUnits'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
@@ -202,7 +203,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
 
           <section id="ofertas" className="account-offers" aria-labelledby="recent-offers-title">
             <div className="account-section-heading"><div><h2 id="recent-offers-title">Ofertas recentes</h2><p>Veja seus últimos anúncios e continue o gerenciamento.</p></div><a className="button button-secondary" href={myOffersHref}>Gerenciar minhas ofertas<Icon name="arrow" /></a></div>
-            {offers.length ? <div className="account-recent-grid">{offers.slice(0, 3).map(offer => <article key={offer.id}><span className="account-eyebrow">{offer.type || 'Camarão'}</span><h3>{offer.title}</h3><p>{formatPrice(offer.price)} / kg · {offer.weight.toLocaleString('pt-BR')} kg</p><a className="button button-secondary" href={editOfferHref(offer.id)}>Editar oferta<Icon name="edit" /></a></article>)}</div> : <div className="account-empty"><Icon name="box" /><h3>Você ainda não cadastrou ofertas</h3><p>Adicione fotos e informações do seu lote para começar.</p><a className="button button-primary" href={newOfferHref}>Cadastrar primeira oferta</a></div>}
+            {offers.length ? <div className="account-recent-grid">{offers.slice(0, 3).map(offer => <article key={offer.id}><span className="account-eyebrow">{offer.type || 'Camarão'}</span><h3>{offer.title}</h3><p>{formatPrice(offer.price)} / kg · {formatQuantity(offer.weight)}</p><a className="button button-secondary" href={editOfferHref(offer.id)}>Editar oferta<Icon name="edit" /></a></article>)}</div> : <div className="account-empty"><Icon name="box" /><h3>Você ainda não cadastrou ofertas</h3><p>Adicione fotos e informações do seu lote para começar.</p><a className="button button-primary" href={newOfferHref}>Cadastrar primeira oferta</a></div>}
           </section>
         </>}
 
