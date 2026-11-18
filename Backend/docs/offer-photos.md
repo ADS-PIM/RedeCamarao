@@ -17,6 +17,12 @@ na conta configurada. Referência: [Upload API do Cloudinary](https://cloudinary
 
 ## Edição conjunta da oferta e das fotos
 
+O frontend oferece ajuste de enquadramento para perfil e ofertas, com arraste,
+zoom e posição. O recorte é gerado localmente em JPG/PNG; a API continua
+recebendo a imagem em `data`, sem metadados de recorte ou alteração do schema.
+Nas ofertas, reenquadrar uma foto existente envia uma nova imagem sem `id`,
+na mesma posição da galeria. A imagem anterior só é liberada após o commit.
+
 `POST /offer/editor` cadastra e `PUT /offer/:id/editor` atualiza. Ambos exigem
 `Authorization: Bearer <accessToken>` e recebem
 `{ offer, photos }`. `offer` contém todos os campos editáveis do lote e status

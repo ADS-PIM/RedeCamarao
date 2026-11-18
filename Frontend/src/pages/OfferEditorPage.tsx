@@ -3,6 +3,8 @@ import type { FormEvent } from 'react'
 import { FormField } from '../components/FormField'
 import { Icon } from '../components/Icon'
 import { Dialog } from '../components/Dialog'
+import { PhotoAdjustmentDialog } from '../components/PhotoAdjustmentDialog'
+import type { PhotoAdjustment } from '../utils/photoAdjustment'
 import { ProductCard } from '../components/ProductCard'
 import { blankEditorValues, changeEditorUnit, editOfferHref, editorPayload, initialEditorValues, validateEditor, myOffersHref } from '../data/offerEditor'
 import { unitOptions } from '../data/offerUnits'
@@ -24,6 +26,8 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
   const [values, setValues] = useState<OfferEditorValues | null>(null)
   const [original, setOriginal] = useState<ManagedOffer | null>(null)
   const [photos, setPhotos] = useState<EditorPhoto[]>([])
+  const [pendingPhotos, setPendingPhotos] = useState<EditorPhoto[]>([])
+  const [editingPhoto, setEditingPhoto] = useState<EditorPhoto | null>(null)
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -95,7 +99,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
     setDirty(true); setSuccess(''); setErrors({})
   }
   async function addPhotos(files: FileList | null) {
-    if (!files?.length || reading || saving) return
+    if (!files?.length || reading || saving || editingPhoto || pendingPhotos.length) return
     setFeedback(''); setSuccess('')
     const selected = Array.from(files)
     if (fileInput.current) fileInput.current.value = ''
@@ -111,14 +115,23 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
         await img.decode().catch(() => { throw new Error('Uma das imagens está danificada. Escolha outra foto.') })
         return { key: crypto.randomUUID(), data, imageUrl: data, description: '' }
       }))
-      setPhotos(current => [...current, ...additions]); setDirty(true)
+      setPendingPhotos(additions)
     } catch (error) { setFeedback(error instanceof Error ? error.message : 'Não foi possível adicionar as fotos.') }
     finally { setReading(false); if (fileInput.current) fileInput.current.value = '' }
   }
   function makeCover(key: string) { setPhotos(current => [...current.filter(photo => photo.key === key), ...current.filter(photo => photo.key !== key)]); setDirty(true); setSuccess('') }
 
+  function applyPhotoAdjustment(data: string, adjustment: PhotoAdjustment) {
+    const photo = editingPhoto ?? pendingPhotos[0]
+    if (!photo) return
+    const adjusted: EditorPhoto = { key: photo.key, data, imageUrl: data, description: photo.description, sourceData: photo.sourceData ?? photo.imageUrl, adjustment }
+    if (editingPhoto) { setPhotos(current => current.map(item => item.key === photo.key ? adjusted : item)); setEditingPhoto(null) }
+    else { setPhotos(current => [...current, adjusted]); setPendingPhotos(current => current.slice(1)) }
+    setDirty(true); setSuccess(''); setFeedback('')
+  }
+
   async function save(publish: boolean | 'DRAFT') {
-    if (!values || pending.current || reading) return
+    if (!values || pending.current || reading || editingPhoto || pendingPhotos.length) return
     const invalid = validateEditor(values)
     setErrors(invalid); setFeedback(''); setSuccess('')
     if (Object.keys(invalid).length) {
@@ -158,7 +171,8 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
     { label: 'Localização e período preenchidos', done: !['city', 'state', 'startDate', 'endDate'].some(key => validateEditor(values)[key as keyof OfferEditorValues]) },
   ]
   const completeness = checks.filter(check => check.done).length * 20
-  const busy = saving || reading
+  const cropPhoto = editingPhoto ?? pendingPhotos[0]
+  const busy = saving || reading || Boolean(cropPhoto)
   const field = (key: keyof Omit<OfferEditorValues, 'available' | 'state' | 'description' | 'type' | 'size'>, label: string, type = 'text', hint?: string) => <FormField id={`editor-${key}`} label={label} type={type} required value={values[key]} onChange={value => change(key, value)} error={errors[key]} hint={hint} disabled={busy} maxLength={type === 'date' ? undefined : key === 'city' ? 200 : key === 'title' ? 255 : 20} inputMode={['price', 'weight', 'minimumQuantity', 'maximumQuantity'].includes(key) ? 'decimal' : undefined} />
   const select = (key: 'type' | 'size' | 'state', label: string, options: { value: string; label: string }[]) => <div className="form-field"><label htmlFor={`editor-${key}`}>{label} *</label><select id={`editor-${key}`} disabled={busy} value={values[key]} aria-invalid={Boolean(errors[key])} aria-describedby={errors[key] ? `editor-${key}-error` : undefined} onChange={event => change(key, event.target.value)}><option value="">Selecione</option>{values[key] && !options.some(option => option.value === values[key]) && <option value={values[key]}>{values[key]}</option>}{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>{errors[key] && <p className="field-error" id={`editor-${key}-error`}>{errors[key]}</p>}</div>
   const measuredField = (key: MeasuredField, label: string) => {
@@ -193,9 +207,9 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
       <form id="offer-editor-form" noValidate onSubmit={(event: FormEvent) => { event.preventDefault(); void save(values.available) }}>
         <section className="editor-panel" aria-labelledby="editor-photos-title"><div className="editor-panel-heading"><div><h2 id="editor-photos-title">Fotos da oferta</h2><p>Adicione até 5 fotos.</p></div><span className="editor-photo-count">{photos.length} de 5</span></div>
           <p className="editor-photo-notice" id="editor-photo-notice"><Icon name="info" /><span><strong>Foto de exposição:</strong> a primeira foto anexada será exibida nos cards da oferta. Para trocar, use “Definir capa” na foto desejada.</span></p>
-          <div className="editor-photos">{photos.map((photo, index) => <figure className={`editor-photo${index === 0 ? ' editor-photo-cover' : ''}`} key={photo.key}><img src={photo.imageUrl} alt={photo.description || `Foto ${index + 1} da oferta`} onError={event => { event.currentTarget.style.visibility = 'hidden'; event.currentTarget.parentElement?.classList.add('editor-photo-failed') }} /><figcaption><button type="button" disabled={busy} className={index === 0 ? 'is-cover' : ''} onClick={() => makeCover(photo.key)} aria-label={index === 0 ? 'Foto de capa' : `Usar foto ${index + 1} como capa`}>{index === 0 ? 'Capa' : 'Definir capa'}</button><button type="button" disabled={busy} aria-label={`Remover foto ${index + 1}`} title={`Remover foto ${index + 1}`} onClick={() => { setPhotos(current => current.filter(item => item.key !== photo.key)); setDirty(true); setSuccess('') }}><Icon name="trash" /><span className="visually-hidden">Remover</span></button></figcaption></figure>)}
+          <div className="editor-photos">{photos.map((photo, index) => <figure className={`editor-photo${index === 0 ? ' editor-photo-cover' : ''}`} key={photo.key}><img src={photo.imageUrl} alt={photo.description || `Foto ${index + 1} da oferta`} onError={event => { event.currentTarget.style.visibility = 'hidden'; event.currentTarget.parentElement?.classList.add('editor-photo-failed') }} /><figcaption><button type="button" disabled={busy} className={index === 0 ? 'is-cover' : ''} onClick={() => makeCover(photo.key)} aria-label={index === 0 ? 'Foto de capa' : `Usar foto ${index + 1} como capa`}>{index === 0 ? 'Capa' : 'Definir capa'}</button><button type="button" disabled={busy} className="editor-photo-adjust" onClick={() => setEditingPhoto(photo)} aria-label={`Ajustar foto ${index + 1}`}><Icon name="edit" />Ajustar</button><button type="button" disabled={busy} aria-label={`Remover foto ${index + 1}`} title={`Remover foto ${index + 1}`} onClick={() => { setPhotos(current => current.filter(item => item.key !== photo.key)); setDirty(true); setSuccess('') }}><Icon name="trash" /><span className="visually-hidden">Remover</span></button></figcaption></figure>)}
           {photos.length < 5 && <button type="button" className="editor-add-photo" disabled={busy} onClick={() => fileInput.current?.click()}><Icon name="images" /><strong>{reading ? 'Lendo fotos...' : 'Adicionar foto'}</strong><small>JPG ou PNG · até 10 MB</small></button>}</div>
-          <input className="visually-hidden" ref={fileInput} type="file" tabIndex={-1} accept="image/jpeg,image/png" multiple aria-label="Selecionar fotos" aria-describedby="editor-photo-notice" onChange={event => void addPhotos(event.target.files)} />
+          <input className="visually-hidden" ref={fileInput} type="file" tabIndex={-1} accept="image/jpeg,image/png" multiple disabled={busy} aria-label="Selecionar fotos" aria-describedby="editor-photo-notice" onChange={event => void addPhotos(event.target.files)} />
           {photos.length === 0 && <p className="editor-photo-hint">Mostre o lote real para ajudar o comprador a conhecer sua oferta.</p>}
         </section>
         <section className="editor-panel" aria-labelledby="editor-info-title"><h2 id="editor-info-title">Informações principais</h2><div className="editor-fields"><div className="editor-field-wide">{field('title', 'Título da oferta', 'text', 'Seja direto: tipo de camarão, condição e quantidade.')}</div>
@@ -213,6 +227,8 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
         <p className="editor-note"><Icon name="info" />Os dados e as fotos só são alterados após salvar. Salvar como pausada retira a oferta do marketplace.</p>
       </aside>
     </div>
+    {cropPhoto && <PhotoAdjustmentDialog key={cropPhoto.key} source={cropPhoto.sourceData ?? cropPhoto.imageUrl} kind="offer" initial={cropPhoto.adjustment}
+      pendingCount={editingPhoto ? 0 : pendingPhotos.length - 1} onApply={applyPhotoAdjustment} onClose={() => { setEditingPhoto(null); setPendingPhotos([]) }} />}
     {preview && <Dialog titleId="editor-preview-title" onClose={() => setPreview(false)}><div className="editor-preview-heading"><div><p className="editor-eyebrow">Prévia das alterações</p><h2 id="editor-preview-title">Sua oferta</h2></div><button type="button" className="button button-secondary" onClick={() => setPreview(false)} aria-label="Fechar prévia"><Icon name="close" /></button></div>
       <div className="editor-preview-card"><ProductCard offer={{ ...editorPayload(values, photos, values.available).offer, id: offerId ?? 'preview', title: values.title || 'Título da oferta', price: Number(editorPayload(values, photos, values.available).offer.price) || 0, weight: Number(editorPayload(values, photos, values.available).offer.weight) || 0, size: values.size || 'Tamanho a informar' }} producerName={name} photo={photos[0]} preview available={values.available} /><p className="editor-note">Esta é uma prévia. As alterações ainda precisam ser salvas.</p></div>
     </Dialog>}

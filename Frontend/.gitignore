@@ -35,3 +35,4 @@ node_modules
 /tests/*
 !/tests/offer-units.test.ts
 !/tests/offer-cover.test.ts
+!/tests/photo-adjustment.test.ts

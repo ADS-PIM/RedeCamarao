@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 
-export function Dialog({ titleId, onClose, busy = false, children }: {
-  titleId: string; onClose: () => void; busy?: boolean; children: ReactNode
+export function Dialog({ titleId, descriptionId, className = '', onClose, busy = false, children }: {
+  titleId: string; descriptionId?: string; className?: string; onClose: () => void; busy?: boolean; children: ReactNode
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -17,7 +17,7 @@ export function Dialog({ titleId, onClose, busy = false, children }: {
       previousFocus?.focus({ preventScroll: true })
     }
   }, [])
-  return <dialog ref={ref} className="account-modal" aria-labelledby={titleId}
+  return <dialog ref={ref} className={`account-modal ${className}`} aria-labelledby={titleId} aria-describedby={descriptionId}
     onCancel={event => { if (busy) event.preventDefault() }}
     onClose={event => { if (!event.currentTarget.open) onClose() }}
     onClick={event => { if (event.target === event.currentTarget && !busy) {
