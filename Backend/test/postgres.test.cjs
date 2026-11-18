@@ -110,6 +110,11 @@ test('PostgreSQL migration and real DAO flows in an isolated temporary schema', 
       assert.equal((await photos.searchById(photo.id)).description, 'Nova');
       assert.equal((await photos.searchByOfferId(offer.id)).length, 1);
       assert.equal((await offers.listByUserId(user.id))[0].coverPhoto, 'https://example.test/new.jpg');
+      const secondPhoto = OfferPhoto.construct({ offerId: offer.id, imageUrl: 'https://example.test/second.jpg', description: 'Segunda foto' });
+      await photos.create(secondPhoto, user.id);
+      const firstPhoto = (await photos.searchByOfferId(offer.id))[0];
+      assert.equal((await offers.searchActive())[0].coverPhoto, firstPhoto.imageUrl);
+      await photos.delete(secondPhoto.id, offer.id, user.id);
       assert.equal((await users.searchPublicProducerById(user.id)).activeOfferCount, 1);
       assert.equal((await users.listPublicProducers()).length, 2);
       assert.equal(await photos.delete(photo.id, offer.id, other.id), false);

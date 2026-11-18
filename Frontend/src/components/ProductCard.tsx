@@ -5,7 +5,7 @@ import { offerHref } from '../data/offerDetail'
 import { Icon } from './Icon'
 import { Photo } from './Photo'
 
-export function ProductCard({ offer, producerName, photo, preview = false, available = true }: { offer: Offer & { coverPhoto?: string | null }; producerName?: string; photo?: { imageUrl: string; description: string }; preview?: boolean; available?: boolean }) {
+export function ProductCard({ offer, producerName, photo, preview = false, available = true }: { offer: Offer; producerName?: string; photo?: { imageUrl: string; description: string }; preview?: boolean; available?: boolean }) {
   return (
     <article className="product-card">
       <figure className="product-photo">

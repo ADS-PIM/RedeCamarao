@@ -5,6 +5,7 @@ export function isOffer(value: unknown): value is Offer {
   if (!value || typeof value !== 'object') return false
   const offer = value as Record<string, unknown>
   return typeof offer.id === 'string'
+    && (offer.coverPhoto === undefined || offer.coverPhoto === null || typeof offer.coverPhoto === 'string' && /^https?:\/\//i.test(offer.coverPhoto))
     && typeof offer.title === 'string'
     && typeof offer.description === 'string'
     && (typeof offer.type === 'string' || offer.type === null)
