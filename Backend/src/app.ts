@@ -33,9 +33,10 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/offer/:id/editor', authUser, express.json({ limit: '22mb' }));
-app.use('/offer/editor', authUser, express.json({ limit: '22mb' }));
-app.use('/users/me/photo', authUser, express.json({ limit: '5mb' }));
+// Base64 adds roughly 1/3 to the size: five 10 MB photos plus JSON metadata.
+app.use('/offer/:id/editor', authUser, express.json({ limit: '70mb' }));
+app.use('/offer/editor', authUser, express.json({ limit: '70mb' }));
+app.use('/users/me/photo', authUser, express.json({ limit: '14mb' }));
 app.use(express.json());
 
 app.use((req, _res, next) => {

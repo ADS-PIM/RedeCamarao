@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const { test, before, after, beforeEach, afterEach, mock } = require('node:test');
 const jwt = require('jsonwebtoken');
 const { imageStorage } = require('../src/service/imageStorage.ts');
-const { parseOfferEditor } = require('../src/application/dto/offerDTO/OfferEditorDTO.ts');
+const { parseOfferEditor, decodeEditorImage } = require('../src/application/dto/offerDTO/OfferEditorDTO.ts');
 const { connection } = require('../src/util/connection.ts');
 const app = require('../src/app.ts').default;
 const { SearchOffer } = require('../src/application/usecase/offer/SearchOfferUseCase.ts');
@@ -109,13 +109,29 @@ test('retirar uma foto da galeria só libera a imagem antiga depois do commit', 
   assert(calls.indexOf('release') < calls.indexOf(removed));
 });
 
-test('endpoint aceita o tamanho das fotos além do JSON padrão e mantém o limite de 3 MB por arquivo', async () => {
-  const raw = Buffer.concat([Buffer.from(png.split(',')[1], 'base64'), Buffer.alloc(150 * 1024)]);
+test('endpoint aceita o tamanho das fotos além do JSON padrão e mantém o limite de 10 MB por arquivo', async () => {
+  const raw = Buffer.concat([Buffer.from(png.split(',')[1], 'base64'), Buffer.alloc(4 * 1024 * 1024)]);
   const body = { ...data(), photos: [{ data: 'data:image/png;base64,' + raw.toString('base64'), description: '' }] };
   assert.equal((await save(body)).status, 200);
   assert.equal(written.length, 1);
-  body.photos[0].data = 'data:image/png;base64,' + Buffer.concat([raw, Buffer.alloc(3 * 1024 * 1024)]).toString('base64');
+  body.photos[0].data = 'data:image/png;base64,' + Buffer.concat([raw, Buffer.alloc(10 * 1024 * 1024)]).toString('base64');
   assert.throws(() => parseOfferEditor(body));
+});
+
+test('aceita exatamente 10 MB e rejeita um byte a mais por foto', () => {
+  const buffer = Buffer.alloc(10 * 1024 * 1024);
+  Buffer.from(png.split(',')[1], 'base64').copy(buffer);
+  assert.equal(decodeEditorImage('data:image/png;base64,' + buffer.toString('base64')).buffer.length, buffer.length);
+  assert.throws(() => decodeEditorImage('data:image/png;base64,' + Buffer.concat([buffer, Buffer.alloc(1)]).toString('base64')), { code: 'INVALID_DATA' });
+});
+
+test('galeria aceita cinco fotos acima de 3 MB no mesmo envio', async () => {
+  const buffer = Buffer.alloc(4 * 1024 * 1024);
+  Buffer.from(png.split(',')[1], 'base64').copy(buffer);
+  const photo = { data: 'data:image/png;base64,' + buffer.toString('base64'), description: '' };
+  const response = await save({ ...data(), photos: Array.from({ length: 5 }, () => ({ ...photo })) });
+  assert.equal(response.status, 200);
+  assert.equal(written.length, 5);
 });
 
 const create = body => fetch(origin + '/offer/editor', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(body) });

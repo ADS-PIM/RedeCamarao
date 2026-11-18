@@ -39,6 +39,10 @@ function App() {
   const isNewOffer = ['/painel/ofertas/nova', '/painel/ofertas/nova/'].includes(pathname)
   const isMyOffers = ['/painel/ofertas', '/painel/ofertas/'].includes(pathname)
 
+  useEffect(() => {
+    if (isLogin && session && !restoring) navigate('/painel', { replace: true })
+  }, [isLogin, session, restoring, navigate])
+
   async function handleLogout() {
     if (logoutPending.current) return
     logoutPending.current = true; setLoggingOut(true)
@@ -65,7 +69,7 @@ function App() {
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
       <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || isNewOffer || isMyOffers || Boolean(editingOfferId)} editingOffer={isNewOffer || isMyOffers || Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onLogout={handleLogout} loggingOut={loggingOut} />
       {editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
-      {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
+      {isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? (session ? null : <LoginPage restoring={restoring} onSessionChange={setSession} />) : isRegister ? <RegisterPage /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>
