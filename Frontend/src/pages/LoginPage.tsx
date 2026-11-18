@@ -2,25 +2,23 @@ import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { FormField } from '../components/FormField'
 import { Icon } from '../components/Icon'
-import { loginUser, logoutUser } from '../services/auth'
+import { loginUser } from '../services/auth'
 import type { UserSession } from '../services/auth'
 import { validateLogin } from '../utils/login'
 import type { LoginData } from '../utils/login'
 import './LoginPage.css'
 
 type Props = {
-  session: UserSession | null
   restoring: boolean
   onSessionChange: (session: UserSession | null) => void
 }
 
-export function LoginPage({ session, restoring, onSessionChange }: Props) {
+export function LoginPage({ restoring, onSessionChange }: Props) {
   const [data, setData] = useState<LoginData>({ email: '', password: '' })
   const [touched, setTouched] = useState<Partial<Record<keyof LoginData, boolean>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const pending = useRef(false)
-  const resultRef = useRef<HTMLHeadingElement>(null)
   const errors = validateLogin(data)
 
   function fieldProps(field: keyof LoginData) {
@@ -49,26 +47,8 @@ export function LoginPage({ session, restoring, onSessionChange }: Props) {
       setData({ email: '', password: '' })
       setTouched({})
       onSessionChange(nextSession)
-      requestAnimationFrame(() => resultRef.current?.focus())
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Não foi possível entrar. Tente novamente.')
-    } finally {
-      pending.current = false
-      setSubmitting(false)
-    }
-  }
-
-  async function logout() {
-    if (pending.current) return
-    pending.current = true
-    setSubmitting(true)
-    setSubmitError('')
-    try {
-      await logoutUser()
-      onSessionChange(null)
-      requestAnimationFrame(() => document.getElementById('login-email')?.focus())
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Não foi possível sair. Tente novamente.')
     } finally {
       pending.current = false
       setSubmitting(false)
@@ -90,23 +70,6 @@ export function LoginPage({ session, restoring, onSessionChange }: Props) {
         </div>
 
         <section className="login-card" aria-labelledby="login-title" aria-busy={submitting || restoring}>
-          {session ? (
-            <div className="login-success">
-              <span className="login-success-icon"><Icon name="check" /></span>
-              <h2 id="login-title" ref={resultRef} tabIndex={-1}>Você está conectado!</h2>
-              <p>
-                Seu acesso à RedeCamarão como {
-                  session.userType === 'PRODUCER'
-                    ? 'produtor'
-                    : session.userType === 'ADMIN'
-                      ? 'administrador'
-                      : 'comprador'
-                } foi confirmado.
-              </p>
-              <button className="button button-secondary" type="button" disabled={submitting} onClick={logout}>{submitting ? 'Saindo...' : 'Sair da conta'}</button>
-            </div>
-          ) : (
-            <>
               <p className="login-eyebrow">SUA CONTA REDECAMARÃO</p>
               <h2 id="login-title">Entrar</h2>
               <p className="login-card-description">Use seu e-mail e senha para acessar sua conta.</p>
@@ -120,8 +83,6 @@ export function LoginPage({ session, restoring, onSessionChange }: Props) {
                 </button>
                 <p className="login-register">Ainda não tem uma conta? <a href="/registro">Criar conta</a></p>
               </form>
-            </>
-          )}
           {submitError && <div className="login-error" role="alert"><Icon name="info" /><p>{submitError}</p></div>}
           <p className="login-session-note" role="status">{restoring ? 'Aguarde enquanto verificamos seu acesso.' : 'Uma conta para comprar ou vender camarão.'}</p>
         </section>

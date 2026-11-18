@@ -83,11 +83,6 @@ export function sortProducers(producers: Producer[], sort: ProducerSort, query =
   })
 }
 
-export function producerIllustration(id: string) {
-  const hash = [...id].reduce((value, character) => (value * 31 + character.charCodeAt(0)) >>> 0, 0)
-  return `/images/producer-farm-${hash % 3 + 1}.jpg`
-}
-
 export function filterProducerOffers(offers: Offer[], filter: ProducerOfferFilter) {
   if (filter === 'all') return offers
   return offers.filter(offer => {

@@ -7,5 +7,12 @@ node_modules
 /database/tests/
 *.test.*
 *.spec.*
+!/test/
+/test/*
+!/test/cloudinary.test.cjs
+!/test/profile-photo.test.cjs
+!/test/offer-editor.test.cjs
+!/test/offer-delete.test.cjs
+!/test/postgres.test.cjs
 /database/certs/
 *.local.log

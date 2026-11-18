@@ -1,5 +1,6 @@
 export type ApplicationErrorCode =
     | 'INVALID_DATA'
+    | 'IMAGE_STORAGE_UNAVAILABLE'
     | 'INVALID_QUANTITY_RANGE'
     | 'INVALID_DATE_RANGE'
     | 'USER_NOT_FOUND'

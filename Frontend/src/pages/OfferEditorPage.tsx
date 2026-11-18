@@ -94,7 +94,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
     const selected = Array.from(files)
     if (fileInput.current) fileInput.current.value = ''
     if (selected.length + photos.length > 5) { setFeedback('Você pode adicionar até 5 fotos.'); return }
-    if (selected.some(file => !['image/jpeg', 'image/png'].includes(file.type) || file.size > 3 * 1024 * 1024)) { setFeedback('Escolha arquivos JPG ou PNG de até 3 MB cada.'); return }
+    if (selected.some(file => !['image/jpeg', 'image/png'].includes(file.type) || file.size > 10 * 1024 * 1024)) { setFeedback('Escolha arquivos JPG ou PNG de até 10 MB cada.'); return }
     setReading(true)
     try {
       const additions = await Promise.all(selected.map(async file => {
@@ -165,7 +165,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
       <form id="offer-editor-form" noValidate onSubmit={(event: FormEvent) => { event.preventDefault(); void save(values.available) }}>
         <section className="editor-panel" aria-labelledby="editor-photos-title"><div className="editor-panel-heading"><div><h2 id="editor-photos-title">Fotos da oferta</h2><p>Adicione até 5 fotos. A primeira será a capa.</p></div><span className="editor-photo-count">{photos.length} de 5</span></div>
           <div className="editor-photos">{photos.map((photo, index) => <figure className={`editor-photo${index === 0 ? ' editor-photo-cover' : ''}`} key={photo.key}><img src={photo.imageUrl} alt={photo.description || `Foto ${index + 1} da oferta`} onError={event => { event.currentTarget.style.visibility = 'hidden'; event.currentTarget.parentElement?.classList.add('editor-photo-failed') }} /><figcaption><button type="button" disabled={busy} className={index === 0 ? 'is-cover' : ''} onClick={() => makeCover(photo.key)} aria-label={index === 0 ? 'Foto de capa' : `Usar foto ${index + 1} como capa`}>{index === 0 ? 'Capa' : 'Definir capa'}</button><button type="button" disabled={busy} aria-label={`Remover foto ${index + 1}`} title={`Remover foto ${index + 1}`} onClick={() => { setPhotos(current => current.filter(item => item.key !== photo.key)); setDirty(true); setSuccess('') }}><Icon name="trash" /><span className="visually-hidden">Remover</span></button></figcaption></figure>)}
-          {photos.length < 5 && <button type="button" className="editor-add-photo" disabled={busy} onClick={() => fileInput.current?.click()}><Icon name="images" /><strong>{reading ? 'Lendo fotos...' : 'Adicionar foto'}</strong><small>JPG ou PNG · até 3 MB</small></button>}</div>
+          {photos.length < 5 && <button type="button" className="editor-add-photo" disabled={busy} onClick={() => fileInput.current?.click()}><Icon name="images" /><strong>{reading ? 'Lendo fotos...' : 'Adicionar foto'}</strong><small>JPG ou PNG · até 10 MB</small></button>}</div>
           <input className="visually-hidden" ref={fileInput} type="file" tabIndex={-1} accept="image/jpeg,image/png" multiple aria-label="Selecionar fotos" onChange={event => void addPhotos(event.target.files)} />
           {photos.length === 0 && <p className="editor-photo-hint">Mostre o lote real para ajudar o comprador a conhecer sua oferta.</p>}
         </section>

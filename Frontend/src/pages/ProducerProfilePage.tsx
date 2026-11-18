@@ -4,7 +4,7 @@ import { Avatar } from '../components/Avatar'
 import { Pagination } from '../components/Pagination'
 import { ProductCard } from '../components/ProductCard'
 import { useProducerProfile } from '../hooks/useProducerProfile'
-import { filterProducerOffers, producerIllustration, producerLocation } from '../data/producers'
+import { filterProducerOffers, producerLocation } from '../data/producers'
 import type { ProducerOfferFilter } from '../data/producers'
 import './ProducersPage.css'
 import './ProducerProfilePage.css'
@@ -65,14 +65,6 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
 
   return (
     <main id="main-content" className="producer-profile-main">
-      <section className="producer-profile-banner" aria-label={`Imagem ilustrativa da fazenda ${producer.name}`}>
-        <img src={producerIllustration(producer.id)} alt="" width="1600" height="600" decoding="async"
-          onError={event => { if (!event.currentTarget.src.endsWith('/images/shrimp-farm.jpg')) event.currentTarget.src = '/images/shrimp-farm.jpg' }} />
-        <div className="container producer-profile-banner-content">
-          <span className="producer-profile-image-note">Imagem ilustrativa</span>
-        </div>
-      </section>
-
       <section className="producer-profile-heading" aria-labelledby="producer-profile-title">
         <div className="container producer-profile-heading-inner">
           <Avatar className="producer-profile-avatar" src={producer.profilePicture} />
