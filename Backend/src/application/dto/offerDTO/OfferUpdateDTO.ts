@@ -24,15 +24,15 @@ export class OfferUpdateDTO implements OfferUpdateData {
     price?: number;
 
     @ValidateIf((_object, value) => value !== undefined)
-    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsNumber({ maxDecimalPlaces: 3 })
     weight?: number;
 
     @ValidateIf((_object, value) => value !== undefined)
-    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsNumber({ maxDecimalPlaces: 3 })
     maximumQuantity?: number;
 
     @ValidateIf((_object, value) => value !== undefined)
-    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsNumber({ maxDecimalPlaces: 3 })
     minimumQuantity?: number;
 
     @ValidateIf((_object, value) => value !== undefined)

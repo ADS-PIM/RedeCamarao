@@ -4,7 +4,9 @@ import { FormField } from '../components/FormField'
 import { Icon } from '../components/Icon'
 import { Dialog } from '../components/Dialog'
 import { ProductCard } from '../components/ProductCard'
-import { blankEditorValues, editOfferHref, editorPayload, initialEditorValues, validateEditor, myOffersHref } from '../data/offerEditor'
+import { blankEditorValues, changeEditorUnit, editOfferHref, editorPayload, initialEditorValues, validateEditor, myOffersHref } from '../data/offerEditor'
+import { unitOptions } from '../data/offerUnits'
+import type { MeasuredField, WeightUnit } from '../data/offerUnits'
 import type { EditorPhoto, OfferEditorValues } from '../data/offerEditor'
 import type { ManagedOffer } from '../services/account'
 import { createOfferWithPhotos, fetchMyOffers, fetchMyProfile, fetchEditorPhotos, saveEditedOffer } from '../services/account'
@@ -88,6 +90,10 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
     setValues(current => current && ({ ...current, [key]: value })); setDirty(true); setSuccess('')
     setErrors(current => ({ ...current, [key]: undefined }))
   }
+  function changeUnit(field: MeasuredField, unit: WeightUnit) {
+    setValues(current => current && changeEditorUnit(current, field, unit))
+    setDirty(true); setSuccess(''); setErrors({})
+  }
   async function addPhotos(files: FileList | null) {
     if (!files?.length || reading || saving) return
     setFeedback(''); setSuccess('')
@@ -155,6 +161,28 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
   const busy = saving || reading
   const field = (key: keyof Omit<OfferEditorValues, 'available' | 'state' | 'description' | 'type' | 'size'>, label: string, type = 'text', hint?: string) => <FormField id={`editor-${key}`} label={label} type={type} required value={values[key]} onChange={value => change(key, value)} error={errors[key]} hint={hint} disabled={busy} maxLength={type === 'date' ? undefined : key === 'city' ? 200 : key === 'title' ? 255 : 20} inputMode={['price', 'weight', 'minimumQuantity', 'maximumQuantity'].includes(key) ? 'decimal' : undefined} />
   const select = (key: 'type' | 'size' | 'state', label: string, options: { value: string; label: string }[]) => <div className="form-field"><label htmlFor={`editor-${key}`}>{label} *</label><select id={`editor-${key}`} disabled={busy} value={values[key]} aria-invalid={Boolean(errors[key])} aria-describedby={errors[key] ? `editor-${key}-error` : undefined} onChange={event => change(key, event.target.value)}><option value="">Selecione</option>{values[key] && !options.some(option => option.value === values[key]) && <option value={values[key]}>{values[key]}</option>}{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>{errors[key] && <p className="field-error" id={`editor-${key}-error`}>{errors[key]}</p>}</div>
+  const measuredField = (key: MeasuredField, label: string) => {
+    const unit = values[`${key}Unit`]
+    const errorId = `editor-${key}-error`
+    const unitName = unit === 'g' ? 'gramas' : 'quilogramas'
+    return <div className="editor-measure-field">
+      <div className="editor-measure-heading">
+        <label htmlFor={`editor-${key}`}>{label}{key === 'price' ? ' (R$)' : ''} <span aria-hidden="true">*</span></label>
+      </div>
+      <div className={`editor-measure-input${errors[key] ? ' has-error' : ''}`}>
+        <input id={`editor-${key}`} type="text" required inputMode="decimal" maxLength={20} value={values[key]} disabled={busy}
+          aria-label={key === 'price' ? `${label}, em reais por ${unit === 'g' ? 'grama' : 'quilograma'}` : `${label}, em ${unitName}`}
+          aria-invalid={Boolean(errors[key])} aria-describedby={errors[key] ? errorId : undefined}
+          placeholder={key === 'price' ? unit === 'g' ? 'Ex.: 0,0349' : 'Ex.: 34,90' : unit === 'g' ? 'Ex.: 500' : 'Ex.: 1,5'}
+          onChange={event => change(key, event.target.value)} />
+        <span className="editor-measure-suffix" aria-hidden="true">{key === 'price' ? `R$/${unit}` : unit}</span>
+      </div>
+      <div className="editor-measure-unit">
+        <select id={`editor-${key}-unit`} aria-label={`Unidade de medida: ${label.toLowerCase()}`} value={unit} disabled={busy} onChange={event => changeUnit(key, event.target.value as WeightUnit)}>{unitOptions.map(option => <option key={option.value} value={option.value}>{option.value === 'kg' ? 'Quilos' : 'Gramas'}</option>)}</select>
+      </div>
+      {errors[key] && <p className="field-error editor-measure-message" id={errorId}>{errors[key]}</p>}
+    </div>
+  }
 
   return <main id="main-content" className="offer-editor-main">
     <section className="editor-heading"><div className="container editor-heading-inner"><div><p className="editor-eyebrow">Minhas ofertas</p><h1>{offerId ? 'Editar oferta' : 'Cadastrar oferta'}</h1><p>{offerId ? 'Atualize os dados e as fotos do seu lote.' : 'Apresente seu lote com fotos e informações para os compradores.'}</p></div>
@@ -173,7 +201,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
           <div className="form-field editor-field-wide"><label htmlFor="editor-description">Descrição *</label><textarea id="editor-description" rows={5} maxLength={1000} disabled={busy} value={values.description} aria-invalid={Boolean(errors.description)} aria-describedby="editor-description-help" onChange={event => change('description', event.target.value)} /><p id="editor-description-help" className={errors.description ? 'field-error' : 'field-hint'}>{errors.description || `${values.description.length}/1.000 caracteres. Descreva o lote e as condições de negociação.`}</p></div>
           {select('type', 'Tipo de camarão', ['Camarão cinza', 'Camarão branco'].map(value => ({ value, label: value })))}{select('size', 'Tamanho', sizeOptions.map(option => ({ value: option.label, label: option.label })))}
         </div></section>
-        <section className="editor-panel" aria-labelledby="editor-price-title"><h2 id="editor-price-title">Preço e quantidade</h2><div className="editor-fields editor-price-fields">{field('price', 'Preço por kg (R$)', 'text', 'Ex.: 34,90')}{field('weight', 'Quantidade disponível (kg)')}{field('minimumQuantity', 'Quantidade mínima (kg)')}{field('maximumQuantity', 'Quantidade máxima (kg)')}</div>
+        <section className="editor-panel" aria-labelledby="editor-price-title"><h2 id="editor-price-title">Preço e quantidade</h2><div className="editor-fields editor-price-fields">{measuredField('price', 'Preço')}{measuredField('weight', 'Quantidade disponível')}{measuredField('minimumQuantity', 'Quantidade mínima')}{measuredField('maximumQuantity', 'Quantidade máxima')}</div>
           <div className="editor-fields">{field('city', 'Cidade')}{select('state', 'Estado', brazilianStates.map(state => ({ value: state.code, label: `${state.name} (${state.code})` })))}{field('startDate', 'Disponível a partir de', 'date')}{field('endDate', 'Disponível até', 'date', 'Após esta data, a oferta deixa de aparecer no marketplace.')}</div>
           <label className="editor-available"><input type="checkbox" checked={values.available} disabled={busy} onChange={event => change('available', event.target.checked)} /><span><strong>Oferta disponível para negociação</strong><small>Desmarque para salvar como pausada.</small></span></label>
         </section>

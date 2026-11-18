@@ -66,6 +66,11 @@ diferenciar maiúsculas de minúsculas, FKs com cascata e triggers de `updatedAt
 As alterações de estrutura são transacionais. Sequelize registra a aplicação em
 `SequelizeMeta`; execuções seguintes aplicam somente migrations pendentes.
 
+A migration `20261118120000-support-gram-quantities.js` amplia `offers.weight`,
+`min_quantity` e `max_quantity` para `numeric(11,3)`. A unidade armazenada
+continua sendo kg, com precisão de 1 g, sem alterar os valores já existentes.
+A reversão dessa migration é recusada quando arredondaria alguma quantidade.
+
 O Aiven já fornece `defaultdb`. `db:init` é um alias de `db:migrate` e não tenta
 criar outro banco. O SQL `RedeCamarao_db.sql` é uma alternativa para instalação
 manual em banco vazio. Não combine a instalação manual com as migrations.

@@ -1,3 +1,4 @@
+import { formatQuantity } from '../data/offerUnits'
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
@@ -83,7 +84,6 @@ export function OfferPage({ offerId }: { offerId: string }) {
   const inSameState = related.length > 0 && getOfferState(offer.location)
     && related.every(item => getOfferState(item.location) === getOfferState(offer.location))
   const producer = offer.producer
-  const quantity = (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 
   return (
     <main id="main-content" className="offer-page">
@@ -105,7 +105,7 @@ export function OfferPage({ offerId }: { offerId: string }) {
             <p className="offer-reference" title={`Identificador completo: ${offer.id}`}>Oferta #{offer.id.slice(0, 8)} · Publicada em {new Date(offer.createdAt).toLocaleDateString('pt-BR')}</p>
             <p className="offer-detail-price">{formatPrice(offer.price)} <small>por kg</small></p>
             <dl className="offer-specifications">
-              <div><dt><Icon name="box" />Quantidade disponível</dt><dd>{quantity(offer.weight)} kg</dd></div>
+              <div><dt><Icon name="box" />Quantidade disponível</dt><dd>{formatQuantity(offer.weight)}</dd></div>
               <div><dt><Icon name="ruler" />Tamanho</dt><dd>{offer.size}</dd></div>
               <div><dt><Icon name="pin" />Localização</dt><dd>{offer.location}</dd></div>
               <div><dt><Icon name="calendar" />Disponibilidade</dt><dd>Até {formatDate(offer.endDate)}</dd></div>
@@ -118,8 +118,8 @@ export function OfferPage({ offerId }: { offerId: string }) {
             <h2 id="offer-about-title">Sobre esta oferta</h2>
             <p className="offer-description-full">{offer.description}</p>
             <dl className="offer-facts">
-              <div><Icon name="box" /><dt>Lote mínimo</dt><dd>{quantity(offer.minimumQuantity)} kg</dd></div>
-              <div><Icon name="ruler" /><dt>Lote máximo</dt><dd>{quantity(offer.maximumQuantity)} kg</dd></div>
+              <div><Icon name="box" /><dt>Lote mínimo</dt><dd>{formatQuantity(offer.minimumQuantity)}</dd></div>
+              <div><Icon name="ruler" /><dt>Lote máximo</dt><dd>{formatQuantity(offer.maximumQuantity)}</dd></div>
               <div><Icon name="calendar" /><dt>Disponível a partir de</dt><dd>{formatDate(offer.startDate)}</dd></div>
             </dl>
           </section>

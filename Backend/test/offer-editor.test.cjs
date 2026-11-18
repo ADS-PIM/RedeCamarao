@@ -51,6 +51,11 @@ test('valida tipos, limites, datas reais, quantidade e imagens antes de gravar',
   assert.throws(() => parseOfferEditor({ ...data(), photos: Array(6).fill({ data: png, description: '' }) }));
   assert.throws(() => parseOfferEditor({ ...data(), photos: [{ data: 'data:image/png;base64,PHNjcmlwdD4=', description: '' }] }));
 });
+test('aceita quantidades em kg com precisão de 1 g e rejeita frações de grama', () => {
+  const body = data(); body.offer.weight = 0.501; body.offer.minimumQuantity = 0.001; body.offer.maximumQuantity = 0.499;
+  assert.equal(parseOfferEditor(body).offer.minimumQuantity, 0.001);
+  assert.throws(() => parseOfferEditor({ ...body, offer: { ...body.offer, minimumQuantity: 0.0001 } }), { code: 'INVALID_DATA' });
+});
 test('rejeita visitante e oferta alheia sem gravar arquivos', async () => {
   assert.equal((await save(data(), '')).status, 401);
   owner = 'other-producer';

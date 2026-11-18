@@ -22,14 +22,14 @@ export class OfferCreateDTO {
     price!: number;
 
     @IsNotEmpty()
-    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsNumber({ maxDecimalPlaces: 3 })
     weight!: number;
 
     @IsNotEmpty()
-    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsNumber({ maxDecimalPlaces: 3 })
     maximumQuantity!: number;
 
-    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsNumber({ maxDecimalPlaces: 3 })
     minimumQuantity!: number;
 
     @IsNotEmpty()

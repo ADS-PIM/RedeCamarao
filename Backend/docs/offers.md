@@ -1,5 +1,23 @@
 # Ofertas
 
+## Unidades de preço e quantidade
+
+O formulário permite selecionar kg ou g separadamente para o preço, estoque,
+pedido mínimo e pedido máximo. Trocar a unidade converte o valor preenchido.
+As quantidades em gramas são inteiras, a partir de 1 g. Preços por grama
+aceitam até cinco casas decimais para manter o equivalente em centavos por kg.
+
+O contrato da API permanece em kg: `price` é o preço por kg (duas casas
+decimais), e `weight`, `minimumQuantity` e `maximumQuantity` são quantidades
+em kg (até três casas decimais). Por exemplo, 500 g viram `0.5` e 1 g vira
+`0.001`. Os limites mínimo/máximo são comparados após essa conversão.
+Na exibição, quantidades abaixo de 1 kg aparecem em gramas; os preços do
+catálogo e da prévia continuam apresentados por kg para comparação.
+
+Antes de usar quantidades de 1 g, aplique `npm.cmd run db:migrate` em `Backend`.
+A migration `20261118120000-support-gram-quantities.js` amplia a precisão das
+três colunas de quantidade, preservando as ofertas existentes.
+
 O CRUD das fotos vinculadas às ofertas está documentado em [Fotos das ofertas](offer-photos.md).
 
 ## Ofertas públicas do marketplace
