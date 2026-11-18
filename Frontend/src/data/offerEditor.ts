@@ -2,6 +2,7 @@ import type { ManagedOffer } from '../services/account.ts'
 import { producerLocation } from './producers.ts'
 import { measuredDecimals, parseMeasuredValue, toCanonical } from './offerUnits.ts'
 import type { MeasuredField, UnitField, WeightUnit } from './offerUnits.ts'
+import type { PhotoAdjustment } from '../utils/photoAdjustment.ts'
 import { brazilianStates } from '../utils/registration.ts'
 import { localDateString } from './account.ts'
 
@@ -11,7 +12,7 @@ export type OfferEditorValues = {
   startDate: string; endDate: string; available: boolean
   priceUnit: WeightUnit; weightUnit: WeightUnit; minimumQuantityUnit: WeightUnit; maximumQuantityUnit: WeightUnit
 }
-export type EditorPhoto = { key: string; id?: string; data?: string; imageUrl: string; description: string }
+export type EditorPhoto = { key: string; id?: string; data?: string; imageUrl: string; description: string; sourceData?: string; adjustment?: PhotoAdjustment }
 export function editOfferHref(id: string) { return `/painel/ofertas/${encodeURIComponent(id)}/editar` }
 export const newOfferHref = '/painel/ofertas/nova'
 export const myOffersHref = '/painel/ofertas'

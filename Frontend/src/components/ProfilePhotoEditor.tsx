@@ -2,6 +2,8 @@ import { useRef, useState } from 'react'
 import { Avatar } from './Avatar'
 import { Icon } from './Icon'
 import type { IconName } from './Icon'
+import { PhotoAdjustmentDialog } from './PhotoAdjustmentDialog'
+import type { PhotoAdjustment } from '../utils/photoAdjustment'
 import './ProfilePhotoEditor.css'
 
 export function ProfilePhotoEditor({ src, onSave, fallback = 'farm' }: {
@@ -12,10 +14,13 @@ export function ProfilePhotoEditor({ src, onSave, fallback = 'farm' }: {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [adjusting, setAdjusting] = useState<{ source: string; initial?: PhotoAdjustment } | null>(null)
+  const [originalSource, setOriginalSource] = useState<string | null>(null)
+  const [adjustment, setAdjustment] = useState<PhotoAdjustment | undefined>(undefined)
   const input = useRef<HTMLInputElement>(null)
   const pending = useRef(false)
   const preview = draft === undefined ? src : draft
-  const busy = saving || reading
+  const busy = saving || reading || Boolean(adjusting)
   async function select(file: File | undefined) {
     if (input.current) input.current.value = ''
     if (!file || busy) return
@@ -30,17 +35,18 @@ export function ProfilePhotoEditor({ src, onSave, fallback = 'farm' }: {
       })
       const image = new Image(); image.src = data
       await image.decode().catch(() => { throw new Error('A imagem está danificada. Escolha outra foto.') })
-      setDraft(data)
+      setAdjusting({ source: data })
     } catch (error) { setError(error instanceof Error ? error.message : 'Não foi possível abrir a foto.') }
     finally { setReading(false) }
   }
   async function save() {
-    if (draft === undefined || pending.current || reading) return
+    if (draft === undefined || pending.current || reading || adjusting) return
     pending.current = true; setSaving(true); setError(''); setSuccess('')
     try {
       await onSave(draft)
       setSuccess(draft === null ? 'Foto de perfil removida.' : 'Foto de perfil atualizada.')
       setDraft(undefined)
+      setOriginalSource(null); setAdjustment(undefined)
     } catch (error) { setError(error instanceof Error ? error.message : 'Não foi possível salvar sua foto.') }
     finally { pending.current = false; setSaving(false) }
   }
@@ -48,12 +54,16 @@ export function ProfilePhotoEditor({ src, onSave, fallback = 'farm' }: {
     <Avatar className="account-photo-avatar" src={preview} alt={draft === undefined ? 'Foto atual de perfil' : 'Prévia da foto de perfil'} fallback={fallback} />
     <div className="profile-photo-content"><h3>Foto de perfil</h3><p>JPG ou PNG de até 10 MB. A imagem será exibida em formato circular.</p>
       <div className="profile-photo-actions"><button type="button" className="button button-secondary" disabled={busy} onClick={() => input.current?.click()}><Icon name="images" />{reading ? 'Lendo foto...' : preview ? 'Trocar foto' : 'Adicionar foto'}</button>
+        {preview && <button type="button" className="button button-secondary" disabled={busy} onClick={() => setAdjusting({ source: originalSource ?? preview, initial: adjustment })}><Icon name="edit" />Ajustar foto</button>}
         {preview && <button type="button" className="profile-photo-remove" disabled={busy} onClick={() => { setDraft(null); setError(''); setSuccess('') }}><Icon name="trash" />Remover foto</button>}
-        {draft !== undefined && <><button type="button" className="button button-primary" disabled={busy} onClick={() => void save()}>{saving ? 'Salvando...' : 'Salvar foto'}</button><button type="button" className="profile-photo-cancel" disabled={busy} onClick={() => { setDraft(undefined); setError('') }}>Cancelar</button></>}
+        {draft !== undefined && <><button type="button" className="button button-primary" disabled={busy} onClick={() => void save()}>{saving ? 'Salvando...' : 'Salvar foto'}</button><button type="button" className="profile-photo-cancel" disabled={busy} onClick={() => { setDraft(undefined); setOriginalSource(null); setAdjustment(undefined); setError('') }}>Cancelar</button></>}
       </div>
-      <input ref={input} className="visually-hidden" type="file" tabIndex={-1} accept="image/jpeg,image/png" aria-label="Selecionar foto de perfil" onChange={event => void select(event.target.files?.[0])} />
+      <input ref={input} className="visually-hidden" type="file" tabIndex={-1} accept="image/jpeg,image/png" disabled={busy} aria-label="Selecionar foto de perfil" onChange={event => void select(event.target.files?.[0])} />
       {draft !== undefined && <p className="profile-photo-hint">{draft === null ? 'Salve para confirmar a remoção da foto atual.' : 'Prévia selecionada. Clique em Salvar foto para confirmar.'}</p>}
       {error && <p className="profile-photo-error" role="alert">{error}</p>}{success && <p className="profile-photo-success" role="status">{success}</p>}
     </div>
+    {adjusting && <PhotoAdjustmentDialog source={adjusting.source} kind="profile" initial={adjusting.initial} onClose={() => setAdjusting(null)} onApply={(data, settings) => {
+      setDraft(data); setOriginalSource(adjusting.source); setAdjustment(settings); setAdjusting(null); setError(''); setSuccess('')
+    }} />}
   </div>
 }

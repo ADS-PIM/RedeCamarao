@@ -1,0 +1,42 @@
+.account-modal.photo-adjust-dialog { width: min(640px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 0; overflow-y: auto; border: 0; border-radius: 18px; background: white; color: #193340; box-shadow: 0 24px 80px #102e3e40; }
+.photo-adjust-dialog::backdrop { background: #102e3e99; }
+.photo-adjust-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 22px 24px 18px; border-bottom: 1px solid var(--border); }
+.photo-adjust-header h2 { margin: 0; font-size: 24px; line-height: 1.3; letter-spacing: -.4px; }
+.photo-adjust-header p { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.photo-adjust-close { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; padding: 7px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--brand-dark); }
+.photo-adjust-close svg { width: 18px; height: 18px; }
+.photo-adjust-body { padding: 18px 24px 22px; }
+.photo-adjust-stage { display: flex; align-items: center; justify-content: center; min-height: 260px; padding: 14px; overflow: hidden; border-radius: 12px; background: #edf4f6; }
+.photo-adjust-stage > p { color: var(--muted); font-size: 14px; }
+.photo-adjust-frame { position: relative; width: 100%; overflow: hidden; isolation: isolate; touch-action: none; user-select: none; cursor: grab; background: #dae7ed; box-shadow: 0 0 0 1px #fff9; }
+.photo-adjust-profile .photo-adjust-frame { width: min(100%, 306px); border-radius: 50%; }
+.photo-adjust-frame.is-dragging { cursor: grabbing; }
+.photo-adjust-frame > img { position: absolute; display: block; max-width: none; max-height: none; pointer-events: none; user-select: none; }
+.photo-adjust-grid { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, transparent calc(33.333% - .5px), #ffffff80 calc(33.333% - .5px), #ffffff80 calc(33.333% + .5px), transparent calc(33.333% + .5px), transparent calc(66.666% - .5px), #ffffff80 calc(66.666% - .5px), #ffffff80 calc(66.666% + .5px), transparent calc(66.666% + .5px)), linear-gradient(transparent calc(33.333% - .5px), #ffffff80 calc(33.333% - .5px), #ffffff80 calc(33.333% + .5px), transparent calc(33.333% + .5px), transparent calc(66.666% - .5px), #ffffff80 calc(66.666% - .5px), #ffffff80 calc(66.666% + .5px), transparent calc(66.666% + .5px)); }
+.photo-adjust-controls { display: grid; gap: 18px; margin-top: 18px; }
+.photo-adjust-control { min-width: 0; }
+.photo-adjust-control > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.photo-adjust-control label { color: #304956; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.photo-adjust-control output { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.photo-adjust-dialog input[type='range'] { display: block; width: 100%; height: 28px; margin: 0; padding: 0; border: 0; background: transparent; accent-color: var(--primary); cursor: pointer; }
+.app-shell .photo-adjust-dialog input[type='range']:enabled:focus { box-shadow: none; outline: none; }
+.photo-adjust-dialog input[type='range']:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--primary); outline-offset: 3px; }
+.photo-adjust-dialog input[type='range']:focus-visible::-moz-range-thumb { outline: 2px solid var(--primary); outline-offset: 3px; }
+.photo-adjust-dialog input[type='range']:disabled { opacity: .45; cursor: default; }
+.photo-adjust-positions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.photo-adjust-reset { justify-self: start; min-height: 32px; padding: 4px 0; border: 0; background: transparent; color: var(--primary); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.photo-adjust-error { margin-top: 14px; color: var(--danger); font-size: 13px; line-height: 1.6; }
+.photo-adjust-footer { padding: 16px 24px 20px; border-top: 1px solid var(--border); }
+.photo-adjust-footer > p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.photo-adjust-footer > div { display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+.photo-adjust-dialog .button { min-height: 44px; padding: 10px 18px; border-radius: 8px; font-size: 14px; }
+@media (max-width: 480px) {
+  .account-modal.photo-adjust-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); border-radius: 14px; }
+  .photo-adjust-header { gap: 12px; padding: 18px 16px 14px; }
+  .photo-adjust-header h2 { font-size: 21px; }
+  .photo-adjust-body { padding: 14px 16px 18px; }
+  .photo-adjust-stage { min-height: 180px; padding: 12px; }
+  .photo-adjust-positions { gap: 12px; }
+  .photo-adjust-control label { font-size: 12px; }
+  .photo-adjust-footer { padding: 14px 16px 18px; }
+}
