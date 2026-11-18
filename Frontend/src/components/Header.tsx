@@ -3,7 +3,7 @@ import { Icon } from './Icon'
 import { Avatar } from './Avatar'
 import './Header.css'
 
-export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, userId, accountName = '', profilePicture, editingOffer = false, onLogout, loggingOut = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; userId?: string; accountName?: string; profilePicture?: string | null; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
+export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, administrator = false, userId, accountName = '', profilePicture, editingOffer = false, onLogout, loggingOut = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; administrator?: boolean; userId?: string; accountName?: string; profilePicture?: string | null; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const headerRef = useRef<HTMLElement>(null)
@@ -68,13 +68,18 @@ export function Header({ authenticated = false, marketplace = false, products = 
     <header ref={headerRef} className={`site-header${account && producer ? ' producer-header' : ''}`}>
       <div className="container header-inner">
         <a href="/" className="brand" aria-label="RedeCamarão — início" onClick={() => setMenuOpen(false)}><strong>Rede</strong>Camarão</a>
-        {authenticated && account && <span className="header-role">{producer ? 'Produtor' : 'Comprador'}</span>}
+        {authenticated && account && <span className="header-role">{administrator ? 'Administrador' : producer ? 'Produtor' : 'Comprador'}</span>}
         <button ref={menuToggleRef} className="menu-toggle" type="button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-controls="main-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}>
           <Icon name={menuOpen ? 'close' : 'menu'} />
         </button>
         <div id="main-navigation" className={`header-navigation ${menuOpen ? 'is-open' : ''}`}>
           <nav aria-label="Navegação principal">
-            {account && producer ? <>
+            {administrator ? <>
+              <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a>
+              <a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtos</a>
+              <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a>
+              <a href="/admin" aria-current={account ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Área administrativa</a>
+            </> : account && producer ? <>
               <a href="/painel" aria-current={!editingOffer ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Painel</a>
               <a href="/painel/ofertas" aria-current={editingOffer ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Minhas ofertas</a>
               <a href={`/produtores/${encodeURIComponent(userId ?? '')}`} onClick={() => setMenuOpen(false)}>Perfil público</a>
@@ -89,10 +94,11 @@ export function Header({ authenticated = false, marketplace = false, products = 
             </>}
           </nav>
           <div className="header-actions">
-            {authenticated && account ? <details className="header-account-menu">
+            {authenticated ? <details className="header-account-menu">
               <summary className="header-account" aria-label="Menu da conta"><Avatar className="header-avatar" src={profilePicture} fallback={producer ? 'farm' : 'bag'} /><span>{accountName || 'Minha conta'}</span><Icon name="chevron" className="header-account-chevron" /></summary>
               <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
-                <a href="/marketplace">Ver marketplace</a>
+                {administrator && <a href="/admin">Área administrativa</a>}
+                {!administrator && <a href="/painel">Ver perfil</a>}
                 <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}><Icon name="logout" />{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
                 {logoutError && <p className="header-logout-error" role="alert">{logoutError}</p>}
               </div>
