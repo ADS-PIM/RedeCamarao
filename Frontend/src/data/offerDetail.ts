@@ -1,5 +1,5 @@
 import type { Offer, OfferDetail } from './marketplace'
-import { getOfferSize, getOfferState } from './products.ts'
+import { getOfferState } from './products.ts'
 
 export function offerHref(id: string) { return `/produtos/${encodeURIComponent(id)}` }
 
@@ -12,19 +12,11 @@ export function offerIdFromPath(pathname: string) {
   } catch { return null }
 }
 
-export function offerIllustration(offer: Offer) {
-  if ((offer.type ?? '').toLowerCase().includes('branco')) return '/images/shrimp-white.jpg'
-  if (getOfferSize(offer.size) === 'extra-large') return '/images/shrimp-premium.jpg'
-  return offer.weight > 50 ? '/images/shrimp-gray.jpg' : '/images/shrimp-fresh.jpg'
-}
-
-export type GalleryPhoto = { id: string; src: string; description: string; illustrative: boolean }
+export type GalleryPhoto = { id: string; src: string; description: string }
 export function offerGallery(offer: OfferDetail): GalleryPhoto[] {
-  if (offer.photos.length) return offer.photos.map(photo => ({
-    id: photo.id, src: photo.imageUrl, description: photo.description || `Foto do lote: ${offer.title}`, illustrative: false,
+  return offer.photos.map(photo => ({
+    id: photo.id, src: photo.imageUrl, description: photo.description || `Foto do lote: ${offer.title}`,
   }))
-  return [...new Set([offerIllustration(offer), '/images/shrimp-fresh.jpg', '/images/shrimp-premium.jpg', '/images/shrimp-farm.jpg'])]
-    .map((src, index) => ({ id: `illustration-${index}`, src, description: 'Foto ilustrativa; não representa este lote', illustrative: true }))
 }
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()

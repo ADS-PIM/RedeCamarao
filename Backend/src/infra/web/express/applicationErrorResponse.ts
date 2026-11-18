@@ -3,6 +3,7 @@ import { ApplicationError, ApplicationErrorCode } from '../../../application/err
 
 const statusByCode: Record<ApplicationErrorCode, number> = {
     INVALID_DATA: 400,
+    IMAGE_STORAGE_UNAVAILABLE: 503,
     INVALID_QUANTITY_RANGE: 400,
     INVALID_DATE_RANGE: 400,
     USER_NOT_FOUND: 404,

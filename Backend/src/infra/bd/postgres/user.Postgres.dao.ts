@@ -4,6 +4,7 @@ import type { propsUser } from '../../../domain/model/user';
 import {UserDAOInterface,UserUpdateData} from '../../../domain/interfaces/user/UserDAOInterface';
 import type { PublicProducer, PublicProducerDAOInterface } from '../../../domain/interfaces/user/PublicProducerDAOInterface';
 import type { QueryResultRow } from 'pg';
+import { imageStorage } from '../../../service/imageStorage';
 
 
 const userColumns = `
@@ -196,9 +197,15 @@ export class UserDAOPostgres implements UserDAOInterface, PublicProducerDAOInter
 
     public async delete(id: string): Promise<void> {
 
-        await connection.query(
-            'DELETE FROM users WHERE id = $1',
+        const result = await connection.query(
+            `WITH images AS MATERIALIZED (
+                SELECT "profilePicture" AS "imageUrl" FROM users WHERE id = $1
+                UNION SELECT photo."imageUrl" FROM "offerPhotos" AS photo
+                    JOIN offers ON offers.id = photo."offerId" WHERE offers."userId" = $1
+             ), deleted AS (DELETE FROM users WHERE id = $1 RETURNING id)
+             SELECT ARRAY(SELECT "imageUrl" FROM images) AS images FROM deleted`,
             [id]
         );
+        await imageStorage.removeUnused((result.rows ?? []).flatMap(row => row.images ?? []));
     }
 }
