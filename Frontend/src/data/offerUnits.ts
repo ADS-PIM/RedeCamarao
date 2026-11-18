@@ -23,6 +23,5 @@ export function toCanonical(value: number, field: MeasuredField, unit: WeightUni
 }
 
 export function formatQuantity(kilograms: number) {
-  if (kilograms > 0 && kilograms < 1) return `${Math.round(kilograms * 1000).toLocaleString('pt-BR')} g`
   return `${kilograms.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} kg`
 }

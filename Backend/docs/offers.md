@@ -11,8 +11,10 @@ O contrato da API permanece em kg: `price` é o preço por kg (duas casas
 decimais), e `weight`, `minimumQuantity` e `maximumQuantity` são quantidades
 em kg (até três casas decimais). Por exemplo, 500 g viram `0.5` e 1 g vira
 `0.001`. Os limites mínimo/máximo são comparados após essa conversão.
-Na exibição, quantidades abaixo de 1 kg aparecem em gramas; os preços do
-catálogo e da prévia continuam apresentados por kg para comparação.
+Novas ofertas e ofertas reabertas para edição usam kg como padrão em todos os
+campos, inclusive para valores fracionados como `0,8`. O formulário aceita
+vírgula ou ponto decimal. Quantidades e preços do catálogo e da prévia também
+aparecem em kg, mantendo uma unidade comum para comparação.
 
 Antes de usar quantidades de 1 g, aplique `npm.cmd run db:migrate` em `Backend`.
 A migration `20261118120000-support-gram-quantities.js` amplia a precisão das

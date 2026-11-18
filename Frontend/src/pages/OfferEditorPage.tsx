@@ -173,7 +173,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
         <input id={`editor-${key}`} type="text" required inputMode="decimal" maxLength={20} value={values[key]} disabled={busy}
           aria-label={key === 'price' ? `${label}, em reais por ${unit === 'g' ? 'grama' : 'quilograma'}` : `${label}, em ${unitName}`}
           aria-invalid={Boolean(errors[key])} aria-describedby={errors[key] ? errorId : undefined}
-          placeholder={key === 'price' ? unit === 'g' ? 'Ex.: 0,0349' : 'Ex.: 34,90' : unit === 'g' ? 'Ex.: 500' : 'Ex.: 1,5'}
+          placeholder={key === 'price' ? unit === 'g' ? 'Ex.: 0,0349' : 'Ex.: 34,90' : unit === 'g' ? 'Ex.: 500' : key === 'minimumQuantity' ? 'Ex.: 0,8' : key === 'maximumQuantity' ? 'Ex.: 30' : 'Ex.: 300'}
           onChange={event => change(key, event.target.value)} />
         <span className="editor-measure-suffix" aria-hidden="true">{key === 'price' ? `R$/${unit}` : unit}</span>
       </div>
