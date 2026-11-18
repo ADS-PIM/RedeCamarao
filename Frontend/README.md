@@ -78,6 +78,22 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 
 ## Padrão visual e responsividade
 
+A paleta está centralizada em `src/index.css`, a partir das três cores da
+referência fornecida. Os componentes usam variáveis semânticas para manter a
+aplicação consistente.
+
+| Cor | Código | Aplicação |
+| --- | --- | --- |
+| Azul-marinho | `#14213D` | Cabeçalho, rodapé, apresentação, títulos, preços e navegação. |
+| Creme | `#F4EDE0` | Fundo das páginas, texto sobre marinho e superfícies de apoio. |
+| Coral | `#FF5C4D` | Botões principais, marca e indicação de navegação ativa. |
+
+Cards e campos usam tons claros derivados do creme para distinguir as camadas.
+Botões coral têm texto marinho, com contraste de aproximadamente 5,24:1;
+o hover também mantém contraste acima de 4,5:1. Status de disponibilidade,
+sucesso, atenção e erro preservam suas cores semânticas. A marca RedeCamarão,
+os ícones de camarão, o conteúdo e a organização dos formulários são mantidos.
+
 - Ícones do Font Awesome Free, com o componente React oficial e importação individual dos símbolos usados. O componente compartilhado Icon preserva os tamanhos, cores e rótulos acessíveis das ações. Camarão identifica produtos; fazenda identifica produtores; água representa aquicultura; fotos, cópia e logout têm símbolos específicos. Os pacotes e estilos ficam no bundle local, sem CDN ou Kit. Referência: [integração oficial com React](https://docs.fontawesome.com/web/use-with/react/add-icons).
 
 A Feira do Agricultor foi usada como referência de organização: estilos próximos dos componentes, cores compartilhadas, conteúdo com largura máxima e grids que se adaptam à tela. A identidade azul da RedeCamarão permanece como base para as próximas telas.

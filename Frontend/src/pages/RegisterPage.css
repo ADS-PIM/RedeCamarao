@@ -7,27 +7,27 @@
 .registration-steps { display: flex; flex-direction: column; gap: 24px; padding: 0; margin: 36px 0; list-style: none; }
 .registration-steps li { display: flex; gap: 14px; align-items: center; min-width: 0; }
 .registration-steps li > div { min-width: 0; overflow-wrap: anywhere; }
-.step-number { flex: 0 0 34px; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 50%; background: white; color: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 650; }
-.is-active .step-number { background: var(--primary); color: white; }
+.step-number { flex: 0 0 34px; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 650; }
+.is-active .step-number { background: var(--primary); color: var(--on-dark); }
 .registration-steps strong { display: block; font-size: 15px; font-weight: 650; margin-bottom: 4px; }
 .registration-steps div > span { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.validation-note, .contact-note { display: flex; gap: 10px; align-items: flex-start; padding: 14px; border-radius: 8px; background: #eaf5f9; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.validation-note, .contact-note { display: flex; gap: 10px; align-items: flex-start; padding: 14px; border-radius: 8px; background: var(--surface-muted); color: var(--muted); font-size: 12px; line-height: 1.6; }
 .validation-note svg, .contact-note svg { flex-shrink: 0; width: 20px; height: 20px; }
-.registration-card { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 28px; min-width: 0; }
+.registration-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; min-width: 0; }
 .registration-card h2 { font-size: 20px; font-weight: 700; line-height: 1.4; letter-spacing: -.3px; }
 .registration-card h2:focus { outline: none; }
 .profile-options { border: 0; padding: 0; margin: 18px 0 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-width: 0; }
 .profile-option { position: relative; display: flex; align-items: center; gap: 12px; min-height: 96px; padding: 14px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; }
-.profile-option.is-selected { border: 2px solid #0780b0; background: #eaf5fa; padding: 13.5px; }
+.profile-option.is-selected { border: 2px solid var(--primary); background: var(--accent-soft); padding: 13.5px; }
 .profile-option:has(input:focus-visible) { outline: none; border-color: var(--field-focus-border); box-shadow: var(--field-focus-ring); }
 .profile-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.profile-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: #f5f8f9; display: flex; align-items: center; justify-content: center; color: var(--primary); }
+.profile-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--page-background); display: flex; align-items: center; justify-content: center; color: var(--primary); }
 .profile-icon svg { width: 24px; height: 24px; }
-.is-selected .profile-icon { background: var(--primary); color: white; }
+.is-selected .profile-icon { background: var(--primary); color: var(--on-dark); }
 .profile-copy { flex: 1; min-width: 0; }
 .profile-copy strong { display: block; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
 .profile-copy > span { display: block; font-size: 13px; line-height: 1.5; color: var(--muted); }
-.radio-indicator { flex: 0 0 20px; width: 20px; height: 20px; border: 1.5px solid var(--border); border-radius: 50%; background: white; }
+.radio-indicator { flex: 0 0 20px; width: 20px; height: 20px; border: 1.5px solid var(--border); border-radius: 50%; background: var(--surface); }
 .is-selected .radio-indicator { border: 6px solid var(--primary); }
 .access-section { border-top: 1px solid var(--border); padding-top: 20px; }
 .access-section h2 { margin-bottom: 20px; }
@@ -36,7 +36,7 @@
 .registration-card .form-field label { font-size: 13px; margin-bottom: 8px; }
 .registration-card .input-wrapper input { height: 46px; border-radius: 8px; }
 .registration-card .field-error, .registration-card .field-hint { font-size: 12px; }
-.state-select { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; color: #304956; background: white; font-size: 16px; }
+.state-select { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; color: var(--ink-soft); background: var(--surface); font-size: 16px; }
 .state-select.has-error { border: 2px solid var(--danger); background: #fff5f5; }
 .terms-field { margin-top: 22px; }
 .terms-line { display: flex; gap: 12px; align-items: flex-start; }

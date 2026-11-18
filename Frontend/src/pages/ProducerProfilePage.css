@@ -7,7 +7,7 @@
 .producer-profile-heading h1 { font-size: clamp(28px, 2.7vw, 40px); }
 .producer-profile-heading .producer-location { margin-top: 10px; font-size: 14px; }
 .producer-profile-main .producer-profile-actions .button { min-height: 46px; padding-inline: 18px; font-size: 14px; }
-.producer-profile-actions .producer-whatsapp-button:disabled { background: #14815e; color: white; border-color: #14815e; opacity: .75; }
+.producer-profile-actions .producer-whatsapp-button:disabled { background: #14815e; color: var(--white); border-color: #14815e; opacity: .75; }
 .producer-profile-container { grid-template-columns: minmax(260px, 28%) minmax(0, 1fr); gap: 28px; padding-block: 32px 48px; }
 .producer-profile-sidebar { gap: 20px; }
 .producer-profile-card { padding: 24px; border-radius: 14px; }
@@ -27,7 +27,7 @@
 .producer-offer-filter { min-height: 44px; padding: 10px 12px; font-size: 13px; border-radius: 24px; }
 .producer-profile-offer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .producer-profile-offer-grid .product-photo img { aspect-ratio: 2.1; }
-.producer-region { display: grid; justify-items: center; gap: 10px; margin-top: 18px; padding: 24px 12px; border-radius: 10px; background: #edf6f8; text-align: center; }
+.producer-region { display: grid; justify-items: center; gap: 10px; margin-top: 18px; padding: 24px 12px; border-radius: 10px; background: var(--surface-soft); text-align: center; }
 .producer-region > svg { width: 34px; height: 34px; color: var(--primary); }
 .producer-region strong { font-size: 14px; overflow-wrap: anywhere; }
 .producer-region > span { color: var(--muted); font-size: 12px; }
