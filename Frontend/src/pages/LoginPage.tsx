@@ -94,7 +94,15 @@ export function LoginPage({ session, restoring, onSessionChange }: Props) {
             <div className="login-success">
               <span className="login-success-icon"><Icon name="check" /></span>
               <h2 id="login-title" ref={resultRef} tabIndex={-1}>Você está conectado!</h2>
-              <p>Seu acesso à RedeCamarão como {session.userType === 'PRODUCER' ? 'produtor' : 'comprador'} foi confirmado.</p>
+              <p>
+                Seu acesso à RedeCamarão como {
+                  session.userType === 'PRODUCER'
+                    ? 'produtor'
+                    : session.userType === 'ADMIN'
+                      ? 'administrador'
+                      : 'comprador'
+                } foi confirmado.
+              </p>
               <button className="button button-secondary" type="button" disabled={submitting} onClick={logout}>{submitting ? 'Saindo...' : 'Sair da conta'}</button>
             </div>
           ) : (
