@@ -74,7 +74,7 @@ export class AdminController {
 
             const admin = await this.searchByEmailAdmin.execute(adminLoginDTO.email);
 
-            if (!admin  || !admin.password  || !(await PasswordCrypto.verifyPassword(adminLoginDTO.password, admin.password))) {
+            if (!admin || !admin.active || !admin.password || !(await PasswordCrypto.verifyPassword(adminLoginDTO.password, admin.password))) {
                 return res.status(401).json({error: 'Invalid email or password'});
             }
 
@@ -95,7 +95,7 @@ export class AdminController {
             await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, userId: admin.id, expiresAt: refreshExpiresAt });
 
             res.cookie('refreshToken', refreshToken, refreshCookieOptions);
-            return res.status(200).json({ accessToken, userId: admin.id });
+            return res.status(200).json({ accessToken, userId: admin.id, userType: 'ADMIN', role: admin.role });
         }catch (error: any) {
             console.error('Error during login:', error);
             return res.status(500).json({ error: error.message || 'Error during login' });
@@ -138,7 +138,7 @@ export class AdminController {
 
 
             res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
-            return res.status(200).json({ accessToken: newAccessToken, userId: adminId });
+            return res.status(200).json({ accessToken: newAccessToken, userId: adminId, userType: 'ADMIN', role: payload.role });
         } catch (error: any) {
             console.error('Error during token refresh:', error);
             return res.status(500).json({ error: error.message || 'Error during token refresh' });
