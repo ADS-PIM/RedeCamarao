@@ -20,8 +20,8 @@ export function ProfilePhotoEditor({ src, onSave, fallback = 'farm' }: {
     if (input.current) input.current.value = ''
     if (!file || busy) return
     setError(''); setSuccess('')
-    if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 3 * 1024 * 1024) {
-      setError('Escolha uma foto JPG ou PNG de até 3 MB.'); return
+    if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 10 * 1024 * 1024) {
+      setError('Escolha uma foto JPG ou PNG de até 10 MB.'); return
     }
     setReading(true)
     try {
@@ -46,7 +46,7 @@ export function ProfilePhotoEditor({ src, onSave, fallback = 'farm' }: {
   }
   return <div className="profile-photo-editor" role="group" aria-label="Foto de perfil">
     <Avatar className="account-photo-avatar" src={preview} alt={draft === undefined ? 'Foto atual de perfil' : 'Prévia da foto de perfil'} fallback={fallback} />
-    <div className="profile-photo-content"><h3>Foto de perfil</h3><p>JPG ou PNG de até 3 MB. A imagem será exibida em formato circular.</p>
+    <div className="profile-photo-content"><h3>Foto de perfil</h3><p>JPG ou PNG de até 10 MB. A imagem será exibida em formato circular.</p>
       <div className="profile-photo-actions"><button type="button" className="button button-secondary" disabled={busy} onClick={() => input.current?.click()}><Icon name="images" />{reading ? 'Lendo foto...' : preview ? 'Trocar foto' : 'Adicionar foto'}</button>
         {preview && <button type="button" className="profile-photo-remove" disabled={busy} onClick={() => { setDraft(null); setError(''); setSuccess('') }}><Icon name="trash" />Remover foto</button>}
         {draft !== undefined && <><button type="button" className="button button-primary" disabled={busy} onClick={() => void save()}>{saving ? 'Salvando...' : 'Salvar foto'}</button><button type="button" className="profile-photo-cancel" disabled={busy} onClick={() => { setDraft(undefined); setError('') }}>Cancelar</button></>}

@@ -9,7 +9,7 @@ repositório. As credenciais ficam exclusivamente no backend. Reinicie o servido
 após alterá-las. O arquivo `.env.example` contém os nomes das variáveis.
 
 O envio usa o SDK oficial com `upload_stream`, assinatura no servidor e
-`resource_type: image`. Somente JPG/PNG de até 3 MB são aceitos. As imagens ficam
+`resource_type: image`. Somente JPG/PNG de até 10 MB são aceitos. As imagens ficam
 em `redecamarao/offers/<uuid>` ou `redecamarao/profiles/<uuid>`; o banco PostgreSQL
 armazena a URL HTTPS (`secure_url`). Não é necessário alterar o schema do banco.
 O identificador de exclusão é recuperado apenas das URLs geradas pela aplicação,
@@ -24,7 +24,7 @@ na conta configurada. Referência: [Upload API do Cloudinary](https://cloudinary
 
 - Foto existente: `{ id, description }`. O ID precisa pertencer à oferta.
 - Foto nova: `{ data, description }`, onde `data` é uma data URL base64 JPG/PNG
-  de até 3 MB decodificados. O backend verifica tamanho e assinatura do formato.
+  de até 10 MB decodificados. O backend verifica tamanho e assinatura do formato.
 
 O primeiro item será a capa. O salvamento confirma a propriedade da oferta,
 grava os dados e substitui os registros da galeria na mesma transação. Os IDs
@@ -45,7 +45,7 @@ imagens retiradas da galeria são removidas se não estiverem mais em uso.
 
 O frontend continua enviando JSON com data URLs base64 e recebendo `imageUrl`,
 sem necessidade de multipart ou upload direto pelo navegador. As rotas mantêm
-os limites de cinco fotos e 3 MB por foto. O tempo de espera do frontend para
+os limites de cinco fotos e 10 MB por foto. O tempo de espera do frontend para
 salvar fotos é de 60 segundos; cada upload ao provedor tem timeout de 20 segundos.
 
 URLs antigas em `/uploads/...` continuam sendo servidas pelo backend quando os
@@ -55,7 +55,7 @@ arquivos existem. Não há migração automática ou exclusão desses arquivos l
 ## Foto de perfil
 
 `PUT /users/me/photo` exige o token de usuário e recebe `{ "data": "data:image/png;base64,..." }`
-ou `{ "data": null }` para remover a foto. Aceita JPG/PNG de até 3 MB. O usuário
+ou `{ "data": null }` para remover a foto. Aceita JPG/PNG de até 10 MB. O usuário
 vem exclusivamente do token; compradores e produtores podem alterar a própria
 foto. A resposta é `{ "profilePicture": "https://res.cloudinary.com/..." }` ou
 `{ "profilePicture": null }`. A foto antiga só é liberada após o commit.

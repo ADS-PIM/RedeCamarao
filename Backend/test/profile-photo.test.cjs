@@ -62,8 +62,8 @@ test('requires authentication and rejects attempts to choose another account', a
   assert.equal((await save({ data: png, userId: 'other-user' })).status, 400);
   assert.equal(calls.length, 0); assert.equal(written.length, 0);
 });
-test('validates image signature, format and 3 MB limit before opening a transaction', async () => {
-  for (const body of [{}, [], { data: 12 }, { data: '' }, { data: 'https://example.test/photo.png' }, { data: 'data:image/svg+xml;base64,PHN2Zy8+' }, { data: 'data:image/png;base64,PHNjcmlwdD4=' }, { data: 'data:image/png;base64,' + Buffer.alloc(3 * 1024 * 1024 + 1).toString('base64') }]) {
+test('validates image signature, format and 10 MB limit before opening a transaction', async () => {
+  for (const body of [{}, [], { data: 12 }, { data: '' }, { data: 'https://example.test/photo.png' }, { data: 'data:image/svg+xml;base64,PHN2Zy8+' }, { data: 'data:image/png;base64,PHNjcmlwdD4=' }, { data: 'data:image/png;base64,' + Buffer.alloc(10 * 1024 * 1024 + 1).toString('base64') }]) {
     assert.equal((await save(body)).status, 400);
   }
   assert.equal(calls.length, 0); assert.equal(written.length, 0);
@@ -110,6 +110,8 @@ test('cleanup leaves legacy and external URLs intact', async () => {
   }
 });
 test('photo upload accepts bodies larger than the standard JSON limit', async () => {
-  const data = 'data:image/png;base64,' + Buffer.concat([Buffer.from(png.split(',')[1], 'base64'), Buffer.alloc(150 * 1024)]).toString('base64');
+  const buffer = Buffer.alloc(10 * 1024 * 1024);
+  Buffer.from(png.split(',')[1], 'base64').copy(buffer);
+  const data = 'data:image/png;base64,' + buffer.toString('base64');
   assert.equal((await save({ data })).status, 200); assert.equal(written.length, 1);
 });

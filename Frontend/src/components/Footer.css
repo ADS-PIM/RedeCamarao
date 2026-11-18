@@ -1,14 +1,16 @@
-.site-footer { background: var(--white); border-top: 1px solid var(--border); }
-.footer-inner { min-height: 94px; display: flex; align-items: center; justify-content: space-between; gap: 30px; }
-.footer-brand { font-size: 18px; font-weight: 700; color: var(--brand-dark); white-space: nowrap; }
-.footer-inner p, .footer-inner nav { font-size: 14px; color: var(--muted); line-height: 1.6; }
-.footer-inner nav { display: flex; gap: 9px; white-space: nowrap; }
-.footer-inner a:hover { color: var(--primary); }
+.site-footer { width: 100%; margin-top: auto; flex-shrink: 0; background: var(--white); border-top: 1px solid var(--border); }
+.footer-inner { min-height: 104px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'brand description links'; align-items: center; gap: 16px 40px; padding-block: 20px; }
+.footer-brand { grid-area: brand; justify-self: start; display: inline-flex; align-items: center; min-height: 44px; font-size: 20px; font-weight: 400; letter-spacing: -.6px; color: var(--brand-dark); white-space: nowrap; }
+.footer-brand strong { font-weight: 750; }
+.footer-description { grid-area: description; justify-self: center; min-width: 0; max-width: 680px; font-size: 14px; color: var(--muted); line-height: 1.7; overflow-wrap: anywhere; }
+.footer-inner nav { grid-area: links; min-width: 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0; padding: 0; list-style: none; }
+.footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.footer-inner a:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 1000px) {
-  .footer-inner { flex-wrap: wrap; padding-block: 26px; gap: 16px 32px; }
-  .footer-inner p { order: 3; flex-basis: 100%; }
+  .footer-inner { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'brand links' 'description description'; gap: 8px 24px; }
+  .footer-description { justify-self: start; }
 }
-@media (max-width: 480px) {
-  .footer-inner { flex-direction: column; align-items: flex-start; }
-  .footer-inner p { order: 0; }
+@media (max-width: 600px) {
+  .footer-inner { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'brand' 'description' 'links'; gap: 8px; padding-block: 20px; }
 }

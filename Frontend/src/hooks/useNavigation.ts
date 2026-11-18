@@ -87,12 +87,13 @@ export function useNavigation() {
     return stop
   }, [navigation])
 
-  const navigate = useCallback((href: string) => {
+  const navigate = useCallback((href: string, options?: { replace?: boolean }) => {
     const destination = new URL(href, window.location.href)
     positions.current.set(current.current.key, { left: window.scrollX, top: window.scrollY })
     if (destination.href === window.location.href) { revealDestination(destination, true); return }
     const key = newEntryKey()
-    window.history.pushState({ ...window.history.state, [entryKey]: key }, '', destination)
+    if (options?.replace) window.history.replaceState({ ...window.history.state, [entryKey]: key }, '', destination)
+    else window.history.pushState({ ...window.history.state, [entryKey]: key }, '', destination)
     setNavigation({ href: destination.href, key, kind: 'push' })
   }, [])
 
