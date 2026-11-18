@@ -27,10 +27,9 @@ export function editOfferIdFromPath(pathname: string) {
 }
 export function initialEditorValues(offer: ManagedOffer): OfferEditorValues {
   const location = producerLocation(offer.location)
-  const number = (value: number) => String(value > 0 && value < 1 ? Math.round(value * 1000) : value).replace('.', ',')
-  const unit = (value: number): WeightUnit => value > 0 && value < 1 ? 'g' : 'kg'
+  const number = (value: number) => String(value).replace('.', ',')
   return { title: offer.title, description: offer.description, type: offer.type ?? '', size: offer.size,
-    priceUnit: 'kg', weightUnit: unit(offer.weight), minimumQuantityUnit: unit(offer.minimumQuantity), maximumQuantityUnit: unit(offer.maximumQuantity),
+    priceUnit: 'kg', weightUnit: 'kg', minimumQuantityUnit: 'kg', maximumQuantityUnit: 'kg',
     price: offer.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), weight: number(offer.weight), minimumQuantity: number(offer.minimumQuantity), maximumQuantity: number(offer.maximumQuantity),
     city: location.city, state: location.state ?? '', startDate: offer.startDate.slice(0, 10), endDate: offer.endDate.slice(0, 10), available: offer.status === 'ACTIVE' }
 }
