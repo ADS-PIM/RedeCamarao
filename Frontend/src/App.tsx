@@ -44,6 +44,12 @@ function App() {
   const isNewOffer = ['/painel/ofertas/nova', '/painel/ofertas/nova/'].includes(pathname)
   const isMyOffers = ['/painel/ofertas', '/painel/ofertas/'].includes(pathname)
 
+  useEffect(() => {
+    if (isLogin && session && !restoring) {
+      navigate(session.userType === 'ADMIN' ? '/admin' : '/painel', { replace: true })
+    }
+  }, [isLogin, session, restoring, navigate])
+
   async function handleLogout() {
     if (logoutPending.current) return
     logoutPending.current = true; setLoggingOut(true)
@@ -98,7 +104,7 @@ function App() {
             </section>
           )}
         </main>
-      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? <LoginPage session={session} restoring={restoring} onSessionChange={setSession} /> : isRegister ? <RegisterPage /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
+      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? (session ? null : <LoginPage restoring={restoring} onSessionChange={setSession} />) : isRegister ? <RegisterPage /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

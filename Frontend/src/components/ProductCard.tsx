@@ -1,14 +1,14 @@
 import type { Offer } from '../data/marketplace'
 import { formatPrice } from '../data/marketplace'
-import { offerHref, offerIllustration } from '../data/offerDetail'
+import { offerHref } from '../data/offerDetail'
 import { Icon } from './Icon'
+import { Photo } from './Photo'
 
-export function ProductCard({ offer, producerName, photo, preview = false, available = true }: { offer: Offer; producerName?: string; photo?: { imageUrl: string; description: string }; preview?: boolean; available?: boolean }) {
+export function ProductCard({ offer, producerName, photo, preview = false, available = true }: { offer: Offer & { coverPhoto?: string | null }; producerName?: string; photo?: { imageUrl: string; description: string }; preview?: boolean; available?: boolean }) {
   return (
     <article className="product-card">
       <figure className="product-photo">
-        <img src={photo?.imageUrl ?? offerIllustration(offer)} alt={photo?.description || (photo ? 'Foto da oferta' : 'Foto ilustrativa de camarões; não representa este lote')} width="1200" height="675" loading="lazy" decoding="async" />
-        {!photo && <figcaption>Foto ilustrativa</figcaption>}
+        <Photo src={photo?.imageUrl ?? offer.coverPhoto} alt={photo?.description || `Foto da oferta: ${offer.title}`} />
       </figure>
       <div className="product-card-body">
         <div className="product-labels">

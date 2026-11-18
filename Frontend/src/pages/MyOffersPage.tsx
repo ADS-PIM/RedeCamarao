@@ -3,7 +3,8 @@ import { Icon } from '../components/Icon'
 import { Dialog } from '../components/Dialog'
 import { Pagination } from '../components/Pagination'
 import { formatPrice } from '../data/marketplace'
-import { offerHref, offerIllustration } from '../data/offerDetail'
+import { offerHref } from '../data/offerDetail'
+import { Photo } from '../components/Photo'
 import { editOfferHref, newOfferHref } from '../data/offerEditor'
 import { canActivateOffer, isPublishedOffer, offerStatusNames, selectManagedOffers } from '../data/account'
 import type { ManagedOfferTab, ManagedOfferSort } from '../data/account'
@@ -15,9 +16,7 @@ import './AccountPage.css'
 import './MyOffersPage.css'
 
 function OfferThumb({ offer }: { offer: ManagedOffer }) {
-  const [failed, setFailed] = useState(false)
-  const real = offer.coverPhoto && !failed
-  return <span className="account-offer-image"><img src={real ? offer.coverPhoto! : offerIllustration(offer)} alt="" width="72" height="64" loading="lazy" onError={() => setFailed(true)} />{!real && <span>Ilustrativa</span>}</span>
+  return <span className="account-offer-image"><Photo src={offer.coverPhoto} alt={`Foto da oferta: ${offer.title}`} /></span>
 }
 function SelectAll({ checked, partial, onChange }: { checked: boolean; partial: boolean; onChange: () => void }) {
   const ref = useRef<HTMLInputElement>(null)

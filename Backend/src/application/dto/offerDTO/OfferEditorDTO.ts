@@ -47,11 +47,13 @@ export function parseOfferEditor(body: unknown): { offer: OfferEditorData; photo
 }
 
 export function decodeEditorImage(data: string) {
+    const maximumDataLength = 'data:image/jpeg;base64,'.length + 4 * Math.ceil(10 * 1024 * 1024 / 3);
+    if (data.length > maximumDataLength) return invalid('Use fotos JPG ou PNG de até 10 MB');
     const match = data.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/]+={0,2})$/);
-    if (!match || data.length > 4.1 * 1024 * 1024) return invalid('Use fotos JPG ou PNG de até 3 MB');
+    if (!match) return invalid('Use fotos JPG ou PNG de até 10 MB');
     const buffer = Buffer.from(match[2], 'base64');
     const png = buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
     const jpeg = buffer[0] === 255 && buffer[1] === 216 && buffer[2] === 255 && buffer.at(-2) === 255 && buffer.at(-1) === 217;
-    if (!buffer.length || buffer.length > 3 * 1024 * 1024 || (match[1] === 'png' ? !png : !jpeg)) return invalid('O arquivo deve ser uma imagem JPG ou PNG válida de até 3 MB');
+    if (!buffer.length || buffer.length > 10 * 1024 * 1024 || (match[1] === 'png' ? !png : !jpeg)) return invalid('O arquivo deve ser uma imagem JPG ou PNG válida de até 10 MB');
     return { buffer, extension: match[1] === 'png' ? 'png' : 'jpg' };
 }
