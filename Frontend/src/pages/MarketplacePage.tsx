@@ -71,7 +71,6 @@ export function MarketplacePage() {
             </form>
           </div>
           <aside className="how-card" id="como-funciona" aria-labelledby="how-title">
-            <img className="farm-image" src="/images/shrimp-farm.jpg" alt="Vista aérea de viveiros de camarão próximos ao litoral" width="1200" height="675" fetchPriority="high" />
             <div className="how-card-content">
               <h2 id="how-title">Do produtor para sua negociação</h2>
               <ol className="how-steps">

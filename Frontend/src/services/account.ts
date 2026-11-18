@@ -19,13 +19,13 @@ export type ProfileUpdate = Pick<UserProfile, 'name' | 'email' | 'description' |
 export type NewOffer = Omit<Offer, 'id'>
 export type OfferUpdate = Partial<Omit<ManagedOffer, 'id' | 'status'>> & { status?: OfferStatus }
 
-async function request(path: string, token: string, method = 'GET', body?: object, baseUrl = apiBaseUrl): Promise<Response> {
+async function request(path: string, token: string, method = 'GET', body?: object, baseUrl = apiBaseUrl, timeout = 15000): Promise<Response> {
   if (!baseUrl) throw new Error('O acesso à sua conta está temporariamente indisponível.')
   try {
     return await fetch(`${baseUrl.replace(/\/+$/, '')}${path}`, {
       method,
       headers: { Authorization: `Bearer ${token}`, ...(body && { 'Content-Type': 'application/json' }) },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(timeout),
       ...(body && { body: JSON.stringify(body) }),
     })
   } catch {
@@ -85,7 +85,7 @@ export async function updateMyProfile(token: string, data: ProfileUpdate, baseUr
 }
 
 export async function saveProfilePhoto(token: string, data: string | null, baseUrl = apiBaseUrl): Promise<string | null> {
-  const response = await request('/users/me/photo', token, 'PUT', { data }, baseUrl)
+  const response = await request('/users/me/photo', token, 'PUT', { data }, baseUrl, 60000)
   if (!response.ok) {
     if (response.status === 413) throw new Error('Escolha uma foto JPG ou PNG de até 3 MB.')
     if (response.status === 400) throw new Error('A foto não é válida. Use JPG ou PNG de até 3 MB.')
@@ -132,7 +132,7 @@ function readEditorPhotos(data: unknown): EditorPhoto[] {
 }
 
 export async function saveEditedOffer(token: string, id: string, data: ReturnType<typeof editorPayload>, baseUrl = apiBaseUrl): Promise<EditorPhoto[]> {
-  const response = await request(`/offer/${encodeURIComponent(id)}/editor`, token, 'PUT', data, baseUrl)
+  const response = await request(`/offer/${encodeURIComponent(id)}/editor`, token, 'PUT', data, baseUrl, 60000)
   if (!response.ok) {
     if (response.status === 413) throw new Error('As fotos excedem o limite de envio. Use até 5 imagens de 3 MB cada.')
     if (response.status === 400) {
@@ -146,7 +146,7 @@ export async function saveEditedOffer(token: string, id: string, data: ReturnTyp
 }
 
 export async function createOfferWithPhotos(token: string, data: ReturnType<typeof editorPayload>, baseUrl = apiBaseUrl): Promise<{ id: string; photos: EditorPhoto[] }> {
-  const response = await request('/offer/editor', token, 'POST', data, baseUrl)
+  const response = await request('/offer/editor', token, 'POST', data, baseUrl, 60000)
   if (!response.ok) {
     if (response.status === 413) throw new Error('Use até 5 fotos de 3 MB cada.')
     if (response.status === 400) {

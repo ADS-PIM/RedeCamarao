@@ -2,6 +2,7 @@ import type { QueryResultRow } from 'pg';
 import { OfferPhotoDAOInterface, OfferPhotoUpdateData } from '../../../domain/interfaces/offerPhoto/OfferPhotoDAOInterface';
 import { OfferPhoto, propsOfferPhoto } from '../../../domain/model/offerPhoto';
 import { connection } from '../../../util/connection';
+import { imageStorage } from '../../../service/imageStorage';
 
 export class OfferPhotoDAOPostgres implements OfferPhotoDAOInterface {
     public async create(photo: OfferPhoto, userId: string): Promise<boolean> {
@@ -41,21 +42,24 @@ export class OfferPhotoDAOPostgres implements OfferPhotoDAOInterface {
         if (fields.length === 0) return false;
 
         const result = await connection.query(
-            `UPDATE "offerPhotos" AS photo SET ${fields.join(', ')} FROM offers
-            WHERE offers.id = photo."offerId"
+            `UPDATE "offerPhotos" AS photo SET ${fields.join(', ')} FROM offers, "offerPhotos" AS previous
+            WHERE previous.id = photo.id AND offers.id = photo."offerId"
                 AND photo.id = $${values.length + 1} AND photo."offerId" = $${values.length + 2}
-                AND offers."userId" = $${values.length + 3}`,
+                AND offers."userId" = $${values.length + 3} RETURNING previous."imageUrl"`,
             [...values, id, offerId, userId]
         );
+        if (data.imageUrl !== undefined) await imageStorage.removeUnused((result.rows ?? []).map(row => row.imageUrl));
         return (result.rowCount ?? 0) > 0;
     }
 
     public async delete(id: string, offerId: string, userId: string): Promise<boolean> {
         const result = await connection.query(
             `DELETE FROM "offerPhotos" AS photo USING offers
-            WHERE offers.id = photo."offerId" AND photo.id = $1 AND photo."offerId" = $2 AND offers."userId" = $3`,
+            WHERE offers.id = photo."offerId" AND photo.id = $1 AND photo."offerId" = $2 AND offers."userId" = $3
+            RETURNING photo."imageUrl"`,
             [id, offerId, userId]
         );
+        await imageStorage.removeUnused((result.rows ?? []).map(row => row.imageUrl));
         return (result.rowCount ?? 0) > 0;
     }
 }

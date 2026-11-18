@@ -1,5 +1,20 @@
 # Fotos das ofertas
 
+## Configuração do Cloudinary
+
+Configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`
+no arquivo `Backend/.env` e no ambiente de hospedagem do backend. O arquivo é
+carregado por caminho absoluto, inclusive quando o servidor inicia na raiz do
+repositório. As credenciais ficam exclusivamente no backend. Reinicie o servidor
+após alterá-las. O arquivo `.env.example` contém os nomes das variáveis.
+
+O envio usa o SDK oficial com `upload_stream`, assinatura no servidor e
+`resource_type: image`. Somente JPG/PNG de até 3 MB são aceitos. As imagens ficam
+em `redecamarao/offers/<uuid>` ou `redecamarao/profiles/<uuid>`; o banco PostgreSQL
+armazena a URL HTTPS (`secure_url`). Não é necessário alterar o schema do banco.
+O identificador de exclusão é recuperado apenas das URLs geradas pela aplicação,
+na conta configurada. Referência: [Upload API do Cloudinary](https://cloudinary.com/documentation/image_upload_api_reference).
+
 ## Edição conjunta da oferta e das fotos
 
 `POST /offer/editor` cadastra e `PUT /offer/:id/editor` atualiza. Ambos exigem
@@ -22,23 +37,47 @@ Fotos existentes não podem ser vinculadas a uma oferta nova. O status `DRAFT`
 é persistido como `RASCUNHO`, incluído pela migration específica do enum. Os
 campos obrigatórios do lote são validados também para rascunhos.
 
-Arquivos novos ficam em `Backend/uploads/offers`, fora do Git, e são servidos
-em `/uploads/offers/...`. A origem da URL vem de `PUBLIC_API_URL`, quando
-configurada, ou da origem da requisição ao backend. Em hospedagem, esse diretório
-precisa de armazenamento persistente e backup; a configuração atual atende ao
-backend local. Nenhum provedor externo de imagens é usado.
+Fotos novas são enviadas em paralelo ao Cloudinary, sem gravar arquivos locais.
+Todos os envios terminam antes da confirmação ou reversão da transação. Uma
+falha no envio ou na gravação reverte os registros e tenta remover os novos
+arquivos da tentativa; fotos anteriores são preservadas. Depois do commit,
+imagens retiradas da galeria são removidas se não estiverem mais em uso.
 
-Falhas antes do commit revertem os registros e removem os arquivos novos da
-tentativa. Arquivos antigos de fotos retiradas da galeria permanecem no disco,
-como ocorre com as URLs no CRUD abaixo; a exclusão de registros não faz coleta
-de arquivos. Não há requisições para baixar URLs externas.
+O frontend continua enviando JSON com data URLs base64 e recebendo `imageUrl`,
+sem necessidade de multipart ou upload direto pelo navegador. As rotas mantêm
+os limites de cinco fotos e 3 MB por foto. O tempo de espera do frontend para
+salvar fotos é de 60 segundos; cada upload ao provedor tem timeout de 20 segundos.
+
+URLs antigas em `/uploads/...` continuam sendo servidas pelo backend quando os
+arquivos existem. Não há migração automática ou exclusão desses arquivos locais.
+`PUBLIC_API_URL` não determina as URLs das novas imagens.
+
+## Foto de perfil
+
+`PUT /users/me/photo` exige o token de usuário e recebe `{ "data": "data:image/png;base64,..." }`
+ou `{ "data": null }` para remover a foto. Aceita JPG/PNG de até 3 MB. O usuário
+vem exclusivamente do token; compradores e produtores podem alterar a própria
+foto. A resposta é `{ "profilePicture": "https://res.cloudinary.com/..." }` ou
+`{ "profilePicture": null }`. A foto antiga só é liberada após o commit.
+
+## Limpeza de imagens
+
+Substituir ou excluir uma foto, excluir uma oferta e excluir a conta também
+liberam as imagens geradas por esta integração. A limpeza consulta referências
+em `offerPhotos` e `users.profilePicture` para preservar URLs ainda em uso. URLs
+externas ou de outra conta Cloudinary são preservadas. O pedido de exclusão
+invalida as cópias no CDN.
+
+Falhas de limpeza são registradas com mensagem genérica e não desfazem uma
+alteração já confirmada. Não há fila de retentativas; se o provedor estiver
+indisponível durante a limpeza, podem restar imagens órfãs no Cloudinary.
 
 Validação sem banco e arquivos reais: `npm.cmd run test:offer-editor`.
 
 ## CRUD por foto
 
 CRUD da tabela `offerPhotos`, seguindo o fluxo de rotas Express, controller,
-DTOs, casos de uso, interface de DAO e persistência MySQL do backend.
+DTOs, casos de uso, interface de DAO e persistência PostgreSQL do backend.
 
 Todas as rotas exigem `Authorization: Bearer <accessToken>` de usuário.
 Somente o dono da oferta pode cadastrar, atualizar ou excluir suas fotos.
@@ -158,8 +197,9 @@ Resposta `200`:
 { "message": "Foto da oferta excluída com sucesso" }
 ```
 
-Exclui somente o registro da foto indicada. A oferta e as demais fotos são
-preservadas. O arquivo hospedado no endereço `imageUrl` não é excluído.
+Exclui o registro da foto indicada. A oferta e as demais fotos são preservadas.
+Imagens geradas por esta integração são liberadas se a URL não tiver mais
+referências no banco; imagens externas e arquivos locais são preservados.
 Uma nova tentativa de excluir a mesma foto retorna `404`.
 
 ### Exclusão da oferta ou do usuário
@@ -168,7 +208,9 @@ Uma nova tentativa de excluir a mesma foto retorna `404`.
 todas as suas fotos. Ao excluir o usuário (`DELETE /users/me`), o banco remove
 suas ofertas e todas as respectivas fotos. As duas cascatas também valem para
 exclusões SQL diretas, preservando os dados de outros usuários. Elas excluem
-os registros em `offerPhotos`; os arquivos hospedados nas URLs não são removidos.
+os registros em `offerPhotos`. Quando a exclusão acontece pela API, as URLs são
+capturadas antes da cascata para a limpeza das imagens sem uso no Cloudinary.
+Exclusões SQL diretas não executam essa limpeza.
 
 ## Erros e persistência
 
@@ -179,6 +221,7 @@ os registros em `offerPhotos`; os arquivos hospedados nas URLs não são removid
 - `409`: a escrita deixou de corresponder à foto, à oferta ou ao dono validado
   na leitura; recarregue os dados antes de tentar novamente.
 - `500`: falha inesperada, com mensagem genérica sem detalhes do banco.
+- `503`: falha de configuração ou envio ao Cloudinary nas rotas de upload.
 
 Os erros de negócio usam `ApplicationError.code`, incluindo
 `OFFER_PHOTO_NOT_FOUND` (`404`) e `OFFER_PHOTO_WRITE_CONFLICT` (`409`).
@@ -186,12 +229,10 @@ Todas as consultas usam parâmetros. A criação verifica o dono em
 `INSERT ... SELECT`; a atualização e a exclusão também verificam oferta e dono
 na própria escrita SQL, protegendo a autorização entre leitura e gravação.
 
-O schema atual já contempla os quatro campos. Em bancos antigos, a migration
-existente `20261101120000-align-marketplace-schema.js` adiciona `description`
-com padrão `""`. A migration `20261106120000-cascade-user-offer-deletion.js`
-habilita a cascata de usuários para ofertas; a cascata de ofertas para fotos
-já existe desde a migration inicial. O banco precisa ter as migrations
-aplicadas. Para aplicá-las, execute
+O schema PostgreSQL atual já contempla os campos de fotos, `description` com
+padrão `""`, `users.profilePicture` e as cascatas de exclusão. A integração
+Cloudinary não exige novas colunas. O banco precisa ter a migration inicial
+`20261115120000-initialize-postgres.js` aplicada. Para aplicá-la, execute
 `npm.cmd run db:migrate` a partir de `Backend` no ambiente desejado.
 
 ## Validação automatizada
@@ -200,11 +241,16 @@ Execute em `Backend`:
 
 ```powershell
 npm.cmd run build
-npm.cmd run test:offer-photos
-npm.cmd run test:application-errors
+npm.cmd run test:cloudinary
 ```
 
 Os testes exercitam o app Express real, autenticação JWT, DTOs, casos de uso e
-DAOs com consultas MySQL simuladas. Cobrem o ciclo CRUD, isolamento entre ofertas,
-permissões, limites dos campos, erros, consultas parametrizadas e conflitos
-entre a leitura e a escrita. Não validam uma instância MySQL real nem aplicam migrations.
+DAOs com consultas PostgreSQL e SDK Cloudinary simulados. Cobrem uploads por
+stream, URLs HTTPS, autenticação, permissões, limites, limpeza após o commit,
+rollback de uploads paralelos, preservação de imagens compartilhadas e falhas
+do provedor. Não acessam o banco nem a conta Cloudinary reais.
+
+Para validar o banco real em um schema temporário isolado, execute
+`$env:POSTGRES_INTEGRATION='1'; npm.cmd run test:postgres`. Esse teste aplica e
+reverte a migration no schema de teste, que é removido ao final; não envia
+imagens ao Cloudinary.

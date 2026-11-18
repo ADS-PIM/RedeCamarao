@@ -3,6 +3,7 @@ import { OfferDAOInterface, OfferUpdateData } from '../../../domain/interfaces/o
 import { Offer, OfferStatus } from '../../../domain/model/offer';
 import type { propsOffer } from '../../../domain/model/offer';
 import type { QueryResultRow } from 'pg';
+import { imageStorage } from '../../../service/imageStorage';
 
 const databaseOfferStatuses: Record<OfferStatus, string> = {
     ACTIVE: 'ATIVO', INACTIVE: 'PAUSADO', SOLD_OUT: 'VENDIDO', CANCELLED: 'CANCELADO', EXPIRED: 'EXPIRADO', DRAFT: 'RASCUNHO'
@@ -91,10 +92,13 @@ export class OfferDAOPostgres implements OfferDAOInterface {
     }
 
     public async delete(id: string, userId: string): Promise<boolean> {
-        // Ownership is checked again in the write; the FK removes the offer's photos.
+        // Capture URLs in the same snapshot before the FK cascades to the photos.
         const result = await connection.query(
-            'DELETE FROM offers WHERE id = $1 AND "userId" = $2', [id, userId]
+            `WITH images AS MATERIALIZED (SELECT "imageUrl" FROM "offerPhotos" WHERE "offerId" = $1),
+                deleted AS (DELETE FROM offers WHERE id = $1 AND "userId" = $2 RETURNING id)
+             SELECT deleted.id, ARRAY(SELECT "imageUrl" FROM images) AS images FROM deleted`, [id, userId]
         );
+        await imageStorage.removeUnused((result.rows ?? []).flatMap(row => row.images ?? []));
         return (result.rowCount ?? 0) > 0;
     }
 

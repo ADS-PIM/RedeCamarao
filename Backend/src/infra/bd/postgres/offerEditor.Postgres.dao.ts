@@ -1,16 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile, unlink } from 'node:fs/promises';
-import path from 'node:path';
 import type { QueryResultRow } from 'pg';
 import { connection } from '../../../util/connection';
 import { ApplicationError } from '../../../application/errors/ApplicationError';
 import { decodeEditorImage } from '../../../application/dto/offerDTO/OfferEditorDTO';
 import type { EditorPhoto, OfferEditorData } from '../../../application/dto/offerDTO/OfferEditorDTO';
+import { imageStorage } from '../../../service/imageStorage';
 
 export class OfferEditorDAOPostgres {
-    async save(id: string, userId: string, data: OfferEditorData, photos: EditorPhoto[], origin: string, creating = false) {
+    async save(id: string, userId: string, data: OfferEditorData, photos: EditorPhoto[], creating = false) {
         const db = await connection.connect();
-        const files: string[] = [];
+        const uploadedIds: string[] = [];
+        const removedUrls: string[] = [];
+        let savedPhotos: { id: string; offerId: string; imageUrl: string; description: string }[];
         try {
             await db.query('BEGIN');
             if (creating) {
@@ -25,20 +26,19 @@ export class OfferEditorDAOPostgres {
             for (const photo of photos) {
                 if (photo.id && !existing.some(row => row.id === photo.id)) throw new ApplicationError('INVALID_DATA', 'Uma das fotos não pertence a esta oferta. Recarregue a página.');
             }
-            const gallery: { imageUrl: string; description: string }[] = [];
-            for (const photo of photos) {
-                if (photo.id) gallery.push({ imageUrl: existing.find(row => row.id === photo.id)!.imageUrl, description: photo.description });
-                else {
-                    const { buffer, extension } = decodeEditorImage(photo.data!);
-                    const directory = path.resolve(__dirname, '../../../../uploads/offers');
-                    await mkdir(directory, { recursive: true });
-                    const filename = `${randomUUID()}.${extension}`;
-                    const target = path.join(directory, filename);
-                    files.push(target);
-                    await writeFile(target, buffer, { flag: 'wx' });
-                    gallery.push({ imageUrl: `${origin}/uploads/offers/${filename}`, description: photo.description });
-                }
-            }
+            // Wait for every upload to settle before rollback, including parallel successes.
+            const results = await Promise.allSettled(photos.map(async photo => {
+                if (photo.id) return { imageUrl: existing.find(row => row.id === photo.id)!.imageUrl as string, description: photo.description };
+                const { buffer } = decodeEditorImage(photo.data!);
+                const image = await imageStorage.upload(buffer, 'offers');
+                uploadedIds.push(image.publicId);
+                return { imageUrl: image.imageUrl, description: photo.description };
+            }));
+            const gallery = results.map(result => {
+                if (result.status === 'rejected') throw result.reason;
+                return result.value;
+            });
+            removedUrls.push(...existing.filter(row => !gallery.some(photo => photo.imageUrl === row.imageUrl)).map(row => row.imageUrl));
             const fields = [data.title, data.description, data.type, data.size, data.price, data.weight,
                 data.minimumQuantity, data.maximumQuantity, data.location, data.startDate, data.endDate,
                 data.status === 'ACTIVE' ? 'ATIVO' : data.status === 'DRAFT' ? 'RASCUNHO' : 'PAUSADO'];
@@ -52,11 +52,13 @@ export class OfferEditorDAOPostgres {
             const ids = gallery.map(() => randomUUID()).sort();
             for (let i = 0; i < gallery.length; i++) await db.query('INSERT INTO "offerPhotos" (id, "offerId", "imageUrl", description) VALUES ($1, $2, $3, $4)', [ids[i], id, gallery[i].imageUrl, gallery[i].description]);
             await db.query('COMMIT');
-            return gallery.map((photo, index) => ({ id: ids[index], offerId: id, ...photo }));
+            savedPhotos = gallery.map((photo, index) => ({ id: ids[index], offerId: id, ...photo }));
         } catch (error) {
             await db.query('ROLLBACK').catch(() => {});
-            await Promise.all(files.map(file => unlink(file).catch(() => {})));
+            await imageStorage.removeCreated(uploadedIds);
             throw error;
         } finally { db.release(); }
+        await imageStorage.removeUnused(removedUrls);
+        return savedPhotos;
     }
 }
