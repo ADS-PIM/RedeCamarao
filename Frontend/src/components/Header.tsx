@@ -98,7 +98,7 @@ export function Header({ authenticated = false, marketplace = false, products = 
               <summary className="header-account" aria-label="Menu da conta"><Avatar className="header-avatar" src={profilePicture} fallback={producer ? 'farm' : 'bag'} /><span>{accountName || 'Minha conta'}</span><Icon name="chevron" className="header-account-chevron" /></summary>
               <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
                 {administrator && <a href="/admin">Área administrativa</a>}
-                {!administrator && <a href="/painel">Ver perfil</a>}
+                {!administrator && <a href={account ? '/marketplace' : '/painel'}>{account ? 'Ir para o marketplace' : 'Ver perfil'}</a>}
                 <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}><Icon name="logout" />{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
                 {logoutError && <p className="header-logout-error" role="alert">{logoutError}</p>}
               </div>

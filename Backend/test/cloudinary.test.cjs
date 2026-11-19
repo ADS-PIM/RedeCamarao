@@ -51,6 +51,38 @@ test('missing credentials reject the upload without calling the provider', async
   assert.equal(upload.mock.callCount(), 0); assert.deepEqual(destroyed, []);
 });
 
+for (const reason of [{ http_code: 503 }, { http_code: 499 }, { code: 'ECONNRESET' }]) {
+  test(`retries a temporary upload failure ${JSON.stringify(reason)} with a new ID and cleans the uncertain upload`, async () => {
+    const ids = [];
+    mock.method(cloudinary.uploader, 'upload_stream', (options, callback) => {
+      ids.push(options.public_id);
+      return new Writable({ write(_chunk, _encoding, done) { done(); }, final(done) {
+        if (ids.length === 1) callback(reason);
+        else callback(null, { public_id: options.public_id, secure_url: url(options.public_id) });
+        done();
+      } });
+    });
+    const image = await imageStorage.upload(Buffer.alloc(0), 'offers');
+    assert.equal(ids.length, 2);
+    assert.notEqual(ids[0], ids[1]);
+    assert.equal(image.publicId, ids[1]);
+    assert.deepEqual(destroyed, [ids[0]]);
+  });
+}
+
+for (const status of [400, 401, 503]) {
+  test(`upload status ${status} has bounded retries and cleans every failed attempt`, async () => {
+    const ids = [];
+    mock.method(cloudinary.uploader, 'upload_stream', (options, callback) => {
+      ids.push(options.public_id);
+      return new Writable({ write(_chunk, _encoding, done) { done(); }, final(done) { callback({ http_code: status, message: 'Sensitive provider details' }); done(); } });
+    });
+    await assert.rejects(imageStorage.upload(Buffer.alloc(0), 'offers'), { code: 'IMAGE_STORAGE_UNAVAILABLE' });
+    assert.equal(ids.length, status === 503 ? 2 : 1);
+    assert.deepEqual(destroyed, ids);
+  });
+}
+
 for (const failure of ['provider', 'stream', 'invalid-response']) {
   test(`${failure} failure hides provider details and cleans the generated asset ID`, async () => {
     let generated;
