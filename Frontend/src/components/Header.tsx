@@ -76,7 +76,7 @@ export function Header({ authenticated = false, marketplace = false, products = 
           <nav aria-label="Navegação principal">
             {administrator ? <>
               <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a>
-              <a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtos</a>
+              <a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Ofertas</a>
               <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a>
               <a href="/admin" aria-current={account ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Área administrativa</a>
             </> : account && producer ? <>
@@ -89,7 +89,7 @@ export function Header({ authenticated = false, marketplace = false, products = 
               <a href="/painel#perfil" onClick={() => setMenuOpen(false)}>Dados pessoais</a>
               <a href="/produtos" onClick={() => setMenuOpen(false)}>Explorar ofertas</a>
             </> : <>
-              <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a><a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtos</a>
+              <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a><a href="/produtos" aria-current={products ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Ofertas</a>
               <a href="/produtores" aria-current={producers ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Produtores</a>
             </>}
           </nav>
