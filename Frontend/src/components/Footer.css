@@ -1,12 +1,13 @@
-.site-footer { width: 100%; margin-top: auto; flex-shrink: 0; background: var(--white); border-top: 1px solid var(--border); }
+.site-footer { width: 100%; margin-top: auto; flex-shrink: 0; background: var(--navy); border-top: 1px solid rgb(244 237 224 / 14%); }
 .footer-inner { min-height: 104px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'brand description links'; align-items: center; gap: 16px 40px; padding-block: 20px; }
-.footer-brand { grid-area: brand; justify-self: start; display: inline-flex; align-items: center; min-height: 44px; font-size: 20px; font-weight: 400; letter-spacing: -.6px; color: var(--brand-dark); white-space: nowrap; }
-.footer-brand strong { font-weight: 750; }
-.footer-description { grid-area: description; justify-self: center; min-width: 0; max-width: 680px; font-size: 14px; color: var(--muted); line-height: 1.7; overflow-wrap: anywhere; }
-.footer-inner nav { grid-area: links; min-width: 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.footer-brand { grid-area: brand; justify-self: start; display: inline-flex; align-items: center; min-height: 44px; font-size: 20px; font-weight: 400; letter-spacing: -.6px; color: var(--cream); white-space: nowrap; }
+.footer-brand strong { color: var(--accent); font-weight: 750; }
+.site-footer :focus-visible { outline-color: var(--accent); }
+.footer-description { grid-area: description; justify-self: center; min-width: 0; max-width: 680px; font-size: 14px; color: var(--on-dark-muted); line-height: 1.7; overflow-wrap: anywhere; }
+.footer-inner nav { grid-area: links; min-width: 0; font-size: 14px; color: var(--cream); line-height: 1.6; }
 .footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0; padding: 0; list-style: none; }
 .footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
-.footer-inner a:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 4px; }
+.footer-inner a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 1000px) {
   .footer-inner { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'brand links' 'description description'; gap: 8px 24px; }
   .footer-description { justify-self: start; }

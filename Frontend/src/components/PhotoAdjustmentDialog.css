@@ -1,14 +1,14 @@
-.account-modal.photo-adjust-dialog { width: min(640px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 0; overflow-y: auto; border: 0; border-radius: 18px; background: white; color: #193340; box-shadow: 0 24px 80px #102e3e40; }
-.photo-adjust-dialog::backdrop { background: #102e3e99; }
+.account-modal.photo-adjust-dialog { width: min(640px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 0; overflow-y: auto; border: 0; border-radius: 18px; background: var(--surface); color: var(--navy); box-shadow: 0 24px 80px rgb(var(--navy-rgb) / 25.10%); }
+.photo-adjust-dialog::backdrop { background: rgb(var(--navy-rgb) / 60.00%); }
 .photo-adjust-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 22px 24px 18px; border-bottom: 1px solid var(--border); }
 .photo-adjust-header h2 { margin: 0; font-size: 24px; line-height: 1.3; letter-spacing: -.4px; }
 .photo-adjust-header p { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.6; }
-.photo-adjust-close { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; padding: 7px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--brand-dark); }
+.photo-adjust-close { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; padding: 7px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--brand-dark); }
 .photo-adjust-close svg { width: 18px; height: 18px; }
 .photo-adjust-body { padding: 18px 24px 22px; }
-.photo-adjust-stage { display: flex; align-items: center; justify-content: center; min-height: 260px; padding: 14px; overflow: hidden; border-radius: 12px; background: #edf4f6; }
+.photo-adjust-stage { display: flex; align-items: center; justify-content: center; min-height: 260px; padding: 14px; overflow: hidden; border-radius: 12px; background: var(--surface-muted); }
 .photo-adjust-stage > p { color: var(--muted); font-size: 14px; }
-.photo-adjust-frame { position: relative; width: 100%; overflow: hidden; isolation: isolate; touch-action: none; user-select: none; cursor: grab; background: #dae7ed; box-shadow: 0 0 0 1px #fff9; }
+.photo-adjust-frame { position: relative; width: 100%; overflow: hidden; isolation: isolate; touch-action: none; user-select: none; cursor: grab; background: var(--surface-muted); box-shadow: 0 0 0 1px #fff9; }
 .photo-adjust-profile .photo-adjust-frame { width: min(100%, 306px); border-radius: 50%; }
 .photo-adjust-frame.is-dragging { cursor: grabbing; }
 .photo-adjust-frame > img { position: absolute; display: block; max-width: none; max-height: none; pointer-events: none; user-select: none; }
@@ -16,7 +16,7 @@
 .photo-adjust-controls { display: grid; gap: 18px; margin-top: 18px; }
 .photo-adjust-control { min-width: 0; }
 .photo-adjust-control > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-.photo-adjust-control label { color: #304956; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.photo-adjust-control label { color: var(--ink-soft); font-size: 13px; font-weight: 700; line-height: 1.5; }
 .photo-adjust-control output { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .photo-adjust-dialog input[type='range'] { display: block; width: 100%; height: 28px; margin: 0; padding: 0; border: 0; background: transparent; accent-color: var(--primary); cursor: pointer; }
 .app-shell .photo-adjust-dialog input[type='range']:enabled:focus { box-shadow: none; outline: none; }
