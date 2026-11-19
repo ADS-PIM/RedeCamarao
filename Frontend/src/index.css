@@ -37,8 +37,9 @@
   --field-focus-ring: inset 0 0 0 1px var(--field-focus-border), 0 0 0 3px rgb(var(--navy-rgb) / 10%);
 }
 * { box-sizing: border-box; }
+/* Reserve space only for an actual scrollbar, including on narrow screens. */
 html { scrollbar-gutter: stable; }
-body { margin: 0; min-width: 320px; }
+body { margin: 0; min-width: 0; }
 button, input, select, textarea { font: inherit; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
 button, a, input[type='checkbox'], input[type='radio'] { touch-action: manipulation; }
