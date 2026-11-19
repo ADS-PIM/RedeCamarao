@@ -36,3 +36,4 @@ node_modules
 !/tests/offer-units.test.ts
 !/tests/offer-cover.test.ts
 !/tests/photo-adjustment.test.ts
+!/tests/offer-photo-save.test.ts

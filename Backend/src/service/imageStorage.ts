@@ -7,6 +7,13 @@ export type StoredImage = { publicId: string; imageUrl: string };
 type ImageFolder = 'offers' | 'profiles';
 const unavailable = () => new ApplicationError('IMAGE_STORAGE_UNAVAILABLE', 'Não foi possível armazenar a foto. Tente novamente.');
 
+function temporaryUploadFailure(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const failure = error as { http_code?: number; code?: string };
+    return [408, 429, 499, 500, 502, 503, 504].includes(failure.http_code ?? 0)
+        || ['ETIMEDOUT', 'ECONNRESET', 'EAI_AGAIN', 'ECONNREFUSED', 'EPIPE'].includes(failure.code ?? '');
+}
+
 // Only URLs created by this application in the configured cloud can be deleted.
 export function managedImageId(value: unknown): string | null {
     if (typeof value !== 'string') return null;
@@ -26,25 +33,35 @@ export const imageStorage = {
     async upload(buffer: Buffer, folder: ImageFolder): Promise<StoredImage> {
         const config = cloudinary.config();
         if (!config.cloud_name || !config.api_key || !config.api_secret) throw unavailable();
-        const publicId = `redecamarao/${folder}/${randomUUID()}`;
+        const failedIds: string[] = [];
         try {
-            const imageUrl = await new Promise<string>((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream({
-                    public_id: publicId, resource_type: 'image', type: 'upload',
-                    allowed_formats: ['jpg', 'jpeg', 'png'], overwrite: false, timeout: 20_000,
-                }, (error, result) => {
-                    if (error || !result || result.public_id !== publicId || managedImageId(result.secure_url) !== publicId) {
-                        reject(unavailable());
-                    } else resolve(result.secure_url);
-                });
-                stream.on('error', reject);
-                stream.end(buffer);
-            });
-            return { publicId, imageUrl };
-        } catch {
-            // The provider may have received the upload even if its response was lost.
-            await imageStorage.removeCreated([publicId]);
+            for (let attempt = 0; attempt < 2; attempt++) {
+                const publicId = `redecamarao/${folder}/${randomUUID()}`;
+                try {
+                    const imageUrl = await new Promise<string>((resolve, reject) => {
+                        const stream = cloudinary.uploader.upload_stream({
+                            public_id: publicId, resource_type: 'image', type: 'upload',
+                            allowed_formats: ['jpg', 'jpeg', 'png'], overwrite: false, timeout: 20_000,
+                        }, (error, result) => {
+                            if (error) {
+                                reject(error);
+                            } else if (!result || result.public_id !== publicId || managedImageId(result.secure_url) !== publicId) {
+                                reject(unavailable());
+                            } else resolve(result.secure_url);
+                        });
+                        stream.on('error', reject);
+                        stream.end(buffer);
+                    });
+                    return { publicId, imageUrl };
+                } catch (error) {
+                    failedIds.push(publicId);
+                    if (attempt === 1 || !temporaryUploadFailure(error)) throw unavailable();
+                }
+            }
             throw unavailable();
+        } finally {
+            // A failed request can still have created an asset. Clean every failed attempt.
+            await imageStorage.removeCreated(failedIds);
         }
     },
 

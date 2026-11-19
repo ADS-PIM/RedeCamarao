@@ -1,6 +1,6 @@
 import type { Offer } from '../data/marketplace'
 import type { EditorPhoto, editorPayload } from '../data/offerEditor'
-import { apiBaseUrl } from './api'
+import { apiBaseUrl } from './api.ts'
 
 export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED' | 'DRAFT'
 export type ManagedOffer = Offer & { status: OfferStatus; createdAt: string; updatedAt?: string; coverPhoto?: string | null }
@@ -85,7 +85,7 @@ export async function updateMyProfile(token: string, data: ProfileUpdate, baseUr
 }
 
 export async function saveProfilePhoto(token: string, data: string | null, baseUrl = apiBaseUrl): Promise<string | null> {
-  const response = await request('/users/me/photo', token, 'PUT', { data }, baseUrl, 60000)
+  const response = await request('/users/me/photo', token, 'PUT', { data }, baseUrl, 90000)
   if (!response.ok) {
     if (response.status === 413) throw new Error('Escolha uma foto JPG ou PNG de até 10 MB.')
     if (response.status === 400) throw new Error('A foto não é válida. Use JPG ou PNG de até 10 MB.')
@@ -132,12 +132,12 @@ function readEditorPhotos(data: unknown): EditorPhoto[] {
 }
 
 export async function saveEditedOffer(token: string, id: string, data: ReturnType<typeof editorPayload>, baseUrl = apiBaseUrl): Promise<EditorPhoto[]> {
-  const response = await request(`/offer/${encodeURIComponent(id)}/editor`, token, 'PUT', data, baseUrl, 60000)
+  const response = await request(`/offer/${encodeURIComponent(id)}/editor`, token, 'PUT', data, baseUrl, 90000)
   if (!response.ok) {
     if (response.status === 413) throw new Error('As fotos excedem o limite de envio. Use até 5 imagens de 10 MB cada.')
-    if (response.status === 400) {
+    if (response.status === 400 || response.status === 503) {
       const result = await response.json().catch(() => null)
-      throw new Error(typeof result?.error === 'string' ? result.error : 'Confira os campos da oferta.')
+      throw new Error(typeof result?.error === 'string' ? result.error : response.status === 503 ? 'O envio das fotos está temporariamente indisponível. Tente novamente.' : 'Confira os campos da oferta.')
     }
     return responseError(response, 'Não foi possível salvar a oferta. Suas alterações continuam nesta tela.')
   }
@@ -146,12 +146,12 @@ export async function saveEditedOffer(token: string, id: string, data: ReturnTyp
 }
 
 export async function createOfferWithPhotos(token: string, data: ReturnType<typeof editorPayload>, baseUrl = apiBaseUrl): Promise<{ id: string; photos: EditorPhoto[] }> {
-  const response = await request('/offer/editor', token, 'POST', data, baseUrl, 60000)
+  const response = await request('/offer/editor', token, 'POST', data, baseUrl, 90000)
   if (!response.ok) {
     if (response.status === 413) throw new Error('Use até 5 fotos de 10 MB cada.')
-    if (response.status === 400) {
+    if (response.status === 400 || response.status === 503) {
       const result = await response.json().catch(() => null)
-      throw new Error(typeof result?.error === 'string' ? result.error : 'Confira os campos da oferta.')
+      throw new Error(typeof result?.error === 'string' ? result.error : response.status === 503 ? 'O envio das fotos está temporariamente indisponível. Tente novamente.' : 'Confira os campos da oferta.')
     }
     return responseError(response, 'Não foi possível cadastrar a oferta. Seus dados continuam nesta tela.')
   }

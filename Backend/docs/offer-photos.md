@@ -52,7 +52,12 @@ imagens retiradas da galeria são removidas se não estiverem mais em uso.
 O frontend continua enviando JSON com data URLs base64 e recebendo `imageUrl`,
 sem necessidade de multipart ou upload direto pelo navegador. As rotas mantêm
 os limites de cinco fotos e 10 MB por foto. O tempo de espera do frontend para
-salvar fotos é de 60 segundos; cada upload ao provedor tem timeout de 20 segundos.
+salvar fotos é de 90 segundos; cada upload ao provedor tem timeout de 20 segundos.
+Falhas temporárias de rede, timeout ou indisponibilidade do provedor recebem uma
+nova tentativa com outro ID. Erros de credenciais, formato ou resposta inválida
+não são repetidos. As imagens de todas as tentativas que falharam são removidas.
+O cadastro e a edição exibem a mensagem de falha de fotos retornada pela API
+(503), preservando os campos preenchidos para uma nova tentativa.
 
 URLs antigas em `/uploads/...` continuam sendo servidas pelo backend quando os
 arquivos existem. Não há migração automática ou exclusão desses arquivos locais.
