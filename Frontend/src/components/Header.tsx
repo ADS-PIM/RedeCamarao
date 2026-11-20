@@ -1,16 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { Avatar } from './Avatar'
+import { Brand } from './Brand'
 import './Header.css'
 
 export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, administrator = false, userId, accountName = '', profilePicture, editingOffer = false, onLogout, loggingOut = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; administrator?: boolean; userId?: string; accountName?: string; profilePicture?: string | null; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoutError, setLogoutError] = useState('')
+  const [headerHidden, setHeaderHidden] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const mobileViewport = window.matchMedia('(max-width: 1000px)')
+    let previousY = Math.max(0, window.scrollY)
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const currentY = Math.max(0, window.scrollY)
+      const header = headerRef.current
+      const engaged = header?.contains(document.activeElement)
+        || header?.querySelector('.header-navigation.is-open, .header-account-menu[open]')
+      if (currentY <= (header?.offsetHeight ?? 80) || engaged) {
+        setHeaderHidden(false)
+        previousY = currentY
+      } else if (Math.abs(currentY - previousY) >= 4) {
+        setHeaderHidden(currentY > previousY)
+        previousY = currentY
+      }
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame) }
+  }, [])
+
+  useEffect(() => {
+    const mobileViewport = window.matchMedia('(max-width: 1240px)')
     const handleViewportChange = (event: MediaQueryListEvent) => {
       if (!event.matches) setMenuOpen(false)
     }
@@ -65,9 +89,9 @@ export function Header({ authenticated = false, marketplace = false, products = 
   }, [menuOpen])
 
   return (
-    <header ref={headerRef} className={`site-header${account && producer ? ' producer-header' : ''}`}>
+    <header ref={headerRef} onFocusCapture={() => setHeaderHidden(false)} className={`site-header${headerHidden ? ' is-scroll-hidden' : ''}${account && producer ? ' producer-header' : ''}`}>
       <div className="container header-inner">
-        <a href="/" className="brand" aria-label="RedeCamarão — início" onClick={() => setMenuOpen(false)}><strong>Rede</strong>Camarão</a>
+        <a href="/" className="brand" aria-label="RedeCamarão — início" onClick={() => setMenuOpen(false)}><Brand /></a>
         {authenticated && account && <span className="header-role">{administrator ? 'Administrador' : producer ? 'Produtor' : 'Comprador'}</span>}
         <button ref={menuToggleRef} className="menu-toggle" type="button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-controls="main-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}>
           <Icon name={menuOpen ? 'close' : 'menu'} />

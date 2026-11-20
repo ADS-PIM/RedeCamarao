@@ -38,7 +38,7 @@
 }
 * { box-sizing: border-box; }
 /* Reserve space only for an actual scrollbar, including on narrow screens. */
-html { scrollbar-gutter: stable; }
+html { scrollbar-gutter: stable; scroll-padding-top: 96px; }
 body { margin: 0; min-width: 0; }
 button, input, select, textarea { font: inherit; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
@@ -59,6 +59,12 @@ h1, h2, p { margin: 0; }
 .skip-link:focus { top: 10px; }
 .app-shell :where(input:not([type='checkbox'], [type='radio']), select, textarea):enabled:focus { border-color: var(--field-focus-border); outline: none; box-shadow: var(--field-focus-ring); }
 .app-shell :where(input, select, textarea)[aria-invalid='true']:enabled:focus { border-color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 2px #df424714; }
-.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field):has(input:focus) { outline: none; border-color: var(--field-focus-border); box-shadow: var(--field-focus-ring); }
-.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field) input:focus { outline: none; border-color: transparent; box-shadow: none; }
+.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field, .account-search):has(input:focus) { outline: 2px solid #ffb45c; outline-offset: 2px; border-color: #bb4b1b; box-shadow: 0 0 0 4px rgb(255 180 92 / 18%); }
+.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field, .account-search) input:focus { outline: none; border-color: transparent; box-shadow: none; }
+.brand, .footer-brand { display: inline-flex; align-items: center; gap: 10px; }
+.brand-logo { display: block; width: 48px; height: 48px; flex: 0 0 auto; object-fit: contain; }
+@media (max-width: 600px) {
+  .brand { font-size: 22px; }
+  .brand .brand-logo { width: 36px; height: 36px; }
+}
 @media (max-width: 600px) { .container { width: calc(100% - 36px); } }

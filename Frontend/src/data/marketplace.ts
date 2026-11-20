@@ -1,4 +1,6 @@
 import { getOfferState } from './products.ts'
+import { matchesCatalogFilters, validateCatalogQuantity } from './catalogFilters.ts'
+import type { CatalogSelection } from './catalogFilters.ts'
 
 export type Offer = {
   coverPhoto?: string | null
@@ -33,13 +35,16 @@ export type OfferDetail = Offer & { createdAt: string; photos: OfferPhoto[]; pro
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
-export function filterOffers(offers: Offer[], query: string, category: Category | null, region: string) {
+export function filterOffers(offers: Offer[], query: string, category: Category | CatalogSelection | null, region = '') {
+  const selection = category && typeof category === 'object' ? category : null
+  if (selection && validateCatalogQuantity(selection)) return []
   const words = normalize(query.trim()).split(/\s+/).filter(Boolean)
   return offers.filter(offer => {
     const text = normalize(`${offer.title} ${offer.description} ${offer.type ?? ''} ${offer.location} ${offer.size} ${offer.weight} kg`)
     const type = normalize(offer.type ?? '')
     const size = normalize(offer.size)
     return words.every(word => text.includes(word))
+      && (!selection || matchesCatalogFilters(offer, selection))
       && (category !== 'gray' || type.includes('cinza'))
       && (category !== 'white' || type.includes('branco'))
       && (category !== 'large' || size.includes('grande') || size.includes('large'))

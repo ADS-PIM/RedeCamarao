@@ -7,7 +7,7 @@
 .footer-inner nav { grid-area: links; min-width: 0; font-size: 14px; color: var(--cream); line-height: 1.6; }
 .footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0; padding: 0; list-style: none; }
 .footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
-.footer-inner a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+.footer-links a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 1000px) {
   .footer-inner { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'brand links' 'description description'; gap: 8px 24px; }
   .footer-description { justify-self: start; }

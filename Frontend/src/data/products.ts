@@ -1,5 +1,9 @@
 import type { Offer } from './marketplace'
 import { brazilianStates } from '../utils/registration.ts'
+import { emptyCatalogSelection, matchesCatalogFilters, validateCatalogQuantity } from './catalogFilters.ts'
+import type { CatalogSelection } from './catalogFilters.ts'
+import { getOfferState } from './offerAttributes.ts'
+export { getOfferState, getOfferSize } from './offerAttributes.ts'
 
 export const sizeOptions = [
   { id: 'small', label: 'Pequeno (8–10 cm)' },
@@ -18,37 +22,18 @@ export const quantityOptions = [
 export type SizeFilter = typeof sizeOptions[number]['id']
 export type QuantityFilter = typeof quantityOptions[number]['id']
 export type ProductSort = 'recent' | 'price-asc' | 'price-desc' | 'quantity-desc'
-export type ProductFilters = {
+export type ProductFilters = CatalogSelection & {
   location: string
-  states: string[]
   minPrice: string
   maxPrice: string
-  sizes: SizeFilter[]
   quantities: QuantityFilter[]
 }
 
 export const emptyProductFilters: ProductFilters = {
-  location: '', states: [], minPrice: '', maxPrice: '', sizes: [], quantities: [],
+  ...emptyCatalogSelection, location: '', minPrice: '', maxPrice: '', quantities: [],
 }
 export const productsPerPage = 6
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
-
-export function getOfferState(location: string) {
-  const code = location.trim().match(/(?:^|[\s,/–-])([a-z]{2})$/i)?.[1].toUpperCase()
-  if (code && brazilianStates.some(state => state.code === code)) return code
-  const normalized = normalize(location)
-  return brazilianStates.find(state => normalized === normalize(state.name)
-    || new RegExp(`[,/–-]\\s*${normalize(state.name)}$`).test(normalized))?.code ?? null
-}
-
-export function getOfferSize(size: string): SizeFilter | null {
-  const value = normalize(size)
-  if (value.includes('extra') || value.includes('jumbo') || value === 'gg') return 'extra-large'
-  if (/\b(pequen[oa]|small)\b/.test(value) || value === 'p') return 'small'
-  if (/\b(medi[oa]|medium)\b/.test(value) || value === 'm') return 'medium'
-  if (/\b(grande|large)\b/.test(value) || value === 'g') return 'large'
-  return null
-}
 
 export function getQuantityBand(weight: number): QuantityFilter {
   if (weight <= 25) return 'up-to-25'
@@ -74,7 +59,7 @@ export function validateProductPrices(filters: ProductFilters): { field: 'minPri
 }
 
 export function filterProductOffers(offers: Offer[], query: string, filters: ProductFilters) {
-  if (validateProductPrices(filters)) return []
+  if (validateProductPrices(filters) || validateCatalogQuantity(filters)) return []
   const words = normalize(query).split(/\s+/).filter(Boolean)
   const location = normalize(filters.location)
   const locationState = getOfferState(filters.location)
@@ -84,13 +69,11 @@ export function filterProductOffers(offers: Offer[], query: string, filters: Pro
     const state = getOfferState(offer.location)
     const stateName = brazilianStates.find(item => item.code === state)?.name ?? ''
     const searchable = normalize(`${offer.title} ${offer.description} ${offer.type ?? ''} ${offer.size} ${offer.location} ${stateName} ${offer.weight} kg`)
-    const size = getOfferSize(offer.size)
     return words.every(word => searchable.includes(word))
       && (!location || (locationState ? locationState === state : location.split(/\s+/).every(word => normalize(offer.location).includes(word))))
-      && (!filters.states.length || (state !== null && filters.states.includes(state)))
+      && matchesCatalogFilters(offer, filters)
       && (minimum === null || offer.price >= minimum)
       && (maximum === null || offer.price <= maximum)
-      && (!filters.sizes.length || (size !== null && filters.sizes.includes(size)))
       && (!filters.quantities.length || filters.quantities.includes(getQuantityBand(offer.weight)))
   })
 }

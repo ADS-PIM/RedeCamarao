@@ -1,3 +1,8 @@
+# Logo da RedeCamarão
+
+- `logo-redecamarao.png`: logo fornecida pelo usuário em `WhatsApp Image 2026-11-19 at 06.50.36.jpeg`, editada com a ferramenta integrada de imagens para gerar PNG com transparência real. Usada no cabeçalho, rodapé e ícone do site.
+- Instrução da edição: remover somente o fundo claro, inclusive nos espaços internos do símbolo, preservando camarão, onda, contorno, cores e proporções; não redesenhar nem adicionar elementos.
+
 # Fotografias ilustrativas do marketplace
 
 As imagens representam a apresentação visual; não são fotos dos produtores ou anúncios de exemplo.
