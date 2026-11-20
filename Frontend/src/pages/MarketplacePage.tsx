@@ -1,20 +1,19 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
-import type { IconName } from '../components/Icon'
+import { QuantityRangeFields } from '../components/QuantityRangeFields'
 import { filterOffers, formatPrice } from '../data/marketplace'
-import type { Category } from '../data/marketplace'
+import { emptyCatalogSelection, shrimpTypeOptions } from '../data/catalogFilters'
+import type { CatalogSelection } from '../data/catalogFilters'
+import { sizeOptions } from '../data/products'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
 import { offerHref } from '../data/offerDetail'
 import { brazilianStates } from '../utils/registration'
 import './MarketplacePage.css'
 
-const categories: { id: Category; title: string; icon: IconName }[] = [
-  { id: 'gray', title: 'Camarão cinza', icon: 'shrimp' },
-  { id: 'white', title: 'Camarão branco', icon: 'shrimp' },
-  { id: 'large', title: 'Tamanho grande', icon: 'ruler' },
-  { id: 'bulk', title: 'Lotes acima de 50 kg', icon: 'box' },
-]
+function toggle<T>(values: T[], value: T) {
+  return values.includes(value) ? values.filter(item => item !== value) : [...values, value]
+}
 
 function scrollToOffers() {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -24,11 +23,17 @@ function scrollToOffers() {
 export function MarketplacePage() {
   const [input, setInput] = useState('')
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<Category | null>(null)
-  const [region, setRegion] = useState('')
+  const [filters, setFilters] = useState<CatalogSelection>(emptyCatalogSelection)
   const { offers, loading, error, reloadOffers } = useMarketplaceOffers()
-  const filteredOffers = filterOffers(offers, query, category, region)
-  const filtering = Boolean(query.trim() || category || region)
+  const filteredOffers = filterOffers(offers, query, filters)
+  const filtering = Boolean(query.trim() || filters.types.length || filters.sizes.length || filters.states.length || filters.minQuantity || filters.maxQuantity)
+  const chips = [
+    ...(query ? [{ id: 'query', label: `Busca: ${query}`, remove: () => { setInput(''); setQuery('') } }] : []),
+    ...shrimpTypeOptions.filter(item => filters.types.includes(item.id)).map(item => ({ id: item.id, label: item.label, remove: () => setFilters(current => ({ ...current, types: toggle(current.types, item.id) })) })),
+    ...sizeOptions.filter(item => filters.sizes.includes(item.id)).map(item => ({ id: item.id, label: item.label, remove: () => setFilters(current => ({ ...current, sizes: toggle(current.sizes, item.id) })) })),
+    ...brazilianStates.filter(item => filters.states.includes(item.code)).map(item => ({ id: item.code, label: item.name, remove: () => setFilters(current => ({ ...current, states: toggle(current.states, item.code) })) })),
+    ...(['minQuantity', 'maxQuantity'] as const).filter(field => filters[field]).map(field => ({ id: field, label: `${field === 'minQuantity' ? 'Lote a partir de' : 'Lote até'} ${filters[field]} ${filters.quantityUnit}`, remove: () => setFilters(current => ({ ...current, [field]: '' })) })),
+  ]
   const offersDescription = loading
     ? 'Carregando ofertas...'
     : error
@@ -43,18 +48,7 @@ export function MarketplacePage() {
     scrollToOffers()
   }
 
-  function clearFilters() { setInput(''); setQuery(''); setCategory(null); setRegion('') }
-
-  function selectCategory(value: Category | null) {
-    setCategory(value)
-  }
-
-  function categoryDescription(value: Category) {
-    if (loading) return 'Carregando...'
-    if (error) return 'Explorar ofertas'
-    const count = filterOffers(offers, '', value, region).length
-    return `${count} ${count === 1 ? 'oferta' : 'ofertas'}`
-  }
+  function clearFilters() { setInput(''); setQuery(''); setFilters(emptyCatalogSelection) }
 
   return (
     <main id="main-content" className="marketplace-main">
@@ -86,24 +80,37 @@ export function MarketplacePage() {
 
       <div className="container marketplace-content">
         <section className="category-section" aria-labelledby="category-title">
-          <h2 id="category-title">Explore por categoria</h2>
-          <p className="section-description">Atalhos para começar sua busca</p>
-          <div className="category-grid">
-            {categories.map(item => <button className={`category-card ${category === item.id ? 'is-selected' : ''}`} key={item.id} type="button" aria-pressed={category === item.id} onClick={() => selectCategory(category === item.id ? null : item.id)}>
-              <span className="category-icon"><Icon name={item.icon} /></span><span className="category-copy"><strong>{item.title}</strong><small>{categoryDescription(item.id)}</small></span>
-            </button>)}
-            <div className={`category-region-card${region ? ' is-selected' : ''}`}>
-              <label htmlFor="market-region"><span className="category-icon"><Icon name="pin" /></span><span className="category-copy"><strong>Por região</strong><small>Ofertas no estado</small></span></label>
-              <select id="market-region" value={region} onChange={event => setRegion(event.target.value)}>
-                <option value="">Todas as regiões</option>
-                {brazilianStates.map(state => <option key={state.code} value={state.code}>{state.name}</option>)}
-              </select>
+          <div className="market-filter-heading"><div><h2 id="category-title">Encontre o lote certo</h2>
+            <p className="section-description">Combine os filtros. Você pode selecionar mais de uma opção em cada grupo.</p></div>
+            {filtering && <button className="market-clear-filters" type="button" onClick={clearFilters}>Limpar filtros<Icon name="close" /></button>}
+          </div>
+          <div className="market-filter-grid">
+            <div role="group" aria-labelledby="market-type-title" className={`market-filter-card${filters.types.length ? ' is-selected' : ''}`}>
+              <h3 id="market-type-title"><Icon name="shrimp" />Tipo de camarão</h3><p>Selecione os tipos desejados</p>
+              <div className="market-filter-options">{shrimpTypeOptions.map(item => <label key={item.id}>
+                <input type="checkbox" checked={filters.types.includes(item.id)} onChange={() => setFilters(current => ({ ...current, types: toggle(current.types, item.id) }))} /><span>{item.label}</span>
+              </label>)}</div>
+            </div>
+            <div role="group" aria-labelledby="market-size-title" className={`market-filter-card${filters.sizes.length ? ' is-selected' : ''}`}>
+              <h3 id="market-size-title"><Icon name="ruler" />Tamanho</h3><p>Escolha um ou mais tamanhos</p>
+              <div className="market-filter-options">{sizeOptions.map(item => <label key={item.id}>
+                <input type="checkbox" checked={filters.sizes.includes(item.id)} onChange={() => setFilters(current => ({ ...current, sizes: toggle(current.sizes, item.id) }))} /><span>{item.label}</span>
+              </label>)}</div>
+            </div>
+            <div role="group" aria-labelledby="market-lot-title" className={`market-filter-card${filters.minQuantity || filters.maxQuantity ? ' is-selected' : ''}`}>
+              <h3 id="market-lot-title"><Icon name="box" />Lote disponível</h3><p>Defina a quantidade total do lote</p>
+              <QuantityRangeFields idPrefix="market-lot" value={filters} onChange={setFilters} />
+            </div>
+            <div role="group" aria-labelledby="market-region-title" className={`market-filter-card${filters.states.length ? ' is-selected' : ''}`}>
+              <h3 id="market-region-title"><Icon name="pin" />Região</h3><p>Selecione um ou mais estados</p>
+              <details className="market-region-picker"><summary>{filters.states.length ? `${filters.states.length} ${filters.states.length === 1 ? 'estado selecionado' : 'estados selecionados'}` : 'Todos os estados'}<Icon name="chevron" /></summary>
+                <div className="market-filter-options market-state-options">{brazilianStates.map(item => <label key={item.code}>
+                  <input type="checkbox" checked={filters.states.includes(item.code)} onChange={() => setFilters(current => ({ ...current, states: toggle(current.states, item.code) }))} /><span>{item.name} ({item.code})</span>
+                </label>)}</div>
+              </details>
             </div>
           </div>
-          <div className="category-filter-summary">
-            <p>{category || region ? <>{categories.find(item => item.id === category)?.title ?? 'Todas as categorias'}<span aria-hidden="true"> · </span>{brazilianStates.find(state => state.code === region)?.name ?? 'Todas as regiões'}</> : 'Combine uma categoria com o estado onde deseja comprar.'}</p>
-            {filtering && <button type="button" onClick={clearFilters}>Limpar filtros<Icon name="close" /></button>}
-          </div>
+          {chips.length > 0 && <div className="market-active-filters" aria-label="Filtros ativos">{chips.map(chip => <button type="button" key={chip.id} onClick={chip.remove} aria-label={`Remover filtro: ${chip.label}`}>{chip.label}<Icon name="close" /></button>)}</div>}
         </section>
 
         <section className="offers-section" id="ofertas" aria-labelledby="offers-title">

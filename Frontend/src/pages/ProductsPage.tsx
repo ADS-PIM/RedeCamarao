@@ -9,9 +9,11 @@ import { formatPrice } from '../data/marketplace'
 import { emptyProductFilters, filterProductOffers, parseProductPrice, productsPerPage, quantityOptions, sizeOptions, sortProductOffers, validateProductPrices } from '../data/products'
 import type { ProductFilters as Filters, ProductSort } from '../data/products'
 import { brazilianStates } from '../utils/registration'
+import { shrimpTypeOptions, validateCatalogQuantity } from '../data/catalogFilters'
 import './ProductsPage.css'
 
 function removeFilter(filters: Filters, key: keyof Filters, value?: string): Filters {
+  if (key === 'types') return { ...filters, types: filters.types.filter(item => item !== value) }
   if (key === 'states') return { ...filters, states: filters.states.filter(item => item !== value) }
   if (key === 'sizes') return { ...filters, sizes: filters.sizes.filter(item => item !== value) }
   if (key === 'quantities') return { ...filters, quantities: filters.quantities.filter(item => item !== value) }
@@ -49,6 +51,10 @@ export function ProductsPage() {
 
   if (query) chips.push({ id: 'query', label: `Busca: ${query}`, remove: () => { setQuery(''); setInput(''); setPage(1) } })
   if (filters.location) chips.push({ id: 'location', label: filters.location, remove: () => removeApplied('location') })
+  shrimpTypeOptions.filter(option => filters.types.includes(option.id)).forEach(option => chips.push({ id: option.id, label: option.label, remove: () => removeApplied('types', option.id) }))
+  for (const field of ['minQuantity', 'maxQuantity'] as const) {
+    if (filters[field]) chips.push({ id: field, label: `${field === 'minQuantity' ? 'Lote a partir de' : 'Lote até'} ${filters[field]} ${filters.quantityUnit}`, remove: () => removeApplied(field) })
+  }
   filters.states.forEach(state => chips.push({ id: `state-${state}`, label: brazilianStates.find(item => item.code === state)?.name ?? state, remove: () => removeApplied('states', state) }))
   sizeOptions.filter(option => filters.sizes.includes(option.id)).forEach(option => chips.push({ id: option.id, label: option.label, remove: () => removeApplied('sizes', option.id) }))
   quantityOptions.filter(option => filters.quantities.includes(option.id)).forEach(option => chips.push({ id: option.id, label: option.label, remove: () => removeApplied('quantities', option.id) }))
@@ -64,6 +70,8 @@ export function ProductsPage() {
     const error = validateProductPrices(draft)
     setPriceError(error)
     if (error) { document.getElementById(`products-${error.field}`)?.focus(); return }
+    const quantityError = validateCatalogQuantity(draft)
+    if (quantityError) { document.getElementById(`products-lot-${quantityError.field}`)?.focus(); return }
     setFilters({ ...draft, location: draft.location.trim() })
     setPage(1)
     setFiltersOpen(false)

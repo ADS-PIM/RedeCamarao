@@ -1,7 +1,9 @@
 import type { FormEvent } from 'react'
 import { brazilianStates } from '../utils/registration'
-import { getOfferSize, getOfferState, getQuantityBand, quantityOptions, sizeOptions } from '../data/products'
-import type { ProductFilters as Filters, QuantityFilter, SizeFilter } from '../data/products'
+import { getOfferSize, getOfferState, sizeOptions } from '../data/products'
+import type { ProductFilters as Filters, SizeFilter } from '../data/products'
+import { shrimpTypeOptions } from '../data/catalogFilters'
+import { QuantityRangeFields } from './QuantityRangeFields'
 import type { Offer } from '../data/marketplace'
 
 type Props = {
@@ -22,14 +24,11 @@ function toggle<T>(values: T[], value: T) {
 export function ProductFilters({ offers, value, unavailable, loading, priceError, onChange, onApply, onClear }: Props) {
   const states = new Map<string, number>()
   const sizes = new Map<SizeFilter, number>()
-  const quantities = new Map<QuantityFilter, number>()
   offers.forEach(offer => {
     const state = getOfferState(offer.location)
     const size = getOfferSize(offer.size)
-    const quantity = getQuantityBand(offer.weight)
     if (state) states.set(state, (states.get(state) ?? 0) + 1)
     if (size) sizes.set(size, (sizes.get(size) ?? 0) + 1)
-    quantities.set(quantity, (quantities.get(quantity) ?? 0) + 1)
   })
 
   const count = (value: number | undefined) => unavailable ? '—' : value ?? 0
@@ -40,6 +39,12 @@ export function ProductFilters({ offers, value, unavailable, loading, priceError
         <button type="button" className="filter-clear" onClick={onClear}>Limpar tudo</button>
       </div>
       <div className="filter-groups">
+        <fieldset className="filter-group">
+          <legend>Tipo de camarão</legend>
+          <div className="filter-options">{shrimpTypeOptions.map(option => <label className="filter-option" key={option.id}>
+            <input type="checkbox" checked={value.types.includes(option.id)} onChange={() => onChange({ ...value, types: toggle(value.types, option.id) })} /><span>{option.label}</span>
+          </label>)}</div>
+        </fieldset>
         <fieldset className="filter-group location-group">
           <legend>Localização</legend>
           <label className="filter-field" htmlFor="products-location">Cidade ou estado</label>
@@ -81,15 +86,8 @@ export function ProductFilters({ offers, value, unavailable, loading, priceError
           </div>
         </fieldset>
         <fieldset className="filter-group">
-          <legend>Quantidade disponível</legend>
-          <div className="filter-options">
-            {quantityOptions.map(option => (
-              <label className="filter-option" key={option.id}>
-                <input type="checkbox" checked={value.quantities.includes(option.id)} onChange={() => onChange({ ...value, quantities: toggle(value.quantities, option.id) })} />
-                <span>{option.label}</span><small>{count(quantities.get(option.id))}</small>
-              </label>
-            ))}
-          </div>
+          <legend>Lote disponível</legend>
+          <QuantityRangeFields idPrefix="products-lot" value={value} onChange={onChange} />
         </fieldset>
       </div>
       <button type="submit" className="button button-primary apply-filters" disabled={loading}>Aplicar filtros</button>

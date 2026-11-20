@@ -24,7 +24,7 @@
 .filter-groups { display: grid; gap: 20px; }
 .filter-group { min-width: 0; border: 0; border-bottom: 1px solid var(--border); padding: 0 0 20px; margin: 0; }
 .filter-group:last-child { border-bottom: 0; padding-bottom: 0; }
-.filter-group legend { padding: 0; margin-bottom: 14px; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.filter-group legend { padding: 0; margin-bottom: 14px; font-size: 15px; font-weight: 700; line-height: 1.5; }
 .filter-field { display: block; font-size: 12px; font-weight: 600; line-height: 1.5; margin-bottom: 8px; }
 .product-filters input[type='search'], .product-filters input[type='text'] { width: 100%; min-height: 44px; padding: 10px 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--navy); font-size: 16px; }
 .product-filters input::placeholder { color: var(--muted); font-size: 13px; opacity: 1; }
@@ -32,7 +32,7 @@
 .filter-subtitle { font-size: 12px; line-height: 1.5; font-weight: 600; margin-block: 20px 8px; }
 .filter-options { display: grid; gap: 2px; }
 .state-options { max-height: 180px; overflow-y: auto; scrollbar-width: thin; }
-.filter-option { display: flex; align-items: center; gap: 8px; min-height: 32px; padding-block: 5px; cursor: pointer; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.filter-option { display: flex; align-items: center; gap: 8px; min-height: 44px; padding-block: 5px; cursor: pointer; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
 .filter-option input { width: 17px; height: 17px; flex-shrink: 0; margin: 0; accent-color: var(--primary); cursor: pointer; }
 .filter-option > span { min-width: 0; overflow-wrap: anywhere; }
 .filter-option small { margin-left: auto; padding-left: 4px; font-size: 11px; }
