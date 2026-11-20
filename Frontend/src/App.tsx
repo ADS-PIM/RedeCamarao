@@ -77,7 +77,7 @@ function App() {
     void withSession(fetchMyProfile).then(profile => {
       if (active) updateAccountName(profile.name, profile.profilePicture ?? null)
     }).catch(() => {
-      if (active) setAccountIdentity(current => current.id === sessionUserId ? { id: '', name: '', profilePicture: null } : current)
+      if (active) setAccountIdentity({ id: sessionUserId, name: '', profilePicture: null })
     })
     return () => { active = false }
   }, [sessionUserId, restoring, session?.userType, withSession, updateAccountName])
@@ -85,7 +85,7 @@ function App() {
   return (
     <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || isNewOffer || isMyOffers || Boolean(editingOfferId)} editingOffer={isNewOffer || isMyOffers || Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} administrator={session?.userType === 'ADMIN'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onLogout={handleLogout} loggingOut={loggingOut} />
+      <Header pending={restoring || Boolean(session && session.userType !== 'ADMIN' && accountIdentity.id !== session.userId)} authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || isNewOffer || isMyOffers || Boolean(editingOfferId)} editingOffer={isNewOffer || isMyOffers || Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} administrator={session?.userType === 'ADMIN'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onLogout={handleLogout} loggingOut={loggingOut} />
       {editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
       {isAdminArea ? (
         <main id="main-content" className="account-main">

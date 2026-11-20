@@ -114,13 +114,13 @@ Content-Type: application/json
 
 {
   "offerId": "c58d2304-f74f-42db-8e57-4ca50b1c642e",
-  "imageUrl": "https://example.com/camarao.jpg",
+  "imageUrl": "https://res.cloudinary.com/sua-conta/image/upload/v1/redecamarao/offers/00000000-0000-4000-8000-000000000001.jpg",
   "description": "Camarão fresco disponível para venda"
 }
 ```
 
 - `offerId`: obrigatório, texto não vazio de até 36 caracteres; a oferta deve existir.
-- `imageUrl`: obrigatória, URL absoluta HTTP ou HTTPS de até 2048 caracteres.
+- `imageUrl`: obrigatória, URL HTTPS de até 2048 caracteres de uma imagem enviada pela aplicação à conta Cloudinary configurada. URLs externas, locais e de outras contas são rejeitadas.
 - `description`: opcional, texto de até 500 caracteres. Quando omitida, fica `""`.
 - `id`: UUID gerado pelo backend. Não deve ser enviado no corpo.
 - Campos desconhecidos e valores `null` são rejeitados.
@@ -133,15 +133,15 @@ Resposta `201`:
   "photo": {
     "id": "c8b3dd27-4587-432b-8397-7a39f8e5aa15",
     "offerId": "c58d2304-f74f-42db-8e57-4ca50b1c642e",
-    "imageUrl": "https://example.com/camarao.jpg",
+    "imageUrl": "https://res.cloudinary.com/sua-conta/image/upload/v1/redecamarao/offers/00000000-0000-4000-8000-000000000001.jpg",
     "description": "Camarão fresco disponível para venda"
   }
 }
 ```
 
-O cadastro recebe a URL de uma imagem já hospedada. Cada chamada cria uma foto;
-várias fotos podem pertencer à mesma oferta. A API armazena a URL sem baixar ou
-enviar arquivos para um provedor de imagens.
+O cadastro recebe a URL de uma imagem já enviada pelo upload da plataforma ao
+Cloudinary. Cada chamada cria uma foto; várias fotos podem pertencer à mesma
+oferta. Esta rota armazena a referência sem importar arquivos externos.
 
 ## Atualizar uma foto
 
@@ -187,7 +187,7 @@ pois a tabela não tem coluna de data.
   {
     "id": "c8b3dd27-4587-432b-8397-7a39f8e5aa15",
     "offerId": "c58d2304-f74f-42db-8e57-4ca50b1c642e",
-    "imageUrl": "https://example.com/camarao.jpg",
+    "imageUrl": "https://res.cloudinary.com/sua-conta/image/upload/v1/redecamarao/offers/00000000-0000-4000-8000-000000000001.jpg",
     "description": "Camarão fresco disponível para venda"
   }
 ]

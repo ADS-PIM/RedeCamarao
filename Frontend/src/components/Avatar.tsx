@@ -8,6 +8,6 @@ export function Avatar({ src, className = '', alt = '', fallback = 'farm' }: {
 }) {
   const [failed, setFailed] = useState<string | null>(null)
   return <span className={`profile-avatar ${className}`}>
-    {src && failed !== src ? <img src={src} alt={alt} decoding="async" onError={() => setFailed(src)} /> : <Icon name={fallback} />}
+    {src && failed !== src ? <img src={src} alt={alt} width={96} height={96} decoding="sync" onError={() => setFailed(src)} /> : <Icon name={fallback} />}
   </span>
 }

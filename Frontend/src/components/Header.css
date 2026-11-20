@@ -6,6 +6,8 @@
 .brand strong { color: var(--accent); font-weight: 750; }
 .site-header :focus-visible { outline-color: var(--accent); }
 .header-navigation { flex: 1; align-self: stretch; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.header-navigation.is-pending > * { visibility: hidden; }
+.header-navigation.is-pending::after { content: ''; display: block; flex-shrink: 0; width: 190px; height: 36px; border-radius: 8px; background: rgb(244 237 224 / 12%); }
 .header-navigation nav { display: flex; align-self: stretch; gap: 28px; margin-inline: auto; }
 .header-navigation nav a { position: relative; display: flex; align-items: center; min-height: 44px; color: var(--on-dark-muted); font-size: 14px; font-weight: 500; white-space: nowrap; }
 .header-navigation nav a:hover { color: var(--cream); }
