@@ -1,17 +1,37 @@
-.site-footer { width: 100%; margin-top: auto; flex-shrink: 0; background: var(--navy); border-top: 1px solid rgb(244 237 224 / 14%); }
-.footer-inner { min-height: 104px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'brand description links'; align-items: center; gap: 16px 40px; padding-block: 20px; }
-.footer-brand { grid-area: brand; justify-self: start; display: inline-flex; align-items: center; min-height: 44px; font-size: 20px; font-weight: 400; letter-spacing: -.6px; color: var(--cream); white-space: nowrap; }
+.site-footer { width: 100%; margin-top: auto; flex-shrink: 0; background: var(--navy); color: var(--cream); border-top: 1px solid rgb(244 237 224 / 14%); }
+.footer-inner { padding-block: 40px 0; }
+.footer-main { display: grid; grid-template-columns: minmax(0, 390px) minmax(180px, 220px); justify-content: space-between; align-items: start; gap: 32px 64px; padding-bottom: 36px; }
+.footer-about { min-width: 0; }
+.footer-brand { display: inline-flex; align-items: center; min-height: 72px; gap: 12px; font-size: 32px; font-weight: 400; line-height: 1.2; letter-spacing: -1px; color: var(--cream); white-space: nowrap; }
+.footer-brand .brand-logo { width: 72px; height: 72px; }
 .footer-brand strong { color: var(--accent); font-weight: 750; }
+.footer-brand:hover { color: var(--cream); text-decoration: none; }
+.footer-description { max-width: 380px; margin-top: 18px; color: var(--on-dark-muted); font-size: 15px; line-height: 1.7; overflow-wrap: anywhere; }
+.footer-quick-menu { min-width: 0; }
+.footer-quick-menu h2 { font-size: 16px; font-weight: 700; line-height: 1.5; }
+.footer-links, .footer-legal-links { margin: 0; padding: 0; list-style: none; }
+.footer-links { display: grid; margin-top: 8px; }
+.footer-links a, .footer-legal-links a { display: inline-flex; align-items: center; min-height: 36px; color: var(--on-dark-muted); font-size: 14px; line-height: 1.5; }
+.footer-links a:hover, .footer-legal-links a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+.footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px 32px; padding-block: 14px; border-top: 1px solid rgb(244 237 224 / 22%); }
+.footer-copyright { min-width: 0; color: var(--on-dark-muted); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.footer-bottom nav { min-width: 0; }
+.footer-legal-links { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.footer-legal-links a { font-size: 13px; }
 .site-footer :focus-visible { outline-color: var(--accent); }
-.footer-description { grid-area: description; justify-self: center; min-width: 0; max-width: 680px; font-size: 14px; color: var(--on-dark-muted); line-height: 1.7; overflow-wrap: anywhere; }
-.footer-inner nav { grid-area: links; min-width: 0; font-size: 14px; color: var(--cream); line-height: 1.6; }
-.footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0; padding: 0; list-style: none; }
-.footer-links a { display: inline-flex; align-items: center; min-height: 44px; }
-.footer-links a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
-@media (max-width: 1000px) {
-  .footer-inner { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'brand links' 'description description'; gap: 8px 24px; }
-  .footer-description { justify-self: start; }
+@media (max-width: 800px) {
+  .footer-main { gap: 32px; grid-template-columns: minmax(0, 1fr) minmax(160px, 200px); }
+  .footer-brand { font-size: 27px; gap: 10px; }
+  .footer-brand .brand-logo { width: 60px; height: 60px; }
+  .footer-bottom { align-items: flex-start; flex-direction: column; gap: 6px; }
 }
 @media (max-width: 600px) {
-  .footer-inner { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'brand' 'description' 'links'; gap: 8px; padding-block: 20px; }
+  .footer-inner { padding-top: 32px; }
+  .footer-main { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-bottom: 28px; }
+  .footer-brand { min-height: 60px; font-size: 27px; }
+  .footer-description { margin-top: 14px; }
+  .footer-links { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 16px; }
+  .footer-links a, .footer-legal-links a { min-height: 44px; }
+  .footer-bottom { padding-block: 18px; gap: 8px; }
+  .footer-legal-links { gap: 0 20px; }
 }

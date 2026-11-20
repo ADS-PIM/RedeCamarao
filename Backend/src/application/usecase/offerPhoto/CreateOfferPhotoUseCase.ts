@@ -5,6 +5,7 @@ import { OfferPhotoCreateDTO } from '../../dto/offerPhotoDTO/OfferPhotoCreateDTO
 import { OfferPhotoSearchDTO } from '../../dto/offerPhotoDTO/OfferPhotoSearchDTO';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { UseCase } from '../useCase';
+import { managedImageId } from '../../../service/imageStorage';
 
 type CreateOfferPhotoInput = { userId: string; data: OfferPhotoCreateDTO };
 
@@ -18,6 +19,7 @@ export class CreateOfferPhoto implements UseCase<CreateOfferPhotoInput, OfferPho
         const offer = await this.offerDAO.searchById(data.offerId);
         if (!offer) throw new ApplicationError('OFFER_NOT_FOUND', 'Oferta não encontrada');
         if (offer.userId !== userId) throw new ApplicationError('FORBIDDEN', 'Acesso negado');
+        if (!managedImageId(data.imageUrl)) throw new ApplicationError('INVALID_DATA', 'Envie a foto pelo upload da plataforma para armazená-la no Cloudinary.');
 
         const photo = OfferPhoto.construct(data);
         if (!(await this.offerPhotoDAO.create(photo, userId))) {

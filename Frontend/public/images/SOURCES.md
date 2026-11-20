@@ -1,6 +1,6 @@
 # Logo da RedeCamarão
 
-- `logo-redecamarao.png`: logo fornecida pelo usuário em `WhatsApp Image 2026-11-19 at 06.50.36.jpeg`, editada com a ferramenta integrada de imagens para gerar PNG com transparência real. Usada no cabeçalho, rodapé e ícone do site.
+- `logo-redecamarao.png`: original transparente da logo fornecida pelo usuário, mantido como fonte. A versão exibida no cabeçalho, rodapé e ícone é servida pelo Cloudinary, com URL versionada em `src/data/brand.ts`. Republicação: `node Backend/scripts/publish-brand.cjs`. O script usa o hash do original, preserva a transparência e verifica a URL antes de atualizar a referência. As demais fotografias desta pasta são referências locais sem uso nas telas atuais.
 - Instrução da edição: remover somente o fundo claro, inclusive nos espaços internos do símbolo, preservando camarão, onda, contorno, cores e proporções; não redesenhar nem adicionar elementos.
 
 # Fotografias ilustrativas do marketplace

@@ -4,7 +4,7 @@ import { Avatar } from './Avatar'
 import { Brand } from './Brand'
 import './Header.css'
 
-export function Header({ authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, administrator = false, userId, accountName = '', profilePicture, editingOffer = false, onLogout, loggingOut = false }: { authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; administrator?: boolean; userId?: string; accountName?: string; profilePicture?: string | null; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
+export function Header({ pending = false, authenticated = false, marketplace = false, products = false, producers = false, account = false, producer = false, administrator = false, userId, accountName = '', profilePicture, editingOffer = false, onLogout, loggingOut = false }: { pending?: boolean; authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; account?: boolean; producer?: boolean; administrator?: boolean; userId?: string; accountName?: string; profilePicture?: string | null; editingOffer?: boolean; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const [headerHidden, setHeaderHidden] = useState(false)
@@ -92,11 +92,11 @@ export function Header({ authenticated = false, marketplace = false, products = 
     <header ref={headerRef} onFocusCapture={() => setHeaderHidden(false)} className={`site-header${headerHidden ? ' is-scroll-hidden' : ''}${account && producer ? ' producer-header' : ''}`}>
       <div className="container header-inner">
         <a href="/" className="brand" aria-label="RedeCamarão — início" onClick={() => setMenuOpen(false)}><Brand /></a>
-        {authenticated && account && <span className="header-role">{administrator ? 'Administrador' : producer ? 'Produtor' : 'Comprador'}</span>}
-        <button ref={menuToggleRef} className="menu-toggle" type="button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-controls="main-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}>
+        {!pending && authenticated && account && <span className="header-role">{administrator ? 'Administrador' : producer ? 'Produtor' : 'Comprador'}</span>}
+        <button ref={menuToggleRef} className="menu-toggle" type="button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-controls="main-navigation" aria-expanded={menuOpen} disabled={pending} onClick={() => setMenuOpen(open => !open)}>
           <Icon name={menuOpen ? 'close' : 'menu'} />
         </button>
-        <div id="main-navigation" className={`header-navigation ${menuOpen ? 'is-open' : ''}`}>
+        <div id="main-navigation" aria-busy={pending} inert={pending} className={`header-navigation${pending ? ' is-pending' : ''} ${menuOpen ? 'is-open' : ''}`}>
           <nav aria-label="Navegação principal">
             {administrator ? <>
               <a href="/marketplace" aria-current={marketplace ? 'page' : undefined} onClick={() => setMenuOpen(false)}>Marketplace</a>

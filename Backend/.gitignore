@@ -15,5 +15,6 @@ node_modules
 !/test/offer-delete.test.cjs
 !/test/postgres.test.cjs
 !/test/offer-cover.test.cjs
+!/test/offer-photos.test.cjs
 /database/certs/
 *.local.log
