@@ -2,6 +2,7 @@ import { config } from '@fortawesome/fontawesome-svg-core'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
+  faFlag, faUserGroup, faShieldHalved, faDownload,
   faArrowLeft, faArrowRight, faBars, faBasketShopping, faBookmark, faBox,
   faCalendarDays, faChevronDown, faCircleCheck, faCircleInfo, faClock,
   faCommentDots, faCopy, faEllipsis, faEye, faEyeSlash, faHandshake,
@@ -18,6 +19,7 @@ import './Icon.css'
 config.autoAddCss = false
 
 const icons = {
+  people: faUserGroup, flag: faFlag, shield: faShieldHalved, download: faDownload,
   bag: faBasketShopping, store: faStore, farm: faWarehouse, shrimp: faShrimp,
   check: faCircleCheck, info: faCircleInfo, arrow: faArrowRight, 'arrow-left': faArrowLeft,
   menu: faBars, close: faXmark, eye: faEye, 'eye-off': faEyeSlash,

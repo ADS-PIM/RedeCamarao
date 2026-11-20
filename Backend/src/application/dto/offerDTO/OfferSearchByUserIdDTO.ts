@@ -13,6 +13,7 @@ export class OfferSearchByUserIdDTO {
     location: string;
     startDate: Date;
     endDate: Date;
+    adminDisabled: boolean;
     status: OfferStatus;
     createdAt: Date;
     updatedAt: Date;

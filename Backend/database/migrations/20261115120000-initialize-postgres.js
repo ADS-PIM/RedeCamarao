@@ -79,7 +79,7 @@ create table "administrators" (
 create table "refresh_tokens" (
     "id" char(36) not null,
     "adminId" char(36) not null,
-    "tokenHash" varchar(281) not null,
+    "tokenHash" char(64) not null,
     "createdAt" TIMESTAMPTZ not null default current_timestamp,
     "expiresAt" TIMESTAMPTZ not null,
     "revokedAt" TIMESTAMPTZ default null,

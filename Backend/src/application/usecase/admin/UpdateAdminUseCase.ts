@@ -9,6 +9,7 @@ export class UpdateAdmin implements UseCase<{ id: string, data: any }, void> {
     public async execute({ id, data }: { id: string, data: any }): Promise<void> {
         const searchByEmailAdmin = new SearchByEmailAdmin(this.adminDAO);
         if (data.email !== undefined) {
+            data.email = data.email.trim().toLowerCase();
             const adminWithEmail = await searchByEmailAdmin.execute(data.email);
             if (adminWithEmail && adminWithEmail.id !== id) {
                 throw new Error('Email already registered');

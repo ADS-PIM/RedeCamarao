@@ -16,6 +16,7 @@ export class CreateAdmin implements UseCase<AdminCreateDTO, null>{
                 throw new Error('Missing required fields');
             }
 
+            adminCreateDTO.email = adminCreateDTO.email.trim().toLowerCase();
             if (await searchByEmailAdmin.execute(adminCreateDTO.email)) {
                 throw new Error('Email already registered');
             }

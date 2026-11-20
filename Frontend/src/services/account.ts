@@ -3,7 +3,7 @@ import type { EditorPhoto, editorPayload } from '../data/offerEditor'
 import { apiBaseUrl } from './api.ts'
 
 export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED' | 'DRAFT'
-export type ManagedOffer = Offer & { status: OfferStatus; createdAt: string; updatedAt?: string; coverPhoto?: string | null }
+export type ManagedOffer = Offer & { status: OfferStatus; adminDisabled?: boolean; createdAt: string; updatedAt?: string; coverPhoto?: string | null }
 export type UserProfile = {
   name: string
   email: string

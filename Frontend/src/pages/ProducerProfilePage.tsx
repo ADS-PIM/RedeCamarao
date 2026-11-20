@@ -9,9 +9,13 @@ import type { ProducerOfferFilter } from '../data/producers'
 import './ProducersPage.css'
 import './ProducerProfilePage.css'
 
+import { ReportForm } from '../components/ReportForm'
+import type { Authorized } from '../services/moderation'
+import type { UserSession } from '../services/auth'
+
 const productsPerPage = 4
 
-export function ProducerProfilePage({ producerId }: { producerId: string }) {
+export function ProducerProfilePage({ producerId, auth, session }: { producerId: string; auth: Authorized; session: UserSession|null }) {
   const { profile, loading, error, reloadProfile } = useProducerProfile(producerId)
   const [page, setPage] = useState(1)
   const [offerFilter, setOfferFilter] = useState<ProducerOfferFilter>('all')
@@ -74,6 +78,7 @@ export function ProducerProfilePage({ producerId }: { producerId: string }) {
             <p className="producer-location"><Icon name="pin" /><span>{location}</span></p>
           </div>
           <div className="producer-profile-actions" aria-label="Opções de contato">
+            {session && session.userType !== 'ADMIN' && session.userId !== producerId && <ReportForm auth={auth} accountId={producerId}/>}
             <button type="button" className="button producer-whatsapp-button" disabled aria-describedby="producer-contact-note"><Icon name="whatsapp" />WhatsApp em breve</button>
           </div>
         </div>

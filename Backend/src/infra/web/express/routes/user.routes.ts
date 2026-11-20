@@ -9,7 +9,12 @@ import {
     loginRateLimit
 } from '../../../../rateLimit/middleware';
 
+import { createReport, myNotifications } from './moderation.routes';
+import { rateLimit } from '../../../../rateLimit/middleware';
+
 const router = Router();
+router.post('/reports', authUser, rateLimit('MESSAGE','report:ip', req => req.ip), createReport);
+router.get('/me/notifications', authUser, myNotifications);
 
 router.get('/producers', (req, res) => controllers.publicProducerController.search(req, res));
 router.get('/producers/:id', (req, res) => controllers.publicProducerController.searchById(req, res));

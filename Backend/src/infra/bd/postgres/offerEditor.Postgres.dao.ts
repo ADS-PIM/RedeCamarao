@@ -15,11 +15,12 @@ export class OfferEditorDAOPostgres {
         try {
             await db.query('BEGIN');
             if (creating) {
-                const { rows: users } = await db.query<QueryResultRow>('SELECT user_type FROM users WHERE id = $1 FOR UPDATE', [userId]);
-                if (!users.length || users[0].user_type !== 'PRODUCER') throw new ApplicationError('FORBIDDEN', 'Somente produtores podem cadastrar ofertas');
+                const { rows: users } = await db.query<QueryResultRow>('SELECT user_type, account_status FROM users WHERE id = $1 FOR UPDATE', [userId]);
+                if (!users.length || users[0].user_type !== 'PRODUCER' || users[0].account_status !== 'ACTIVE') throw new ApplicationError('FORBIDDEN', 'Somente produtores podem cadastrar ofertas');
             } else {
-                const { rows: owners } = await db.query<QueryResultRow>('SELECT "userId" FROM offers WHERE id = $1 FOR UPDATE', [id]);
+                const { rows: owners } = await db.query<QueryResultRow>('SELECT "userId", admin_disabled FROM offers WHERE id = $1 FOR UPDATE', [id]);
                 if (!owners.length) throw new ApplicationError('OFFER_NOT_FOUND', 'Oferta não encontrada');
+                if (owners[0].admin_disabled && data.status === 'ACTIVE') throw new ApplicationError('FORBIDDEN', 'Somente a administração pode reativar esta oferta.');
                 if (owners[0].userId !== userId) throw new ApplicationError('FORBIDDEN', 'Acesso negado');
             }
             const existing: QueryResultRow[] = creating ? [] : (await db.query<QueryResultRow>('SELECT id, "imageUrl" FROM "offerPhotos" WHERE "offerId" = $1', [id])).rows;

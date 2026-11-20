@@ -1,6 +1,6 @@
 import type { Producer, ProducerProfile } from '../data/producers'
 import { isOffer } from './offers.ts'
-import { apiBaseUrl } from './api'
+import { apiBaseUrl } from './api.ts'
 
 function isProducer(value: unknown): value is Producer {
   if (!value || typeof value !== 'object') return false

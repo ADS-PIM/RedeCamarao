@@ -5,6 +5,7 @@ import { Icon } from '../components/Icon'
 import { ProfilePhotoEditor } from '../components/ProfilePhotoEditor'
 import { useAuthenticatedAction } from '../hooks/useAuthenticatedAction'
 import { ProductCard } from '../components/ProductCard'
+import { ModerationNotifications } from '../components/ModerationNotifications'
 import { formatPrice } from '../data/marketplace'
 import type { OfferDetail } from '../data/marketplace'
 import { readSavedOffers, savedOffersKey, setOfferSaved } from '../data/offerDetail'
@@ -193,6 +194,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
           </button>}
         </section>
 
+        <ModerationNotifications auth={withSession}/>
         {profile.userType === 'PRODUCER' && <>
           <section className="account-metrics" aria-label="Resumo das ofertas">
             <article><div><span>Ofertas ativas</span><span className="account-metric-icon"><Icon name="box" /></span></div><strong>{activeCount}</strong><small>Disponíveis no marketplace</small></article>
