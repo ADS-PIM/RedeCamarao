@@ -11,15 +11,17 @@ import './LoginPage.css'
 type Props = {
   restoring: boolean
   onSessionChange: (session: UserSession | null) => void
+  returnTo?: string
 }
 
-export function LoginPage({ restoring, onSessionChange }: Props) {
+export function LoginPage({ restoring, onSessionChange, returnTo }: Props) {
   const [data, setData] = useState<LoginData>({ email: '', password: '' })
   const [touched, setTouched] = useState<Partial<Record<keyof LoginData, boolean>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const pending = useRef(false)
   const errors = validateLogin(data)
+  const registerHref = returnTo ? `/registro?returnTo=${encodeURIComponent(returnTo)}` : '/registro'
 
   function fieldProps(field: keyof LoginData) {
     return {
@@ -81,7 +83,7 @@ export function LoginPage({ restoring, onSessionChange }: Props) {
                 <button className="button button-primary login-submit" type="submit" disabled={submitting || restoring}>
                   {restoring ? 'Verificando sessão...' : submitting ? 'Entrando...' : 'Entrar'}<Icon name="arrow" />
                 </button>
-                <p className="login-register">Ainda não tem uma conta? <a href="/registro">Criar conta</a></p>
+                <p className="login-register">Ainda não tem uma conta? <a href={registerHref}>Criar conta</a></p>
               </form>
           {submitError && <div className="login-error" role="alert"><Icon name="info" /><p>{submitError}</p></div>}
           <p className="login-session-note" role="status">{restoring ? 'Aguarde enquanto verificamos seu acesso.' : 'Uma conta para comprar ou vender camarão.'}</p>

@@ -39,7 +39,8 @@ export function readSavedOffers(storage: Pick<SavedStorage, 'getItem'>): string[
   } catch { return [] }
 }
 
-export function setOfferSaved(storage: SavedStorage, id: string, saved: boolean) {
+export function setOfferSaved(storage: SavedStorage, id: string, saved: boolean, registered = false) {
+  if (saved && !registered) throw new Error('Crie uma conta ou entre para salvar ofertas.')
   const ids = readSavedOffers(storage).filter(value => value !== id)
   if (saved) ids.push(id)
   storage.setItem(savedOffersKey, JSON.stringify(ids))

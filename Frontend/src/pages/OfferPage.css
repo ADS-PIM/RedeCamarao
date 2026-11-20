@@ -8,6 +8,7 @@
 .offer-actions .button[aria-pressed='true'] { border-color: var(--border); background: var(--surface-muted); color: var(--primary-dark); }
 .offer-actions svg { width: 20px; height: 20px; flex-shrink: 0; }
 .offer-action-feedback { min-height: 22px; margin-bottom: 18px; color: var(--primary-dark); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.offer-action-feedback a { color: var(--primary); font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
 .offer-share-link { max-width: 600px; margin: 0 0 20px auto; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 .offer-share-link label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 600; line-height: 1.6; }
 .offer-share-link input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--page-background); color: var(--navy); font-size: 16px; cursor: text; }
