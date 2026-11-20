@@ -60,3 +60,9 @@
   .header-actions .login-link { padding-inline: 12px; }
 }
 @media (max-width: 380px) { .header-role { display: none; } }
+@media (max-width: 320px) {
+  .header-inner { gap: 8px; }
+  .brand { gap: 7px; font-size: 19px; }
+  .brand .brand-logo { width: 32px; height: 32px; }
+  .menu-toggle { width: 40px; height: 40px; padding: 7px; }
+}

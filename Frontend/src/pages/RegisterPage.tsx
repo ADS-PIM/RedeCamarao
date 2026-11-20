@@ -9,7 +9,7 @@ import './RegisterPage.css'
 
 const initialData: RegistrationData = { name: '', document: '', email: '', password: '', confirmPassword: '', terms: false, phone: '', city: '', state: '' }
 
-export function RegisterPage() {
+export function RegisterPage({ returnTo }: { returnTo?: string } = {}) {
   const [step, setStep] = useState(1)
   const [profile, setProfile] = useState<'BUYER' | 'PRODUCER'>('BUYER')
   const [data, setData] = useState(initialData)
@@ -19,6 +19,7 @@ export function RegisterPage() {
   const [submitError, setSubmitError] = useState('')
   const headingRef = useRef<HTMLHeadingElement>(null)
   const errors = validateRegistration(data)
+  const loginHref = returnTo ? `/entrar?returnTo=${encodeURIComponent(returnTo)}` : '/entrar'
 
   function changeField(field: FieldName, value: string) {
     setData(current => ({ ...current, [field]: value }))
@@ -93,7 +94,7 @@ export function RegisterPage() {
               <Icon name="check" />
               <h2 ref={headingRef} tabIndex={-1}>Conta criada com sucesso!</h2>
               <p>Seu cadastro foi concluído. Agora você pode entrar com seu e-mail e senha.</p>
-              <a className="button button-primary" href="/entrar">Entrar</a>
+              <a className="button button-primary" href={loginHref}>Entrar</a>
             </div>
           ) : (
             <form onSubmit={submit} noValidate aria-busy={submitting}>
@@ -157,7 +158,7 @@ export function RegisterPage() {
               </>}
               {submitError && <div className="submit-error" role="alert"><Icon name="info" /><p>{submitError}</p></div>}
               <div className="form-actions">
-                {step === 1 ? <a className="existing-account" href="/entrar">Já tem conta? <span>Entrar</span></a> : <button className="button button-secondary" type="button" disabled={submitting} onClick={() => moveToStep(1)}>Voltar</button>}
+                {step === 1 ? <a className="existing-account" href={loginHref}>Já tem conta? <span>Entrar</span></a> : <button className="button button-secondary" type="button" disabled={submitting} onClick={() => moveToStep(1)}>Voltar</button>}
                 <button className="button button-primary continue-button" type="submit" disabled={submitting}><Icon name="arrow" />{step === 1 ? 'Continuar' : submitting ? 'Criando conta...' : 'Criar conta'}</button>
               </div>
             </form>
