@@ -6,7 +6,7 @@ export class SearchByEmailAdmin implements UseCase<string, Admin | null>{
     constructor(private readonly adminDAO: AdminDAOInterface){}
 
     public async execute(email: string): Promise<Admin | null> {
-        const admin: Admin | null = await this.adminDAO.searchByEmail(email);
+        const admin: Admin | null = await this.adminDAO.searchByEmail(email.trim().toLowerCase());
         return admin ? Admin.reconstruct(admin) : null;
     }
 }

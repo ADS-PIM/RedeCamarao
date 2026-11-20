@@ -1,7 +1,7 @@
 import type { LoginData } from '../utils/login.ts'
 import { apiBaseUrl } from './api'
 
-export type UserSession = { accessToken: string; userId: string; userType: 'BUYER' | 'PRODUCER' | 'ADMIN'; role?: 'SUPER_ADMIN' | 'ADMIN' }
+export type UserSession = { accessToken: string; userId: string; userType: 'BUYER' | 'PRODUCER' | 'ADMIN'; name?: string; role?: 'SUPER_ADMIN' | 'ADMIN' }
 
 let refreshRequest: Promise<UserSession | null> | undefined
 
@@ -20,7 +20,7 @@ async function request(route: 'users' | 'admin', endpoint: string, data?: LoginD
   }
 }
 
-async function readSession(response: Response): Promise<UserSession> {
+export async function readSession(response: Response): Promise<UserSession> {
   const data = await response.json().catch(() => null)
   if (!data || typeof data.accessToken !== 'string' || !data.accessToken ||
       typeof data.userId !== 'string' || !data.userId ||
@@ -31,6 +31,7 @@ async function readSession(response: Response): Promise<UserSession> {
     accessToken: data.accessToken,
     userId: data.userId,
     userType: data.userType,
+    ...(typeof data.name === 'string' && { name: data.name }),
     ...(data.role && { role: data.role }),
   }
 }
@@ -38,6 +39,7 @@ async function readSession(response: Response): Promise<UserSession> {
 export async function loginUser(data: LoginData, baseUrl = apiBaseUrl): Promise<UserSession> {
   const userResponse = await request('users', 'login', data, baseUrl)
   if (userResponse.ok) return readSession(userResponse)
+  if (userResponse.status === 403) throw new Error((await userResponse.json()).error)
   if (userResponse.status === 429) throw new Error('Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente.')
 
   if (userResponse.status === 401 || userResponse.status === 400) {

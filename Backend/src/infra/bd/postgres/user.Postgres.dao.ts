@@ -12,6 +12,7 @@ const userColumns = `
     name,
     email,
     "hashPassword" AS password,
+    account_status AS "accountStatus",
     user_type AS "userType",
     "CPF_CNPJ" AS cpf_cnpj,
     description,
@@ -30,12 +31,12 @@ const publicProducerQuery = `
     LEFT JOIN (
         SELECT "userId", COUNT(*) AS "activeOfferCount"
         FROM offers
-        WHERE status = 'ATIVO'
+        WHERE status = 'ATIVO' AND NOT admin_disabled
             AND start_availability_date <= CURRENT_DATE
             AND end_availability_date >= CURRENT_DATE
         GROUP BY "userId"
     ) AS "activeOffers" ON "activeOffers"."userId" = u.id
-    WHERE u.user_type = $1
+    WHERE u.user_type = $1 AND u.account_status = 'ACTIVE'
 `;
 
 type PublicProducerRow = QueryResultRow & Omit<PublicProducer, 'activeOfferCount'> & {
@@ -80,11 +81,11 @@ export class UserDAOPostgres implements UserDAOInterface, PublicProducerDAOInter
                 email,
                 "hashPassword",
                 "CPF_CNPJ",
-                user_type,
+                user_type, account_status,
                 location,
                 phone,
                 "createdAt"
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $10, $7, $8, $9)`,
             [
                 user.id,
                 user.name,
@@ -94,7 +95,8 @@ export class UserDAOPostgres implements UserDAOInterface, PublicProducerDAOInter
                 user.userType,
                 user.location,
                 user.phone,
-                user.createdAt
+                user.createdAt,
+                user.userType === UserType.PRODUCER ? 'PENDING' : 'ACTIVE'
             ]
         );
     }

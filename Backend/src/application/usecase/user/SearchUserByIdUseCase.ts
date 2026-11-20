@@ -18,6 +18,7 @@ export class SearchByIdUser implements UseCase<string, UserSearchByIdDTO | null>
 
         return {
             id: user.id,
+            accountStatus: user.accountStatus,
             name: user.name,
             email: user.email,
             userType: user.userType,

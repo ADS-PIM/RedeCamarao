@@ -1,0 +1,5 @@
+.report-form form,.report-form label { display:grid; gap:.6rem; }
+.report-form form { gap:1rem; margin-top:1rem; }
+.report-form :is(select,textarea,input) { width:100%; padding:.7rem; border:1px solid var(--border); border-radius:8px; color:var(--ink); background:var(--surface); }
+.report-form form>div { display:flex; gap:.6rem; justify-content:flex-end; flex-wrap:wrap; }
+.report-form [role=alert] { color:#9c2931; }

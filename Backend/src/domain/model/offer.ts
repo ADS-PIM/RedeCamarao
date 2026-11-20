@@ -26,6 +26,7 @@ export type propsOffer = {
     status: OfferStatus;
     createdAt: Date;
     updatedAt?: Date;
+    adminDisabled?: boolean;
     coverPhoto?: string | null;
 }
 
@@ -106,6 +107,7 @@ export class Offer {
     }
 
     public get updatedAt() { return this.props.updatedAt ?? this.props.createdAt; }
+    public get adminDisabled() { return this.props.adminDisabled ?? false; }
     public get coverPhoto() { return this.props.coverPhoto ?? null; }
     public get createdAt () {
         return this.props.createdAt;

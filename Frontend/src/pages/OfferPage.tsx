@@ -13,7 +13,10 @@ import { offerGallery, offerHref, readSavedOffers, relatedOffers, savedOffersKey
 import type { UserSession } from '../services/auth'
 import './OfferPage.css'
 
-export function OfferPage({ offerId, session, restoring }: { offerId: string; session: UserSession | null; restoring: boolean }) {
+import { ReportForm } from '../components/ReportForm'
+import type { Authorized } from '../services/moderation'
+
+export function OfferPage({ offerId, session, restoring, auth }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized }) {
   const { offer, loading, error, reloadOffer } = useOfferDetail(offerId)
   const { offers, loading: relatedLoading, error: relatedError, reloadOffers } = useMarketplaceOffers()
   const [saved, setSaved] = useState(false)
@@ -100,6 +103,7 @@ export function OfferPage({ offerId, session, restoring }: { offerId: string; se
       <div className="container offer-container">
         <div className="offer-topbar">
           <div className="offer-actions">
+            {session && session.userType !== 'ADMIN' && session.userId !== producer.id && <ReportForm auth={auth} offerId={offerId}/>}
             <button type="button" className="button button-secondary" onClick={shareOffer}><Icon name="share" />Compartilhar</button>
             <button type="button" className="button button-secondary" aria-label={session ? 'Salvar oferta' : 'Entre ou crie uma conta para salvar esta oferta'} aria-pressed={saved} disabled={restoring} onClick={saveOffer}><Icon name="bookmark" />{saved ? 'Salvo' : 'Salvar'}</button>
           </div>

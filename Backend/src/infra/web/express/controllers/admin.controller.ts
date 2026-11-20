@@ -4,6 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PasswordCrypto } from '../../../../service/passwordCrypto'
 import jwt from 'jsonwebtoken';
+import { finishAdminLogin } from '../../../../service/moderationEmail';
 import { AdminRole } from '../../../../domain/model/admin';
 
 import { AdminCreateDTO } from '../../../../application/dto/adminDTO/AdminCreateDTO';
@@ -85,17 +86,42 @@ export class AdminController {
                 return res.status(500).json({error: 'JWT secrets are not configured'});
             }
 
+            const accessToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, accessSecret, { expiresIn: '5m' });
+            const refreshTokenId = crypto.randomUUID();
+            const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
+            const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+            await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, userId: admin.id, expiresAt: refreshExpiresAt });
+
+            res.cookie('refreshToken', refreshToken, refreshCookieOptions);
+            return res.status(200).json({ accessToken, userId: admin.id, userType: 'ADMIN', name: admin.name, role: admin.role });
+        } catch {
+            return res.status(503).json({ error: 'Não foi possível entrar agora. Tente novamente.' });
+        }
+    }
+
+    public async verifyCode(req: Request, res: Response): Promise<Response> {
+        try {
+            const { challenge, code } = req.body ?? {};
+            const admin = typeof challenge === 'string' && typeof code === 'string' && await finishAdminLogin(challenge, code);
+            if (!admin) return res.status(401).json({ error: 'Código inválido ou expirado.' });
+            const accessSecret = process.env.JWT_ACCESS_SECRET;
+            const refreshSecret = process.env.JWT_REFRESH_SECRET;
+
+            if (!accessSecret || !refreshSecret) {
+                return res.status(500).json({error: 'JWT secrets are not configured'});
+            }
+
             
-            const accessToken = jwt.sign({ adminId: admin.id, role: admin.role }, accessSecret, { expiresIn: '5m' });
+            const accessToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, accessSecret, { expiresIn: '5m' });
 
             const refreshTokenId = crypto.randomUUID();
-            const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
+            const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
 
             const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
             await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, userId: admin.id, expiresAt: refreshExpiresAt });
 
             res.cookie('refreshToken', refreshToken, refreshCookieOptions);
-            return res.status(200).json({ accessToken, userId: admin.id, userType: 'ADMIN', role: admin.role });
+            return res.status(200).json({ accessToken, userId: admin.id, userType: 'ADMIN', name: admin.name, role: admin.role });
         }catch (error: any) {
             console.error('Error during login:', error);
             return res.status(500).json({ error: error.message || 'Error during login' });
@@ -123,22 +149,24 @@ export class AdminController {
             }
 
             const adminId = payload.adminId;
-            if (!payload.jti || payload.jti !== storedToken.id) {
+            if (payload.mfa !== true || !payload.jti || payload.jti !== storedToken.id) {
                 return res.status(401).json({ message: 'Invalid refresh token' })
             }
 
             if (!process.env.JWT_ACCESS_SECRET) throw new Error('JWT access secret is not configured');
-            const newAccessToken = jwt.sign({ adminId, role: payload.role }, process.env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+            const current = await this.searchByIdAdmin.execute(adminId);
+            if (!current?.active) return res.status(401).json({ error: 'Sessão encerrada.' });
+            const newAccessToken = jwt.sign({ adminId, role: current.role, mfa: true }, process.env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
 
             await this.deleteByToken.execute(refreshToken);
             const newRefreshTokenId = crypto.randomUUID();
-            const newRefreshToken = jwt.sign({ adminId, role: payload.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d', jwtid: newRefreshTokenId });
+            const newRefreshToken = jwt.sign({ adminId, role: current.role, mfa: true }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d', jwtid: newRefreshTokenId });
             const newRefreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
             await this.createRefreshToken.execute({ id: newRefreshTokenId, token: newRefreshToken, userId: adminId, expiresAt: newRefreshExpiresAt });
 
 
             res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
-            return res.status(200).json({ accessToken: newAccessToken, userId: adminId, userType: 'ADMIN', role: payload.role });
+            return res.status(200).json({ accessToken: newAccessToken, userId: adminId, userType: 'ADMIN', name: current.name, role: current.role });
         } catch (error: any) {
             console.error('Error during token refresh:', error);
             return res.status(500).json({ error: error.message || 'Error during token refresh' });

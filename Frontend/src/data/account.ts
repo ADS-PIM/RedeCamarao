@@ -21,7 +21,7 @@ export function isPublishedOffer(offer: ManagedOffer, today = localDateString())
 }
 
 export function canActivateOffer(offer: ManagedOffer, today = localDateString()) {
-  return offer.status === 'INACTIVE' && offer.endDate.slice(0, 10) >= today
+  return !offer.adminDisabled && offer.status === 'INACTIVE' && offer.endDate.slice(0, 10) >= today
 }
 
 export type ManagedOfferTab = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'DRAFT' | 'CLOSED'

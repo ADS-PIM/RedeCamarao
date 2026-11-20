@@ -10,7 +10,7 @@ export class AdminDAOPostgres implements AdminDAOInterface{
         try {
             const result = await connection.query(
                 'INSERT INTO administrators (id, name, email, "hashPassword", role, active, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, $7)',
-                [admin.id, admin.name, admin.email, admin.password, admin.role, admin.active, admin.createdAt]
+                [admin.id, admin.name, admin.email.trim().toLowerCase(), admin.password, admin.role, admin.active, admin.createdAt]
             );
         } catch (error: any) {
             throw new Error('Error registering admin: ' + error.message);
@@ -20,7 +20,7 @@ export class AdminDAOPostgres implements AdminDAOInterface{
     async searchByEmail(email: string): Promise<Admin | null> {
         try {
             const { rows: admin } = await connection.query(
-                'SELECT id, name, email, "hashPassword" AS password, role, active, "createdAt", "profilePicture" AS profile_picture FROM administrators WHERE LOWER(email) = LOWER($1)',
+                'SELECT id, name, email, "hashPassword" AS password, role, active, "createdAt", "profilePicture" AS profile_picture FROM administrators WHERE LOWER(BTRIM(email)) = LOWER(BTRIM($1))',
                 [email]
             );
             if (admin.length == 0) {
@@ -77,7 +77,7 @@ export class AdminDAOPostgres implements AdminDAOInterface{
         }
         if (data.email !== undefined) {
             fields.push(`email = $${values.length + 1}`);
-            values.push(data.email);
+            values.push(data.email.trim().toLowerCase());
         }
         if (data.password !== undefined) {
             fields.push(`"hashPassword" = $${values.length + 1}`);

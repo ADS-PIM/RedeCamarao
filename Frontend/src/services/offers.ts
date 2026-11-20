@@ -1,5 +1,5 @@
 import type { Offer, OfferDetail } from '../data/marketplace'
-import { apiBaseUrl } from './api'
+import { apiBaseUrl } from './api.ts'
 
 export function isOffer(value: unknown): value is Offer {
   if (!value || typeof value !== 'object') return false
