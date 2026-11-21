@@ -1,5 +1,5 @@
 import type { LoginData } from '../utils/login.ts'
-import { apiBaseUrl } from './api'
+import { apiBaseUrl } from './api.ts'
 
 export type UserSession = { accessToken: string; userId: string; userType: 'BUYER' | 'PRODUCER' | 'ADMIN'; role?: 'SUPER_ADMIN' | 'ADMIN' }
 
