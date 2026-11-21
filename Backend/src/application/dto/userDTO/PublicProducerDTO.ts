@@ -14,7 +14,6 @@ export function toPublicProducerDTO(producer: PublicProducer): PublicProducerDTO
         name: producer.name,
         description: producer.description,
         location: producer.location,
-        phone: producer.phone,
         businessHours: producer.businessHours,
         profilePicture: producer.profilePicture ?? null,
         activeOfferCount: producer.activeOfferCount

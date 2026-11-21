@@ -26,7 +26,6 @@ export type OfferProducer = {
   name: string
   description: string | null
   location: string | null
-  phone: string | null
   businessHours: string | null
   profilePicture?: string | null
   activeOfferCount: number

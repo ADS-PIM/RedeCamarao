@@ -34,7 +34,8 @@ function App() {
   const isMarketplace = ['/', '/marketplace', '/marketplace/'].includes(pathname)
   const isProducts = ['/produtos', '/produtos/'].includes(pathname)
   const requestedReturnTo = new URLSearchParams(window.location.search).get('returnTo')
-  const returnAfterAuth = requestedReturnTo?.startsWith('/produtos/') && !requestedReturnTo.startsWith('//') ? requestedReturnTo : null
+  const returnAfterAuth = requestedReturnTo && !requestedReturnTo.startsWith('//')
+    && (requestedReturnTo.startsWith('/produtos/') || requestedReturnTo.startsWith('/produtores/')) ? requestedReturnTo : null
   const offerId = offerIdFromPath(pathname)
   const isProducers = ['/produtores', '/produtores/'].includes(pathname)
   const producerId = producerIdFromPath(pathname)
@@ -106,7 +107,7 @@ function App() {
             </section>
           )}
         </main>
-      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} restoring={restoring} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} /> : isProducers ? <ProducersPage /> : isLogin ? (session ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
+      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} restoring={restoring} onSessionChange={setSession} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} session={session} restoring={restoring} onSessionChange={setSession} /> : isProducers ? <ProducersPage /> : isLogin ? (session ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

@@ -11,6 +11,7 @@
   --navy-rgb: 20 33 61;
   --cream: #F4EDE0;
   --coral: #FF5C4D;
+  --coral-rgb: 255 92 77;
   --primary: var(--navy);
   --primary-dark: #0D172C;
   --brand-dark: var(--navy);
@@ -33,8 +34,8 @@
   --white: #FFFFFF;
   --danger: #df4247;
   --success: #149566;
-  --field-focus-border: var(--navy);
-  --field-focus-ring: inset 0 0 0 1px var(--field-focus-border), 0 0 0 3px rgb(var(--navy-rgb) / 10%);
+  --field-focus-border: var(--accent);
+  --field-focus-ring: inset 0 0 0 1px var(--field-focus-border), 0 0 0 3px rgb(var(--coral-rgb) / 18%);
 }
 * { box-sizing: border-box; }
 /* Reserve space only for an actual scrollbar, including on narrow screens. */
@@ -47,6 +48,7 @@ a { color: inherit; text-decoration: none; }
 button { cursor: pointer; }
 button:disabled { cursor: wait; opacity: .7; }
 button, input, textarea, select { min-width: 0; }
+.app-shell input[type='checkbox'], .app-shell input[type='radio'] { accent-color: var(--accent); }
 :focus-visible { outline: 3px solid var(--field-focus-border); outline-offset: 4px; }
 h1, h2, p { margin: 0; }
 .container { width: min(1800px, 89%); margin-inline: auto; }
@@ -59,14 +61,14 @@ h1, h2, p { margin: 0; }
 .skip-link:focus { top: 10px; }
 .app-shell :where(input:not([type='checkbox'], [type='radio']), select, textarea):enabled:focus { border-color: var(--field-focus-border); outline: none; box-shadow: var(--field-focus-ring); }
 .app-shell :where(input, select, textarea)[aria-invalid='true']:enabled:focus { border-color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 2px #df424714; }
-.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field, .account-search):has(input:focus) { outline: 2px solid #ffb45c; outline-offset: 2px; border-color: #bb4b1b; box-shadow: 0 0 0 4px rgb(255 180 92 / 18%); }
+.app-shell :is(.market-search, .products-search, .producers-search-input, .search-field, .account-search):has(input:focus) { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); box-shadow: 0 0 0 4px rgb(var(--coral-rgb) / 18%); }
 .app-shell :is(.market-search, .products-search, .producers-search-input, .search-field, .account-search) input:focus { outline: none; border-color: transparent; box-shadow: none; }
 .brand, .footer-brand { display: inline-flex; align-items: center; gap: 10px; }
-.brand-logo { display: block; width: 170px; height: auto; aspect-ratio: 2300 / 730; flex: 0 0 auto; object-fit: contain; }
-@media (max-width: 1240px) { .brand-logo { width: 150px; } }
+.brand-logo { display: block; width: 195px; height: auto; aspect-ratio: 2300 / 730; flex: 0 0 auto; object-fit: contain; }
+@media (max-width: 1240px) { .brand-logo { width: 170px; } }
 @media (max-width: 600px) {
   .brand { font-size: 22px; }
-  .brand-logo { width: 132px; }
+  .brand-logo { width: 148px; }
 }
-@media (max-width: 360px) { .brand-logo { width: 118px; } }
+@media (max-width: 360px) { .brand-logo { width: 132px; } }
 @media (max-width: 600px) { .container { width: calc(100% - 36px); } }
