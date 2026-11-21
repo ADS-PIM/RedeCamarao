@@ -1,4 +1,4 @@
-import type { Offer } from './marketplace'
+import type { Offer } from './marketplace.ts'
 import { getOfferState } from './products.ts'
 import { brazilianStates } from '../utils/registration.ts'
 

@@ -1,5 +1,5 @@
 import { formatQuantity } from '../data/offerUnits'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { OfferGallery } from '../components/OfferGallery'
@@ -13,35 +13,38 @@ import { offerGallery, offerHref, readSavedOffers, relatedOffers, savedOffersKey
 import type { UserSession } from '../services/auth'
 import './OfferPage.css'
 
+function subscribeToSavedOffers(onChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === savedOffersKey || event.key === null) onChange()
+  }
+  window.addEventListener('storage', handleStorage)
+  window.addEventListener('rede-camarao:saved-offers-change', onChange)
+  return () => {
+    window.removeEventListener('storage', handleStorage)
+    window.removeEventListener('rede-camarao:saved-offers-change', onChange)
+  }
+}
+
+function getSavedOffersSnapshot() {
+  try { return window.localStorage.getItem(savedOffersKey) ?? '[]' } catch { return '[]' }
+}
+
+function getEmptySavedOffersSnapshot() { return '[]' }
+
 export function OfferPage({ offerId, session, restoring }: { offerId: string; session: UserSession | null; restoring: boolean }) {
   const { offer, loading, error, reloadOffer } = useOfferDetail(offerId)
   const { offers, loading: relatedLoading, error: relatedError, reloadOffers } = useMarketplaceOffers()
-  const [saved, setSaved] = useState(false)
+  const savedOffersSnapshot = useSyncExternalStore(subscribeToSavedOffers, getSavedOffersSnapshot, getEmptySavedOffersSnapshot)
   const [feedback, setFeedback] = useState('')
   const [showSaveAccountPrompt, setShowSaveAccountPrompt] = useState(false)
   const [showShareLink, setShowShareLink] = useState(false)
   const shareLinkRef = useRef<HTMLInputElement>(null)
   const userId = session?.userId
+  const saved = Boolean(userId && readSavedOffers({ getItem: key => key === savedOffersKey ? savedOffersSnapshot : null }).includes(offerId))
 
   useEffect(() => {
     document.title = `${loading ? 'Oferta de camarão' : error ? 'Oferta indisponível' : offer?.title ?? 'Oferta não encontrada'} | RedeCamarão`
   }, [offer, loading, error])
-
-  useEffect(() => {
-    if (!userId) { setSaved(false); return }
-    try { setSaved(readSavedOffers(window.localStorage).includes(offerId)) } catch { setSaved(false) }
-  }, [offerId, userId])
-
-  useEffect(() => {
-    if (!userId) return
-    const syncSaved = (event: StorageEvent) => {
-      if (event.key === savedOffersKey || event.key === null) {
-        try { setSaved(readSavedOffers(window.localStorage).includes(offerId)) } catch { setSaved(false) }
-      }
-    }
-    window.addEventListener('storage', syncSaved)
-    return () => window.removeEventListener('storage', syncSaved)
-  }, [offerId, userId])
 
   function saveOffer() {
     if (restoring) return
@@ -50,7 +53,7 @@ export function OfferPage({ offerId, session, restoring }: { offerId: string; se
     try {
       const next = !readSavedOffers(window.localStorage).includes(offerId)
       setOfferSaved(window.localStorage, offerId, next, Boolean(session?.userId))
-      setSaved(next)
+      window.dispatchEvent(new Event('rede-camarao:saved-offers-change'))
       setFeedback(next ? 'Oferta salva neste navegador.' : 'Oferta removida dos salvos.')
     } catch { setFeedback('Não foi possível salvar neste navegador. Tente novamente.') }
   }

@@ -1,6 +1,6 @@
-import { digitsOnly, formatLocation } from '../utils/registration'
-import type { RegistrationData } from '../utils/registration'
-import { apiBaseUrl } from './api'
+import { digitsOnly, formatLocation } from '../utils/registration.ts'
+import type { RegistrationData } from '../utils/registration.ts'
+import { apiBaseUrl } from './api.ts'
 
 export async function registerUser(data: RegistrationData, userType: 'BUYER' | 'PRODUCER') {
   const baseUrl = apiBaseUrl?.replace(/\/+$/, '')

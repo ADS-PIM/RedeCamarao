@@ -1,4 +1,4 @@
-import type { Offer } from './marketplace'
+import type { Offer } from './marketplace.ts'
 import { brazilianStates } from '../utils/registration.ts'
 import { emptyCatalogSelection, matchesCatalogFilters, validateCatalogQuantity } from './catalogFilters.ts'
 import type { CatalogSelection } from './catalogFilters.ts'
