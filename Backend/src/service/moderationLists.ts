@@ -16,7 +16,7 @@ export async function summary(superAdmin: boolean) {
     const counts = async (table: string) => Object.fromEntries((await connection.query('SELECT status,count(*)::int AS n FROM '+table+' GROUP BY status')).rows.map(r => [r.status,r.n]));
     const [offers,reports,accounts,team] = await Promise.all([counts('admin_offer_list'),counts('moderation_reports'),
         superAdmin ? counts('admin_account_list') : {},connection.query('SELECT role,count(*)::int AS n FROM administrators WHERE active GROUP BY role')]);
-    return { offers,reports,accounts,team:Object.fromEntries(team.rows.map(r=>[r.role,r.n])) };
+    return { offers,reports,accounts,emailConfigured:Boolean(process.env.RESEND_API_KEY?.trim() && process.env.EMAIL_FROM?.trim()),team:Object.fromEntries(team.rows.map(r=>[r.role,r.n])) };
 }
 
 export async function listing(section: string, query: Filters, superAdmin: boolean) {
@@ -38,10 +38,9 @@ export async function listing(section: string, query: Filters, superAdmin: boole
     } else if (section === 'accounts') {
         if (!superAdmin) throw new ModerationError(403,'A gestão de contas é exclusiva da administração.');
         source='admin_account_list'; eq('status',query.status); eq('profile',query.profile); eq('id',query.id);
-        search(['name','email','code','document'],query.q);
-        if (typeof query.q === 'string' && /^[\d./ -]+$/.test(query.q) && query.q.replace(/\D/g,'') !== query.q) {
-            conditions.pop(); search(['document'],query.q.replace(/\D/g,''));
-        }
+        const documentQuery = typeof query.q === 'string' && /^[\d./ -]+$/.test(query.q) && /\d/.test(query.q);
+        if (documentQuery) search(['document'],String(query.q).replace(/\D/g,''));
+        else search(['name','email','code','document'],query.q);
         search(['location'],query.location);
     } else if (section === 'reports') {
         source=reportsQuery; eq('status',query.status); eq('"offerId"',query.offerId);
@@ -55,17 +54,17 @@ export async function listing(section: string, query: Filters, superAdmin: boole
     const size = Math.min(100, Math.max(1,Number(query.size)||6));
     const page = Math.min(100000000,Math.max(1,Number(query.page)||1));
     if (!Number.isInteger(size) || !Number.isInteger(page)) throw new ModerationError(400,'Paginação inválida.');
-    const [total,rows] = await Promise.all([
-        connection.query('SELECT count(*)::int AS total FROM '+source+where,args),
-        connection.query('SELECT * FROM '+source+where+' ORDER BY '+order+' LIMIT $'+(args.length+1)+' OFFSET $'+(args.length+2),[...args,size,(page-1)*size])
-    ]);
-    return { rows:rows.rows,total:total.rows[0].total };
+    const count = await connection.query('SELECT count(*)::int AS total FROM '+source+where,args);
+    const total = count.rows[0].total as number;
+    const current = Math.min(page, Math.max(1, Math.ceil(total / size)));
+    const rows = await connection.query('SELECT * FROM '+source+where+' ORDER BY '+order+' LIMIT $'+(args.length+1)+' OFFSET $'+(args.length+2),[...args,size,(current-1)*size]);
+    return { rows:rows.rows,total,page:current };
 }
 
 export async function filterOptions() {
     const [categories,actors,actions] = await Promise.all([
         connection.query('SELECT DISTINCT type FROM offers WHERE type IS NOT NULL ORDER BY type'),
-        connection.query('SELECT DISTINCT ON (actor_id) actor_id AS id, actor AS name FROM moderation_history ORDER BY actor_id,id DESC'),
+        connection.query('SELECT DISTINCT ON (actor_id) actor_id AS id, actor AS name FROM moderation_history ORDER BY actor_id,moderation_history.id DESC'),
         connection.query('SELECT DISTINCT action FROM moderation_history ORDER BY action'),
     ]);
     return { categories:categories.rows.map(r=>r.type), actors:actors.rows, actions:actions.rows.map(r=>r.action) };

@@ -4,7 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { PasswordCrypto } from '../../../../service/passwordCrypto'
 import jwt from 'jsonwebtoken';
-import { finishAdminLogin } from '../../../../service/moderationEmail';
+import { ModerationError, requiredText } from '../../../../service/moderation';
 import { AdminRole } from '../../../../domain/model/admin';
 
 import { AdminCreateDTO } from '../../../../application/dto/adminDTO/AdminCreateDTO';
@@ -21,7 +21,7 @@ import { UpdateAdmin } from '../../../../application/usecase/admin/UpdateAdminUs
 
 import { CreateRefreshToken } from '../../../../application/usecase/refresh_token/CreateRefreshTokenUseCase';
 import { DeleteByToken } from '../../../../application/usecase/refresh_token/DeleteByTokenUseCase';
-import { FindByToken } from '../../../../application/usecase/refresh_token/FindByTokenUseCase';
+import type { AdminRefreshTokenInterface } from '../../../../domain/interfaces/RefreshTokenDAOInterface';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
@@ -41,26 +41,30 @@ export class AdminController {
         private searchByIdAdmin: SearchByIdAdmin,
         private searchPublicById: SearchPublicById,
         private createRefreshToken: CreateRefreshToken,
-        private findByToken: FindByToken,
+        private rotateRefreshToken: AdminRefreshTokenInterface['rotate'],
         private deleteByToken: DeleteByToken,
         private updateAdmin: UpdateAdmin,
         private deleteAdmin: DeleteAdmin,
         private searchAllAdmins: SearchAllAdmins
     ) {}
 
-    public async register(req: Request, res: Response): Promise<Response> {
+    public async register(req: AuthRequest, res: Response): Promise<Response> {
         try {
             const adminCreateDTO = plainToInstance(AdminCreateDTO, req.body);
             const errors = await validate(adminCreateDTO);
 
             if (errors.length > 0) {
-                return res.status(400).json({errors});
+                return res.status(400).json({error: 'Confira o nome, o e-mail, a senha e a função do membro.'});
             }
 
-            await this.createAdmin.execute(adminCreateDTO);
-            return res.status(201).json({ message: 'Admin registred succesfully' })
+            if (!req.admin?.adminId) return res.status(401).json({ error: 'Entre com sua conta administrativa.' });
+            await this.createAdmin.execute(adminCreateDTO, req.admin.adminId);
+            return res.status(201).json({ message: 'Membro da equipe cadastrado.' })
         } catch (error: any) {
-            return res.status(500).json({error: error.message});
+            if (String(error.message).includes('FORBIDDEN')) return res.status(403).json({ error: 'Sua função não permite cadastrar membros.' });
+            if (String(error.message).includes('Email already registered') || String(error.message).includes('duplicate key'))
+                return res.status(409).json({error: 'Este e-mail já pertence a um membro da equipe.'});
+            return res.status(500).json({error: 'Não foi possível cadastrar o membro da equipe.'});
         }
     }
 
@@ -70,13 +74,13 @@ export class AdminController {
             const errors = await validate(adminLoginDTO);
 
             if (errors.length > 0) {
-                return res.status(400).json({errors});
+                return res.status(400).json({ error: 'Confira o e-mail e a senha.' });
             }
 
             const admin = await this.searchByEmailAdmin.execute(adminLoginDTO.email);
 
             if (!admin || !admin.active || !admin.password || !(await PasswordCrypto.verifyPassword(adminLoginDTO.password, admin.password))) {
-                return res.status(401).json({error: 'Invalid email or password'});
+                return res.status(401).json({error: 'E-mail ou senha incorretos.'});
             }
 
             const accessSecret = process.env.JWT_ACCESS_SECRET;
@@ -86,45 +90,17 @@ export class AdminController {
                 return res.status(500).json({error: 'JWT secrets are not configured'});
             }
 
-            const accessToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, accessSecret, { expiresIn: '5m' });
+            const accessToken = jwt.sign({ adminId: admin.id, role: admin.role, amr: ['pwd'] }, accessSecret, { expiresIn: '5m' });
             const refreshTokenId = crypto.randomUUID();
-            const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
+            const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role, amr: ['pwd'] }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
             const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
             await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, userId: admin.id, expiresAt: refreshExpiresAt });
 
+            res.clearCookie('userRefreshToken', { ...refreshCookieOptions, maxAge: undefined, path: '/users' });
             res.cookie('refreshToken', refreshToken, refreshCookieOptions);
             return res.status(200).json({ accessToken, userId: admin.id, userType: 'ADMIN', name: admin.name, role: admin.role });
         } catch {
             return res.status(503).json({ error: 'Não foi possível entrar agora. Tente novamente.' });
-        }
-    }
-
-    public async verifyCode(req: Request, res: Response): Promise<Response> {
-        try {
-            const { challenge, code } = req.body ?? {};
-            const admin = typeof challenge === 'string' && typeof code === 'string' && await finishAdminLogin(challenge, code);
-            if (!admin) return res.status(401).json({ error: 'Código inválido ou expirado.' });
-            const accessSecret = process.env.JWT_ACCESS_SECRET;
-            const refreshSecret = process.env.JWT_REFRESH_SECRET;
-
-            if (!accessSecret || !refreshSecret) {
-                return res.status(500).json({error: 'JWT secrets are not configured'});
-            }
-
-            
-            const accessToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, accessSecret, { expiresIn: '5m' });
-
-            const refreshTokenId = crypto.randomUUID();
-            const refreshToken = jwt.sign({ adminId: admin.id, role: admin.role, mfa: true }, refreshSecret, { expiresIn: '7d', jwtid: refreshTokenId });
-
-            const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-            await this.createRefreshToken.execute({ id: refreshTokenId, token: refreshToken, userId: admin.id, expiresAt: refreshExpiresAt });
-
-            res.cookie('refreshToken', refreshToken, refreshCookieOptions);
-            return res.status(200).json({ accessToken, userId: admin.id, userType: 'ADMIN', name: admin.name, role: admin.role });
-        }catch (error: any) {
-            console.error('Error during login:', error);
-            return res.status(500).json({ error: error.message || 'Error during login' });
         }
     }
 
@@ -137,10 +113,7 @@ export class AdminController {
                 throw new Error('JWT refresh secret is not configured');
             }
 
-            const storedToken = await this.findByToken.execute(refreshToken);
-            if (!storedToken) return res.status(401).json({ message: 'Invalid refresh token' });
-
-            let payload: any;
+            let payload: string | jwt.JwtPayload;
             try {
                 payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
             } catch (error) {
@@ -148,22 +121,22 @@ export class AdminController {
                 return res.status(401).json({ message: 'Invalid or expired refresh token' });
             }
 
-            const adminId = payload.adminId;
-            if (payload.mfa !== true || !payload.jti || payload.jti !== storedToken.id) {
-                return res.status(401).json({ message: 'Invalid refresh token' })
+            if (typeof payload === 'string' || typeof payload.adminId !== 'string' || !payload.jti) {
+                return res.status(401).json({ error: 'Sessão inválida.' });
             }
+            const adminId = payload.adminId;
 
             if (!process.env.JWT_ACCESS_SECRET) throw new Error('JWT access secret is not configured');
             const current = await this.searchByIdAdmin.execute(adminId);
             if (!current?.active) return res.status(401).json({ error: 'Sessão encerrada.' });
-            const newAccessToken = jwt.sign({ adminId, role: current.role, mfa: true }, process.env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
+            const newAccessToken = jwt.sign({ adminId, role: current.role, amr: ['pwd'] }, process.env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
 
-            await this.deleteByToken.execute(refreshToken);
             const newRefreshTokenId = crypto.randomUUID();
-            const newRefreshToken = jwt.sign({ adminId, role: current.role, mfa: true }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d', jwtid: newRefreshTokenId });
+            const newRefreshToken = jwt.sign({ adminId, role: current.role, amr: ['pwd'] }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d', jwtid: newRefreshTokenId });
             const newRefreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-            await this.createRefreshToken.execute({ id: newRefreshTokenId, token: newRefreshToken, userId: adminId, expiresAt: newRefreshExpiresAt });
-
+            const rotated = await this.rotateRefreshToken({ previousToken: refreshToken, previousId: payload.jti, adminId,
+                id: newRefreshTokenId, token: newRefreshToken, expiresAt: newRefreshExpiresAt });
+            if (!rotated) return res.status(401).json({ error: 'Sessão encerrada.' });
 
             res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
             return res.status(200).json({ accessToken: newAccessToken, userId: adminId, userType: 'ADMIN', name: current.name, role: current.role });
@@ -176,9 +149,7 @@ export class AdminController {
     public async logout(req: Request, res: Response): Promise<Response> {
         try {
             const refreshToken = req.cookies?.refreshToken;
-            if (!refreshToken) return res.status(400).json({ message: 'refreshToken is required' });
-
-            await this.deleteByToken.execute(refreshToken);
+            if (refreshToken) await this.deleteByToken.execute(refreshToken);
 
             const { maxAge, ...clearCookieOptions } = refreshCookieOptions;
             res.clearCookie('refreshToken', clearCookieOptions);
@@ -189,7 +160,7 @@ export class AdminController {
         }
     }
 
-    public async update(req: AuthRequest, res: Response): Promise<Response> {
+    public async update(req: AuthRequest, res: Response, teamAccess = false): Promise<Response> {
         try {
             const authenticatedAdminId = req.admin?.adminId;
             const targetAdminId = req.params.id;
@@ -203,10 +174,16 @@ export class AdminController {
             const isSuperAdmin = req.admin?.role === AdminRole.SUPER_ADMIN;
             const adminUpdateDTO = plainToInstance(AdminUpdateDTO, req.body);
             const errors = await validate(adminUpdateDTO);
-            const requestedFields = Object.keys(req.body);
+            const requestedFields = Object.keys(req.body ?? {}).filter(field => field !== 'justification');
+            const justification = teamAccess || req.body?.justification !== undefined
+                ? requiredText(req.body?.justification, 2000, 'justificativa') : 'Atualização do cadastro administrativo.';
+            if (teamAccess && (typeof req.body.active !== 'boolean' || !Object.values(AdminRole).includes(req.body.role)
+                || requestedFields.some(field => field !== 'role' && field !== 'active'))) {
+                return res.status(400).json({ error: 'Selecione a função e a situação do acesso.' });
+            }
 
             if (errors.length > 0 || requestedFields.length === 0) {
-                return res.status(400).json({ errors });
+                return res.status(400).json({ error: 'Confira os dados do membro da equipe.' });
             }
 
             const selfAllowedFields = ['name', 'password', 'profile_picture'];
@@ -231,27 +208,32 @@ export class AdminController {
             const updateData = Object.fromEntries(
                 requestedFields.map((field) => [field, adminUpdateDTO[field as keyof AdminUpdateDTO]])
             );
-            await this.updateAdmin.execute({id: targetAdminId, data: updateData});
+            await this.updateAdmin.execute({id: targetAdminId, data: updateData, audit: {actorId: authenticatedAdminId, justification}});
+            if (teamAccess) return res.sendStatus(204);
 
             return res.status(200).json({ message: 'Admin updated successfully' });
         } catch (error: any) {
-            if (error.message === 'Email already registered') {
-                return res.status(409).json({ error: error.message });
+            if (error instanceof ModerationError) return res.status(error.status).json({ error: error.message });
+            if (error.code === '23505' || error.message === 'Email already registered') {
+                return res.status(409).json({ error: 'Este e-mail já pertence a um membro da equipe.' });
             }
             console.error('Error updating admin:', error);
             return res.status(500).json({ error: error.message || 'Error updating admin' });
         }
     }
 
-    public async delete(req: Request, res: Response): Promise<Response> {
+    public async delete(req: AuthRequest, res: Response): Promise<Response> {
         try {
             const targetAdminId = req.params.id;
             if (typeof targetAdminId !== 'string') {
                 return res.status(400).json({ error: 'Invalid admin id' });
             }
-            await this.deleteAdmin.execute(targetAdminId);
+            if (!req.admin?.adminId) return res.sendStatus(401);
+            const justification = req.body?.justification !== undefined ? requiredText(req.body.justification,2000,'justificativa') : 'Remoção do cadastro administrativo.';
+            await this.deleteAdmin.execute({id: targetAdminId, audit: {actorId: req.admin.adminId, justification}});
             return res.status(200).json({ message: 'Admin deleted successfully' });
         } catch (error: any) {
+            if (error instanceof ModerationError) return res.status(error.status).json({ error: error.message });
             console.error('Error deleting admin:', error);
             return res.status(500).json({ error: error.message || 'Error deleting admin' });
         }
@@ -272,9 +254,10 @@ export class AdminController {
         }
     }
 
-    public async searchById(req: Request, res: Response): Promise<Response> {
+    public async searchById(req: AuthRequest, res: Response): Promise<Response> {
         try {
             const adminId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            if (req.admin?.role !== 'SUPER_ADMIN' && req.admin?.adminId !== adminId) return res.status(403).json({error: 'Acesso restrito à gestão.'});
             const admin = await this.searchPublicById.execute(adminId);
             if (!admin) {
                 return res.status(404).json({ error: 'Admin not found' });

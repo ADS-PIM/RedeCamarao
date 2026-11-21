@@ -119,7 +119,11 @@ export function Header({ pending = false, authenticated = false, marketplace = f
           </nav>
           <div className="header-actions">
             {authenticated ? <details className="header-account-menu">
-              <summary className="header-account" aria-label="Menu da conta"><Avatar className="header-avatar" src={profilePicture} fallback={producer ? 'farm' : 'bag'} /><span>{accountName || 'Minha conta'}</span><Icon name="chevron" className="header-account-chevron" /></summary>
+              <summary className="header-account" aria-label={administrator ? 'Menu da conta administrativa' : 'Menu da conta'}>
+                <Avatar className="header-avatar" src={profilePicture} fallback={administrator ? 'shield' : producer ? 'farm' : 'bag'} />
+                <span>{accountName || 'Minha conta'}</span>
+                <Icon name="chevron" className="header-account-chevron" />
+              </summary>
               <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
                 {administrator && <a href="/admin">Área administrativa</a>}
                 {!administrator && <a href={account ? '/marketplace' : '/painel'}>{account ? 'Ir para o marketplace' : 'Ver perfil'}</a>}

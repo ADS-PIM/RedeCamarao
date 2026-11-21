@@ -8,14 +8,14 @@ const definitions = {
   enable: ['Reativar oferta','A oferta volta a seguir o status e o período de disponibilidade definidos pelo produtor.','Reativar oferta','Informações regularizadas'],
   remove: ['Excluir oferta','A publicação será removida permanentemente do marketplace.','Excluir oferta','Violação grave das políticas'],
   ban: ['Banir conta','O titular perderá o acesso à plataforma e todas as suas ofertas serão desativadas.','Banir conta','Fraude ou tentativa de golpe'],
-  restore: ['Reativar conta','O titular poderá acessar a plataforma. As ofertas desativadas poderão ser revisadas individualmente.','Reativar conta','Revisão do bloqueio'],
+  restore: ['Reativar conta','O bloqueio será removido. Cadastros que aguardavam aprovação voltarão à fila. As ofertas desativadas poderão ser revisadas individualmente.','Reativar conta','Revisão do bloqueio'],
   approve: ['Aprovar cadastro','O produtor poderá entrar e publicar ofertas no marketplace.','Aprovar cadastro','Cadastro verificado'],
   suspend: ['Suspender conta','O acesso será suspenso e as ofertas sairão do marketplace.','Suspender conta','Suspensão preventiva'],
   archive: ['Arquivar denúncia','A denúncia será encerrada e a decisão ficará disponível no histórico.','Arquivar denúncia','Análise concluída'],
   review: ['Iniciar análise','A denúncia entrará na sua fila de análise.','Iniciar análise','Triagem da denúncia'],
 } as const
 export type Decision = { action:keyof typeof definitions; targetId?:string; reportId?:string; note?:string; title:string; detail:string }
-export function ModerationDialog({decision,auth,onClose,onSaved}:{decision:Decision;auth:Authorized;onClose:()=>void;onSaved:()=>void}) {
+export function ModerationDialog({decision,auth,onClose,onSaved,emailConfigured}:{decision:Decision;emailConfigured:boolean;auth:Authorized;onClose:()=>void;onSaved:()=>void}) {
   const [title,description,submit,defaultReason] = definitions[decision.action]
   const word = decision.action === 'ban' ? 'BANIR' : decision.action === 'remove' ? 'EXCLUIR' : ''
   const [reason,setReason] = useState<string>(defaultReason)
@@ -41,7 +41,7 @@ export function ModerationDialog({decision,auth,onClose,onSaved}:{decision:Decis
       <label>Justificativa *<textarea required rows={4} maxLength={2000} value={why} onChange={e=>setWhy(e.target.value)} /></label>
       <small>{decision.action === 'review' ? 'O registro ficará disponível para a equipe.' : 'A justificativa será enviada ao titular e registrada no histórico.'}</small>
       {word && <label>Digite {word} para confirmar *<input required value={confirmation} autoComplete="off" onChange={e=>setConfirmation(e.target.value)} /></label>}
-      {decision.action !== 'review' && <p className="mod-notice">Notificação ao titular por e-mail e pela plataforma.</p>}
+      {decision.action !== 'review' && <p className="mod-notice">{emailConfigured ? 'O aviso ficará na plataforma e será encaminhado por e-mail.' : 'O aviso ficará na plataforma. O e-mail ficará pendente até a configuração do envio.'}</p>}
       {decision.action === 'remove' && <p className="mod-warning">A exclusão é irreversível. O registro de auditoria será preservado.</p>}
       {error && <p role="alert" className="mod-error">{error}</p>}
       <div className="mod-actions"><button type="button" disabled={busy} className="button button-secondary" onClick={onClose}>Cancelar</button><button disabled={busy} className={'button '+(word ? 'mod-danger-button' : 'button-primary')}>{busy?'Registrando…':submit}</button></div>

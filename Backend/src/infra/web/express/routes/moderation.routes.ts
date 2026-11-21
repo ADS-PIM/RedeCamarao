@@ -2,7 +2,9 @@ import { Router, type Response, type RequestHandler } from 'express';
 import type { AuthRequest } from '../../../../../authMiddleware';
 import { connection } from '../../../../util/connection';
 import { summary, listing, filterOptions } from '../../../../service/moderationLists';
-import { moderate, ModerationError, requiredText, submitReport, transaction } from '../../../../service/moderation';
+import { isSuperAdmin } from '../../../../../authMiddleware';
+import { controllers } from '../../../../config/composition_root';
+import { moderate, ModerationError, submitReport } from '../../../../service/moderation';
 import type { UserAuthRequest } from '../../../../../userAuthMiddleware';
 
 const router = Router();
@@ -21,6 +23,21 @@ router.get('/summary',endpoint(async (req,res)=>res.json(await summary(req.admin
 router.get('/filters',endpoint(async (_req,res)=>res.json(await filterOptions())));
 router.get('/lists/:section',endpoint(async (req,res)=>res.json(await listing(String(req.params.section),req.query,req.admin?.role==='SUPER_ADMIN'))));
 router.post('/actions',endpoint(async (req,res)=>{ await moderate(req.admin!.adminId!,req.body); res.sendStatus(204); }));
+router.get('/reports/:id/context',endpoint(async (req,res)=>{
+    const id=String(req.params.id);
+    if (!/^\d{1,18}$/.test(id)) throw new ModerationError(400,'Denúncia inválida.');
+    const {rows}=await connection.query(`SELECT
+        CASE WHEN a.id IS NOT NULL THEN json_build_object('name',a.name,'profile',a.profile,'status',a.status,
+          'location',a.location,'activeOffers',a."activeOffers",'code',a.code) END AS account,
+        CASE WHEN o.id IS NOT NULL THEN row_to_json(o) END AS offer,
+        (SELECT json_build_object('action',h.action,'actor',h.actor,'reason',h.reason,
+            'justification',h.justification,'note',h.internal_note,'createdAt',h.created_at)
+         FROM moderation_history h WHERE h.report_id=r.id ORDER BY h.id DESC LIMIT 1) AS decision
+        FROM moderation_reports r LEFT JOIN admin_account_list a ON a.id=r.account_id
+        LEFT JOIN admin_offer_list o ON o.id=r.offer_id WHERE r.id=$1`,[id]);
+    if (!rows.length) throw new ModerationError(404,'Denúncia não encontrada.');
+    res.json(rows[0]);
+}));
 router.get('/evidence/:id',endpoint(async (req,res)=>{
     const id=String(req.params.id);
     if (!/^\d{1,18}$/.test(id)) throw new ModerationError(400,'Anexo inválido.');
@@ -28,26 +45,7 @@ router.get('/evidence/:id',endpoint(async (req,res)=>{
     if (!row) throw new ModerationError(404,'Anexo não encontrado.');
     res.attachment(row.name).type(row.mime).set('X-Content-Type-Options','nosniff').send(row.content);
 }));
-router.post('/team/:id',endpoint(async (req,res)=>{
-    if (req.admin?.role !== 'SUPER_ADMIN') throw new ModerationError(403,'Acesso restrito à gestão.');
-    const id=String(req.params.id);
-    const { role,active,justification }=req.body ?? {};
-    if (id===req.admin.adminId || !['SUPER_ADMIN','ADMIN'].includes(role) || typeof active!=='boolean')
-        throw new ModerationError(400,'Selecione outro membro e uma função válida.');
-    const why=requiredText(justification,2000,'justificativa');
-    await transaction(async db=>{
-        const members=(await db.query('SELECT id,name,role,active FROM administrators WHERE id=ANY($1::text[]) ORDER BY id FOR UPDATE',[[id,req.admin!.adminId]])).rows;
-        const actor=members.find(a=>a.id===req.admin!.adminId);
-        const target=members.find(a=>a.id===id);
-        if (!actor?.active || actor.role!=='SUPER_ADMIN') throw new ModerationError(403,'Permissão insuficiente.');
-        if (!target) throw new ModerationError(404,'Membro não encontrado.');
-        await db.query('UPDATE administrators SET role=$2,active=$3 WHERE id=$1',[id,role,active]);
-        await db.query('DELETE FROM refresh_tokens WHERE "adminId"=$1',[id]);
-        await db.query(`INSERT INTO moderation_history(actor_id,actor,action,reference,reason,justification)
-            VALUES ($1,$2,'Permissão alterada',$3,$4,$5)`,[actor.id,actor.name,target.name, (role==='ADMIN'?'Moderador':'Administrador')+' · '+(active?'Ativo':'Inativo'),why]);
-    });
-    res.sendStatus(204);
-}));
+router.post('/team/:id',isSuperAdmin,(req,res)=>controllers.adminController.update(req,res,true));
 export const createReport = endpoint(async (req: UserAuthRequest,res)=>res.status(201).json(await submitReport(req.user!.userId,req.body)));
 export const myNotifications = endpoint(async (req: UserAuthRequest,res)=>{
     const {rows}=await connection.query('SELECT id,message,created_at AS "createdAt" FROM moderation_notifications WHERE user_id=$1 ORDER BY id DESC LIMIT 50',[req.user!.userId]);

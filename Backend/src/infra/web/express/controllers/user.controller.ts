@@ -148,6 +148,7 @@ export class UserController {
 
             await this.createRefreshToken.execute({ id: refreshTokenId, userId: user.id, token: refreshToken, expiresAt });
 
+            res.clearCookie('refreshToken', { ...refreshCookieOptions, maxAge: undefined, path: '/admin' });
             res.cookie('userRefreshToken', refreshToken, refreshCookieOptions);
             return res.status(200).json({ accessToken, userId: user.id, userType: user.userType });
         } catch (error: any) {

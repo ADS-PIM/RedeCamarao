@@ -8,7 +8,6 @@ import { RefreshTokenDAOPostgres } from "../../infra/bd/postgres/adminRefreshTok
 
 import { CreateRefreshToken } from "../../application/usecase/refresh_token/CreateRefreshTokenUseCase";
 import { DeleteByToken } from "../../application/usecase/refresh_token/DeleteByTokenUseCase";
-import { FindByToken } from "../../application/usecase/refresh_token/FindByTokenUseCase";
 import { SearchByEmailAdmin } from '../../application/usecase/admin/SearchAdminByEmailUseCase';
 import { SearchByIdAdmin } from '../../application/usecase/admin/SearchAdminByIdUseCase';
 import { UpdateAdmin } from '../../application/usecase/admin/UpdateAdminUseCase';
@@ -30,7 +29,6 @@ const searchAllAdmins = new SearchAllAdmins(adminDAO);
 const searchPublicById = new SearchPublicById(adminDAO);
 
 const createRefreshToken = new CreateRefreshToken(refreshTokenDAO);
-const findByToken = new FindByToken(refreshTokenDAO);
 const deleteByToken = new DeleteByToken(refreshTokenDAO);
 
 export const adminController = new AdminController(
@@ -39,7 +37,7 @@ export const adminController = new AdminController(
     searchByIdAdmin,
     searchPublicById,
     createRefreshToken,
-    findByToken,
+    rotation => refreshTokenDAO.rotate(rotation),
     deleteByToken,
     updateAdmin,
     deleteAdmin,

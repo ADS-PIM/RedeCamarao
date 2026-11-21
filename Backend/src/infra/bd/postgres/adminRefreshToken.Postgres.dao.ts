@@ -1,4 +1,4 @@
-import { RefreshTokenInterface } from '../../../domain/interfaces/RefreshTokenDAOInterface';
+import { AdminRefreshTokenInterface, AdminTokenRotation } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../../../util/connection';
 import type { QueryResultRow } from 'pg';
 import { RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
@@ -6,7 +6,14 @@ import { createHash } from 'node:crypto';
 
 const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
 
-export class RefreshTokenDAOPostgres implements RefreshTokenInterface {
+export class RefreshTokenDAOPostgres implements AdminRefreshTokenInterface {
+    async rotate(rotation: AdminTokenRotation): Promise<boolean> {
+        const result = await connection.query(`UPDATE refresh_tokens SET id=$1, "tokenHash"=$2, "expiresAt"=$3, "createdAt"=now()
+            WHERE id=$4 AND "tokenHash"=$5 AND "adminId"=$6 AND "revokedAt" IS NULL AND "expiresAt">now()`,
+            [rotation.id, hashToken(rotation.token), rotation.expiresAt, rotation.previousId, hashToken(rotation.previousToken), rotation.adminId]);
+        return result.rowCount === 1;
+    }
+
     async create(id: string, token: string, adminId: string, expiresAt: Date): Promise<void> {
         try {
             await connection.query(

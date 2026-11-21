@@ -1,12 +1,14 @@
-import { AdminDAOInterface } from "../../../domain/interfaces/admin/AdminDAOInterface";
+import { AdminAudit, AdminDAOInterface, AdminUpdateData } from "../../../domain/interfaces/admin/AdminDAOInterface";
 import { UseCase } from "../useCase";
 import { PasswordCrypto } from "../../../service/passwordCrypto";
 import { SearchByEmailAdmin } from "../admin/SearchAdminByEmailUseCase";
 
-export class UpdateAdmin implements UseCase<{ id: string, data: any }, void> {
+type Change = { id: string; data: AdminUpdateData; audit: AdminAudit };
+
+export class UpdateAdmin implements UseCase<Change, void> {
     constructor(private readonly adminDAO: AdminDAOInterface) {}
 
-    public async execute({ id, data }: { id: string, data: any }): Promise<void> {
+    public async execute({ id, data, audit }: Change): Promise<void> {
         const searchByEmailAdmin = new SearchByEmailAdmin(this.adminDAO);
         if (data.email !== undefined) {
             data.email = data.email.trim().toLowerCase();
@@ -20,6 +22,6 @@ export class UpdateAdmin implements UseCase<{ id: string, data: any }, void> {
             data.password = await PasswordCrypto.hashPassword(data.password);
         }
 
-        await this.adminDAO.update(id, data);
+        await this.adminDAO.update(id, data, audit);
     }
 }

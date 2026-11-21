@@ -57,7 +57,7 @@ export function authToken(req: AuthRequest, res: Response, next: NextFunction): 
                 return;
             }
 
-            if (!admin || typeof admin === 'string' || typeof admin.adminId !== 'string' || !admin.adminId || admin.mfa !== true || admin.jti !== undefined) {
+            if (!admin || typeof admin === 'string' || typeof admin.adminId !== 'string' || !admin.adminId || admin.jti !== undefined) {
                 res.status(401).json({ error: 'Invalid token payload' });
                 return;
             }

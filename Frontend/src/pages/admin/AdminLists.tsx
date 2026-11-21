@@ -27,7 +27,7 @@ type Props = {section:Section;auth:Authorized;superAdmin:boolean;summary:Summary
 export function AdminLists({section,auth,superAdmin,summary,options,version,reload,decide,team}:Props) {
   const [filters,setFilters]=useState<Filters>(()=> {
     const search=new URLSearchParams(window.location.search)
-    const f:Filters=section==='history'?{days:'7'}:{}
+    const f:Filters=section==='history'?{days:search.has('accountId')?'':'7'}:{}
     for (const key of ['q','status','id','accountId']) if(search.get(key)) f[key]=search.get(key)!
     return f
   })
@@ -61,8 +61,8 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
     if ('title' in row) return [
       <><button className="mod-name" onClick={()=>setDetail(row)}>{row.title}</button><small>{row.code} · {formatQuantity(Number(row.weight))}</small></>,
       row.producer,<strong>{formatPrice(Number(row.price))}/kg</strong>,<Badge status={row.status}/>,
-      row.openReports?<a className="mod-link" href={'/admin/denuncias?offerId='+row.id}>{row.openReports} em aberto</a>:row.totalReports?'Resolvidas':'Nenhuma',
-      <div className="mod-row-actions"><button onClick={()=>decideOffer(row,row.status==='DISABLED'?'enable':'disable')}>{row.status==='DISABLED'?'Reativar':'Desativar'}</button>{superAdmin&&<button className="mod-danger-text" onClick={()=>decideOffer(row,'remove')}>Excluir</button>}</div>,
+      row.totalReports?<a className="mod-link" href={'/admin/denuncias?offerId='+row.id}>{row.openReports?row.openReports+' em aberto':'Resolvidas'}</a>:'Nenhuma',
+      <div className="mod-row-actions">{row.status==='DISABLED'&&row.accountStatus!=='ACTIVE'?<small>Conta bloqueada</small>:<button onClick={()=>decideOffer(row,row.status==='DISABLED'?'enable':'disable')}>{row.status==='DISABLED'?'Reativar':'Desativar'}</button>}{superAdmin&&<button className="mod-danger-text" onClick={()=>decideOffer(row,'remove')}>Excluir</button>}</div>,
     ]
     if ('email' in row) return [
       <><strong>{row.name}</strong><small>{row.email}</small></>,labels[row.profile],<Badge status={row.status}/>,dateText(row.createdAt),verification(row),
@@ -87,18 +87,19 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
         {accounts&&<SelectFilter label="Status" value={filters.status||''} change={status=>filter({status})} options={[['','Status: todos'],...['ACTIVE','PENDING','SUSPENDED','BANNED'].map(choice)]}/>}
         {!history&&<button className="button button-secondary" aria-expanded={more} onClick={()=>setMore(!more)}><Icon name="filters"/>Mais filtros</button>}
       </div>
+      {history&&filters.accountId&&<p className="mod-toolbar">Histórico desta conta <button className="mod-link" onClick={()=>filter({accountId:''})}>Ver todas as contas</button></p>}
       {more&&<div className="mod-toolbar"><input aria-label="Localização" placeholder="Cidade ou estado" value={filters.location||''} onChange={e=>filter({location:e.target.value})}/>
         {offers&&<><SelectFilter label="Status da oferta" value={filters.status||''} change={status=>filter({status})} options={[['','Todos os status'],...['ATIVO','REVIEW','PAUSADO','DISABLED','VENDIDO','CANCELADO','EXPIRADO','RASCUNHO'].map(choice)]}/><label><input type="checkbox" checked={filters.reported==='true'} onChange={e=>filter({reported:String(e.target.checked)})}/> Com denúncias abertas</label></>}
         <button className="mod-link" onClick={()=>{setFilters({});setPage(1)}}>Limpar filtros</button></div>}
       {error&&<p role="alert" className="mod-error">{error}</p>}
       {query.data ? <><table className="mod-table"><thead><tr>{columns[section].map(c=><th scope="col" key={c}>{c}</th>)}</tr></thead><tbody>{query.data.rows.map(row=><tr key={row.id}>{cells(row).map((cell,i)=><td data-label={columns[section][i]} key={i}>{cell}</td>)}</tr>)}</tbody></table>
-      {!query.data.rows.length&&<p className="mod-empty">Nenhum registro encontrado.</p>}<Pages page={page} size={6} total={query.data.total} noun={history?'registros':titles[section].toLowerCase()} change={setPage}/></>:<LoadState error={query.error} retry={reload}/>}
+      {!query.data.rows.length&&<p className="mod-empty">Nenhum registro encontrado.</p>}<Pages page={query.data.page} size={6} total={query.data.total} noun={history?'registros':titles[section].toLowerCase()} change={setPage}/></>:<LoadState error={query.error} retry={reload}/>}
     </section>
-    {history?<section className="mod-panel mod-security"><div><h2>Permissões e segurança</h2><p>Administradores gerenciam contas e exclusões. Moderadores analisam ofertas e denúncias.</p><small>Autenticação em duas etapas por e-mail · {summary.team.SUPER_ADMIN||0} administrador(es) · {summary.team.ADMIN||0} moderador(es)</small></div>{superAdmin&&<button className="button button-secondary" onClick={team}>Gerenciar equipe</button>}</section>:
+    {history?<section className="mod-panel mod-security"><div><h2>Permissões e segurança</h2><p>Administradores gerenciam contas e exclusões. Moderadores analisam ofertas e denúncias.</p><small>Segunda etapa desativada · Acesso por senha · {summary.team.SUPER_ADMIN||0} administrador(es) · {summary.team.ADMIN||0} moderador(es)</small></div>{superAdmin&&<button className="button button-secondary" onClick={team}>Gerenciar equipe</button>}</section>:
     <aside className="mod-notice"><strong>{offers?'Moderação de ofertas':'Gestão de acesso com responsabilidade'}</strong><p>{offers?'A desativação retira a oferta do marketplace. Somente a administração pode reativá-la. O histórico permanece disponível após a exclusão.':'Banir uma conta bloqueia o acesso e desativa suas ofertas. O motivo é obrigatório e o titular recebe uma notificação.'}</p></aside>}
     {detail&&<Dialog className="mod-dialog" titleId="details-title" onClose={()=>setDetail(null)}><div className="mod-dialog-heading"><h2 id="details-title">{'name' in detail?detail.name:detail.title}</h2><button className="mod-icon" aria-label="Fechar" onClick={()=>setDetail(null)}><Icon name="close"/></button></div>
       <p>{detail.code} · <Badge status={detail.status}/></p>
-      {'name' in detail?<><dl className="mod-facts">{[['Perfil',labels[detail.profile]],['E-mail',detail.email],['CPF/CNPJ',detail.document],['Contato',detail.phone],['Localização',detail.location],['Cadastro',dateText(detail.createdAt)],['Verificação',verification(detail)],['Ofertas ativas',detail.activeOffers]].map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v||'—'}</dd></div>)}</dl>
+      {'name' in detail?<><dl className="mod-facts">{[['Perfil',labels[detail.profile]],['E-mail',detail.email],['CPF/CNPJ',detail.document],['Contato',detail.phone],['Localização',detail.location],['Cadastro',dateText(detail.createdAt)],['Verificação',verification(detail)],['Ofertas ativas',detail.activeOffers]].map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v ?? '—'}</dd></div>)}</dl>
       <div className="mod-actions">{detail.status==='PENDING'&&<button className="button button-primary" onClick={()=>decideAccount(detail,'approve')}>Aprovar cadastro</button>}
       {['BANNED','SUSPENDED'].includes(detail.status)&&<button className="button button-primary" onClick={()=>decideAccount(detail,'restore')}>Reativar conta</button>}
       {detail.status==='ACTIVE'&&<button className="button button-secondary" onClick={()=>decideAccount(detail,'suspend')}>Suspender conta</button>}
