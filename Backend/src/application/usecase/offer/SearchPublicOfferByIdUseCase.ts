@@ -51,7 +51,6 @@ export class SearchPublicOfferById implements UseCase<string, PublicOfferDetailD
                 name: producer.name,
                 description: producer.description,
                 location: producer.location,
-                phone: producer.phone,
                 businessHours: producer.businessHours,
                 profilePicture: producer.profilePicture ?? null,
                 activeOfferCount: activeOffers.filter(item => item.userId === producer.id).length
