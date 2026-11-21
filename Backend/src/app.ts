@@ -3,10 +3,12 @@ import dotenv from 'dotenv';
 import path from 'node:path';
 import routes from './infra/web/express/routes/index';
 import { authUser } from '../userAuthMiddleware';
+import { configureRateLimiting } from './rateLimit/middleware';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
+configureRateLimiting(app);
 
 const allowedOrigins = new Set([
     'http://localhost:5173',

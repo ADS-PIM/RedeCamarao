@@ -1,5 +1,5 @@
 import { formatQuantity } from '../data/offerUnits'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { OfferGallery } from '../components/OfferGallery'
@@ -16,10 +16,17 @@ import './OfferPage.css'
 import { ReportForm } from '../components/ReportForm'
 import type { Authorized } from '../services/moderation'
 
+function subscribeToSavedOffers(notify: () => void) {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === savedOffersKey || event.key === null) notify()
+  }
+  window.addEventListener('storage', onStorage)
+  return () => window.removeEventListener('storage', onStorage)
+}
+
 export function OfferPage({ offerId, session, restoring, auth }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized }) {
   const { offer, loading, error, reloadOffer } = useOfferDetail(offerId)
   const { offers, loading: relatedLoading, error: relatedError, reloadOffers } = useMarketplaceOffers()
-  const [saved, setSaved] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [showSaveAccountPrompt, setShowSaveAccountPrompt] = useState(false)
   const [showShareLink, setShowShareLink] = useState(false)
@@ -30,21 +37,9 @@ export function OfferPage({ offerId, session, restoring, auth }: { offerId: stri
     document.title = `${loading ? 'Oferta de camarão' : error ? 'Oferta indisponível' : offer?.title ?? 'Oferta não encontrada'} | RedeCamarão`
   }, [offer, loading, error])
 
-  useEffect(() => {
-    if (!userId) { setSaved(false); return }
-    try { setSaved(readSavedOffers(window.localStorage).includes(offerId)) } catch { setSaved(false) }
-  }, [offerId, userId])
-
-  useEffect(() => {
-    if (!userId) return
-    const syncSaved = (event: StorageEvent) => {
-      if (event.key === savedOffersKey || event.key === null) {
-        try { setSaved(readSavedOffers(window.localStorage).includes(offerId)) } catch { setSaved(false) }
-      }
-    }
-    window.addEventListener('storage', syncSaved)
-    return () => window.removeEventListener('storage', syncSaved)
-  }, [offerId, userId])
+  const saved = useSyncExternalStore(subscribeToSavedOffers, () => {
+    try { return Boolean(userId) && readSavedOffers(window.localStorage).includes(offerId) } catch { return false }
+  })
 
   function saveOffer() {
     if (restoring) return
@@ -53,7 +48,7 @@ export function OfferPage({ offerId, session, restoring, auth }: { offerId: stri
     try {
       const next = !readSavedOffers(window.localStorage).includes(offerId)
       setOfferSaved(window.localStorage, offerId, next, Boolean(session?.userId))
-      setSaved(next)
+      window.dispatchEvent(new StorageEvent('storage', { key: savedOffersKey }))
       setFeedback(next ? 'Oferta salva neste navegador.' : 'Oferta removida dos salvos.')
     } catch { setFeedback('Não foi possível salvar neste navegador. Tente novamente.') }
   }

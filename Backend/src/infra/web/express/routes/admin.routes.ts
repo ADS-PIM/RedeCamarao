@@ -19,11 +19,10 @@ router.post('/forgot-password', ...passwordRecoveryRateLimit, (req, res) => cont
 
 router.post('/reset-password', passwordResetRateLimit, (req, res) => controllers.passwordResetController.reset(req, res));
 
-router.get('/', authToken, authenticatedRateLimit, (req, res) => controllers.adminController.searchAll(req, res));
+router.get('/', authToken, authenticatedRateLimit, isSuperAdmin, (req, res) => controllers.adminController.searchAll(req, res));
 router.post('/register', authToken, authenticatedRateLimit, isSuperAdmin, (req, res) => controllers.adminController.register(req, res));
-router.post('/register/force', (req, res) => controllers.adminController.register(req, res));
+router.post('/register/force', authToken, authenticatedRateLimit, isSuperAdmin, (req, res) => controllers.adminController.register(req, res));
 
-router.post('/verify-code', ...loginRateLimit, (req, res) => controllers.adminController.verifyCode(req, res));
 
 router.post('/login', ...loginRateLimit, (req, res) => controllers.adminController.login(req, res));
 router.post('/logout', sessionRateLimit, (req, res) => controllers.adminController.logout(req, res));

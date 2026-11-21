@@ -22,6 +22,7 @@
     "test:migration": "node --require tsx/cjs --test test/postgres.test.cjs",
     "dev": "tsx watch src/server.ts",
     "build": "tsc --noEmit --project ./tsconfig.json",
+    "admin:bootstrap": "node --require tsx/cjs scripts/bootstrap-admin.cjs",
     "db:init": "sequelize-cli db:migrate",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all",

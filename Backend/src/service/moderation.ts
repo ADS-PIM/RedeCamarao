@@ -13,6 +13,8 @@ export const actions = {
 } as const;
 type Action = keyof typeof actions;
 export const reportCategories = ['Possível fraude', 'Preço divergente', 'Produto não entregue', 'Anúncio duplicado', 'Conteúdo inadequado', 'Outro'];
+const pendingBan = 'Cadastro pendente banido';
+const pendingRestore = 'Cadastro devolvido à análise';
 const offerActions: Action[] = ['disable', 'enable', 'remove'];
 const accountActions: Action[] = ['ban', 'restore', 'approve', 'suspend'];
 export function requiredText(input: unknown, max: number, label: string) {
@@ -58,6 +60,7 @@ export async function moderate(actorId: string, input: Record<string, unknown>) 
         const target = fromReport ? (offerActions.includes(action) ? report.offer_id : report.account_id) : requiredText(input.targetId,36,'referência');
         let offerId: string | null = report?.offer_id ?? null;
         let accountId = report?.account_id ?? target;
+        let description: string = actions[action];
         let offer;
         if (offerActions.includes(action)) {
             offerId = target;
@@ -85,7 +88,16 @@ export async function moderate(actorId: string, input: Record<string, unknown>) 
             reference = 'CT-' + accountId.slice(0,8).toUpperCase();
             const allowed: Record<string,string[]> = { ban:['ACTIVE','SUSPENDED','PENDING'], restore:['BANNED','SUSPENDED'], approve:['PENDING'], suspend:['ACTIVE'] };
             if (!allowed[action].includes(account.account_status)) conflict('A situação da conta mudou. Atualize a lista.');
-            const status = action === 'ban' ? 'BANNED' : action === 'suspend' ? 'SUSPENDED' : 'ACTIVE';
+            let status = action === 'ban' ? 'BANNED' : action === 'suspend' ? 'SUSPENDED' : 'ACTIVE';
+            if (action === 'ban' && account.account_status === 'PENDING') description = pendingBan;
+            if (action === 'restore' && account.account_status === 'BANNED') {
+                const lastBan = await db.query('SELECT action FROM moderation_history WHERE account_id=$1 AND action=ANY($2::text[]) ORDER BY id DESC LIMIT 1',
+                    [accountId, [actions.ban, pendingBan]]);
+                if (lastBan.rows[0]?.action === pendingBan) {
+                    status = 'PENDING';
+                    description = pendingRestore;
+                }
+            }
             await db.query("UPDATE users SET account_status=$2, verified=CASE WHEN $3='approve' THEN true ELSE verified END WHERE id=$1",[accountId,status,action]);
             if (status !== 'ACTIVE') {
                 await db.query('UPDATE offers SET admin_disabled=true WHERE "userId"=$1 AND NOT admin_disabled',[accountId]);
@@ -95,9 +107,9 @@ export async function moderate(actorId: string, input: Record<string, unknown>) 
         if (report) await db.query('UPDATE moderation_reports SET status=$2,assignee=$3 WHERE id=$1',
             [report.id, action === 'review' ? 'REVIEW' : 'RESOLVED', actor.name]);
         await db.query(`INSERT INTO moderation_history(actor_id,actor,action,reference,account_id,offer_id,report_id,reason,justification,internal_note)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,[actorId,actor.name,actions[action],reference,accountId,offerId,report?.id,reason,justification,note]);
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,[actorId,actor.name,description,reference,accountId,offerId,report?.id,reason,justification,note]);
         if (account && action !== 'review') await db.query('INSERT INTO moderation_notifications(user_id,email,message) VALUES ($1,$2,$3)',
-            [accountId,account.email,actions[action] + ' · ' + reference + '\n' + reason + '\n' + justification]);
+            [accountId,account.email,description + ' · ' + reference + '\n' + reason + '\n' + justification]);
         return removed;
     });
     await imageStorage.removeUnused(images);

@@ -36,6 +36,14 @@ export async function readSession(response: Response): Promise<UserSession> {
   }
 }
 
+export async function loginAdministrator(data: LoginData, baseUrl = apiBaseUrl): Promise<UserSession> {
+  const response = await request('admin', 'login', data, baseUrl)
+  if (response.ok) return readSession(response)
+  if (response.status === 429) throw new Error('Muitas tentativas. Aguarde alguns minutos.')
+  if (response.status === 401) throw new Error('E-mail ou senha incorretos.')
+  throw new Error('Não foi possível entrar na área administrativa.')
+}
+
 export async function loginUser(data: LoginData, baseUrl = apiBaseUrl): Promise<UserSession> {
   const userResponse = await request('users', 'login', data, baseUrl)
   if (userResponse.ok) return readSession(userResponse)
@@ -69,9 +77,6 @@ export function restoreSession(baseUrl = apiBaseUrl): Promise<UserSession | null
 }
 
 export async function logoutUser(baseUrl = apiBaseUrl) {
-  const adminResponse = await request('admin', 'logout', undefined, baseUrl)
-  if (adminResponse.ok) return
-
-  const userResponse = await request('users', 'logout', undefined, baseUrl)
-  if (!userResponse.ok) throw new Error('Não foi possível sair agora. Tente novamente.')
+  const responses = await Promise.all([request('admin', 'logout', undefined, baseUrl), request('users', 'logout', undefined, baseUrl)])
+  if (responses.some(response => !response.ok)) throw new Error('Não foi possível sair agora. Tente novamente.')
 }

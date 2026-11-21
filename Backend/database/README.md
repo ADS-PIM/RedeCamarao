@@ -79,6 +79,10 @@ A reversão `npx.cmd sequelize-cli db:migrate:undo` remove as tabelas criadas pe
 migration inicial e seus dados. Use somente em ambiente descartável ou com
 backup e intenção explícita de remover o schema.
 
+## Primeiro acesso administrativo
+
+Em uma instalação nova com as migrations aplicadas, execute `npm.cmd run admin:bootstrap` no diretório `Backend`. Informe o nome, o e-mail e a senha no terminal. O comando cria o primeiro `SUPER_ADMIN` e registra a operação no histórico. A equipe pode entrar por `/entrar?acesso=admin` e cadastrar os demais membros em **Histórico de ações → Gerenciar equipe**.
+
 ## Dados do MySQL
 
 `database/legacy/mysql/` preserva o SQL e o histórico de migrations MySQL. Esses

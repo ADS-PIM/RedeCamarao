@@ -37,6 +37,8 @@ function App() {
   const isMarketplace = ['/', '/marketplace', '/marketplace/'].includes(pathname)
   const isProducts = ['/produtos', '/produtos/'].includes(pathname)
   const requestedReturnTo = new URLSearchParams(window.location.search).get('returnTo')
+  const staffLogin = new URLSearchParams(window.location.search).get('acesso') === 'admin'
+  const adminReturn = requestedReturnTo && /^\/admin(?:\/(?:ofertas|contas|denuncias|historico))?\/?$/.test(requestedReturnTo) ? requestedReturnTo : '/admin'
   const returnAfterAuth = requestedReturnTo?.startsWith('/produtos/') && !requestedReturnTo.startsWith('//') ? requestedReturnTo : null
   const offerId = offerIdFromPath(pathname)
   const isProducers = ['/produtores', '/produtores/'].includes(pathname)
@@ -50,10 +52,10 @@ function App() {
   const isMyOffers = ['/painel/ofertas', '/painel/ofertas/'].includes(pathname)
 
   useEffect(() => {
-    if (isLogin && session && !restoring) {
-      navigate(returnAfterAuth ?? (session.userType === 'ADMIN' ? '/admin' : '/painel'), { replace: true })
+    if (isLogin && session && !restoring && (!staffLogin || session.userType === 'ADMIN')) {
+      navigate(returnAfterAuth ?? (session.userType === 'ADMIN' ? adminReturn : '/painel'), { replace: true })
     }
-  }, [isLogin, session, restoring, navigate, returnAfterAuth])
+  }, [isLogin, session, restoring, navigate, returnAfterAuth, staffLogin, adminReturn])
 
   async function handleLogout() {
     if (logoutPending.current) return
@@ -101,11 +103,11 @@ function App() {
             <section className="container account-status" role="alert">
               <h1>Acesso restrito</h1>
               <p>Esta área é exclusiva para contas administrativas.</p>
-              <a className="button button-primary" href="/entrar">Entrar</a>
+              <a className="button button-primary" href={`/entrar?acesso=admin&returnTo=${encodeURIComponent(pathname)}`}>Entrar como equipe</a>
             </section>
           )}
         </main>
-      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} auth={withSession} restoring={restoring} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} auth={withSession} session={session} /> : isProducers ? <ProducersPage /> : isLogin ? (session ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
+      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} auth={withSession} restoring={restoring} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} auth={withSession} session={session} /> : isProducers ? <ProducersPage /> : isLogin ? (session && !(staffLogin && session.userType !== 'ADMIN') ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

@@ -39,8 +39,8 @@ export function AdminPage({pathname,auth,session}:{pathname:string;auth:Authoriz
   const [expanded,setExpanded]=useState(false)
   const superAdmin=session.role==='SUPER_ADMIN'
   const section=sections.find(s=>s.url===pathname.replace(/\/$/,''))
-  const summary=useModerationData<Summary>(auth,adminApi+'/summary',version)
-  const options=useModerationData<Options>(auth,adminApi+'/filters',version)
+  const summary=useModerationData<Summary>(auth,adminApi+'/summary',version,true)
+  const options=useModerationData<Options>(auth,adminApi+'/filters',version,true)
   const reload=()=>setVersion(v=>v+1)
   const props={auth,superAdmin,version,reload,decide:(d:Decision)=>{setSuccess('');setDecision(d)}}
   const available=sections.filter(s=>superAdmin||s.id!=='accounts')
@@ -54,7 +54,7 @@ export function AdminPage({pathname,auth,session}:{pathname:string;auth:Authoriz
     section.id==='overview'?<Overview {...props} summary={summary.data}/>:section.id==='reports'?<AdminReports {...props} summary={summary.data}/>:
     <AdminLists key={section.id} {...props} section={section.id} summary={summary.data} options={options.data} team={()=>setTeam(true)}/>}
     </div>
-    {decision&&<ModerationDialog decision={decision} auth={auth} onClose={()=>setDecision(null)} onSaved={()=>{setDecision(null);setSuccess('Decisão registrada no histórico.');reload()}}/>}
+    {decision&&<ModerationDialog emailConfigured={Boolean(summary.data?.emailConfigured)} decision={decision} auth={auth} onClose={()=>setDecision(null)} onSaved={()=>{setDecision(null);setSuccess('Decisão registrada no histórico.');reload()}}/>}
     {team&&<TeamDialog auth={auth} userId={session.userId} onClose={()=>setTeam(false)} reload={reload}/>}
   </main>
 }

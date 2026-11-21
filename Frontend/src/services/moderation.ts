@@ -2,14 +2,15 @@ import { apiBaseUrl } from './api'
 
 export type Authorized = <T>(request: (token: string) => Promise<T>) => Promise<T>
 export type Counts = Record<string, number>
-export type Summary = { offers: Counts; accounts: Counts; reports: Counts; team: Counts }
+export type Summary = { emailConfigured: boolean; offers: Counts; accounts: Counts; reports: Counts; team: Counts }
 export type Options = { categories: string[]; actions: string[]; actors: { id: string; name: string }[] }
 export type OfferRow = { id: string; code: string; title: string; description: string; producer: string; accountId: string; accountStatus: string; type: string; location: string; price: string; weight: string; status: string; openReports: number; totalReports: number }
 export type AccountRow = { id: string; code: string; name: string; email: string; document: string; profile: string; status: string; verified: boolean; location: string; phone: string; createdAt: string; activeOffers: number }
 export type ReportRow = { id: string; code: string; category: string; status: string; narrative: string; createdAt: string; reporter: string; assignee: string | null; offerId: string | null; offerTitle: string | null; accountId: string; accountName: string; priority: boolean; reportCount: number; files: { id: string; name: string }[] }
 export type HistoryRow = { id: string; actor: string; action: string; reference: string; reason: string; justification: string; note: string | null; createdAt: string }
+export type ReportContext = { decision: Omit<HistoryRow,'reference'|'id'> | null; offer: OfferRow | null; account: Pick<AccountRow,'name'|'profile'|'status'|'location'|'activeOffers'|'code'> | null }
 export type Member = { id: string; name: string; email: string; role: string; active: boolean }
-export type Page<T> = { rows: T[]; total: number }
+export type Page<T> = { rows: T[]; total: number; page: number }
 export type Filters = Record<string,string>
 export const adminApi = '/admin/moderation'
 export const labels: Record<string,string> = {

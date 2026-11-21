@@ -15,7 +15,7 @@ export function LoadState({error,retry}:{error?:string;retry:()=>void}) {
     : <p className="mod-empty" role="status">Carregando dados…</p>
 }
 export function Pages({page,size,total,noun,change}:{page:number;size:number;total:number;noun:string;change:(p:number)=>void}) {
-  return <div className="mod-pages"><small>{total ? 'Mostrando '+((page-1)*size+1)+'–'+Math.min(page*size,total)+' de '+total.toLocaleString('pt-BR')+' '+noun : '0 '+noun}</small><Pagination currentPage={page} totalPages={Math.ceil(total/size)} label={'Páginas de '+noun} onChange={change}/></div>
+  return <div className="mod-pages"><small>{total ? 'Mostrando '+((page-1)*size+1)+'–'+Math.min(page*size,total)+' de '+total.toLocaleString('pt-BR')+' '+(total===1?noun.replace(/s$/,''):noun) : '0 '+noun}</small><Pagination currentPage={page} totalPages={Math.ceil(total/size)} label={'Páginas de '+noun} onChange={change}/></div>
 }
 export function SelectFilter({label,value,change,options}:{label:string;value:string;change:(v:string)=>void;options:[string,string][]}) {
   return <select aria-label={label} value={value} onChange={e=>change(e.target.value)}>{options.map(([id,text])=><option key={id} value={id}>{text}</option>)}</select>
