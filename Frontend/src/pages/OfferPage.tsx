@@ -24,11 +24,10 @@ function subscribeToSavedOffers(notify: () => void) {
   return () => window.removeEventListener('storage', onStorage)
 }
 
-export function OfferPage({ offerId, session, restoring, auth }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized }) {
+export function OfferPage({ offerId, session, restoring, auth, navigate }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized; navigate: (href: string) => void }) {
   const { offer, loading, error, reloadOffer } = useOfferDetail(offerId)
   const { offers, loading: relatedLoading, error: relatedError, reloadOffers } = useMarketplaceOffers()
   const [feedback, setFeedback] = useState('')
-  const [showSaveAccountPrompt, setShowSaveAccountPrompt] = useState(false)
   const [showShareLink, setShowShareLink] = useState(false)
   const shareLinkRef = useRef<HTMLInputElement>(null)
   const userId = session?.userId
@@ -43,11 +42,13 @@ export function OfferPage({ offerId, session, restoring, auth }: { offerId: stri
 
   function saveOffer() {
     if (restoring) return
-    if (!session) { setShowSaveAccountPrompt(true); setFeedback(''); return }
-    setShowSaveAccountPrompt(false)
+    if (!session) {
+      navigate(`/entrar?returnTo=${encodeURIComponent(offerHref(offerId))}`)
+      return
+    }
     try {
       const next = !readSavedOffers(window.localStorage).includes(offerId)
-      setOfferSaved(window.localStorage, offerId, next, Boolean(session?.userId))
+      setOfferSaved(window.localStorage, offerId, next, Boolean(session.userId))
       window.dispatchEvent(new StorageEvent('storage', { key: savedOffersKey }))
       setFeedback(next ? 'Oferta salva neste navegador.' : 'Oferta removida dos salvos.')
     } catch { setFeedback('Não foi possível salvar neste navegador. Tente novamente.') }
@@ -96,14 +97,12 @@ export function OfferPage({ offerId, session, restoring, auth }: { offerId: stri
   return (
     <main id="main-content" className="offer-page">
       <div className="container offer-container">
-        <div className="offer-topbar">
-          <div className="offer-actions">
-            {session && session.userType !== 'ADMIN' && session.userId !== producer.id && <ReportForm auth={auth} offerId={offerId}/>}
-            <button type="button" className="button button-secondary" onClick={shareOffer}><Icon name="share" />Compartilhar</button>
-            <button type="button" className="button button-secondary" aria-label={session ? 'Salvar oferta' : 'Entre ou crie uma conta para salvar esta oferta'} aria-pressed={saved} disabled={restoring} onClick={saveOffer}><Icon name="bookmark" />{saved ? 'Salvo' : 'Salvar'}</button>
-          </div>
+        <div className="offer-actions">
+          {session && session.userType !== 'ADMIN' && session.userId !== producer.id && <ReportForm auth={auth} offerId={offerId}/>}
+          <button type="button" className="button button-secondary" onClick={shareOffer}><Icon name="share" />Compartilhar</button>
+          <button type="button" className="button button-secondary" aria-label={session ? 'Salvar oferta' : 'Salvar oferta — entrar na conta'} aria-pressed={session ? saved : undefined} disabled={restoring} onClick={saveOffer}><Icon name="bookmark" />{saved ? 'Salvo' : 'Salvar'}</button>
+          <p className={feedback ? 'offer-action-feedback' : 'visually-hidden'} role="status">{feedback}</p>
         </div>
-        <p className="offer-action-feedback" role="status">{showSaveAccountPrompt ? <>Para salvar esta oferta, <a href={`/entrar?returnTo=${encodeURIComponent(offerHref(offerId))}`}>entre</a> ou <a href={`/registro?returnTo=${encodeURIComponent(offerHref(offerId))}`}>crie uma conta</a>.</> : feedback}</p>
         {showShareLink && <div className="offer-share-link"><label htmlFor="offer-share-url">Link da oferta</label><input id="offer-share-url" ref={shareLinkRef} value={shareUrl} readOnly onFocus={event => event.target.select()} /></div>}
 
         <div className="offer-layout">

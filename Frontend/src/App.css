@@ -1,5 +1,17 @@
 ﻿.app-shell { min-height: 100svh; display: flex; flex-direction: column; }
 .app-shell > main { flex: 1; }
 .app-shell > main:focus { outline: none; }
+.app-shell.account-shell {
+  display: grid;
+  grid-template-columns: clamp(180px, 15vw, 240px) minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: "header header" "sidebar content" "footer footer";
+}
+.account-shell > header { grid-area: header; }
+.account-shell > main { grid-area: content; min-width: 0; }
+.account-shell > footer { grid-area: footer; }
+@media (max-width: 1000px) {
+  .app-shell.account-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; grid-template-areas: "header" "sidebar" "content" "footer"; }
+}
 .unavailable-page { padding-block: 80px; }
 .unavailable-page p { margin-block: 20px; color: var(--muted); }

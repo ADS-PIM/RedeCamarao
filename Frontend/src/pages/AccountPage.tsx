@@ -209,7 +209,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
           </section>
         </>}
 
-        {profile.userType === 'BUYER' && <section id="salvas" className="buyer-saved" aria-labelledby="buyer-saved-title">
+        {profile.userType === 'BUYER' && <section id="salvas" className="buyer-saved" aria-labelledby="buyer-saved-title" aria-busy={savedOffersLoading}>
           <div className="account-section-heading">
             <div><p className="account-eyebrow">SUAS ESCOLHAS</p><h2 id="buyer-saved-title">Ofertas salvas</h2>
               <p>{savedOfferIds.length} {savedOfferIds.length === 1 ? 'oferta salva neste navegador' : 'ofertas salvas neste navegador'}</p></div>

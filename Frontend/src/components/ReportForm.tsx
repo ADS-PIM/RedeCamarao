@@ -11,9 +11,19 @@ export function ReportForm({auth,offerId,accountId}:{auth:Authorized;offerId?:st
   const [files,setFiles]=useState<File[]>([])
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
-  const [sent,setSent]=useState('')
-  return <><button type="button" className="button button-secondary" onClick={()=>{setOpen(true);setError('');setSent('')}}><Icon name="flag"/>Denunciar {offerId?'oferta':'conta'}</button>
-    {sent&&<small role="status">{sent}</small>}
+  const [protocol, setProtocol] = useState('')
+  return <><button type="button" className="button button-secondary" onClick={()=>{setOpen(true);setError('');setProtocol('')}}><Icon name="flag"/>Denunciar {offerId?'oferta':'conta'}</button>
+    <div className={protocol ? 'report-status' : 'visually-hidden'} role="status" aria-atomic="true">
+      {protocol && (
+        <div className="report-confirmation">
+          <Icon name="check" />
+          <div>
+            <strong>Recebemos sua denúncia.</strong>
+            <p>Protocolo <b>{protocol}</b></p>
+          </div>
+        </div>
+      )}
+    </div>
     {open&&<Dialog className="report-form" titleId="report-title" busy={busy} onClose={()=>setOpen(false)}><h2 id="report-title">Denunciar {offerId?'oferta':'conta'}</h2>
     <form onSubmit={async e=>{
       e.preventDefault();if(busy)return
@@ -26,7 +36,9 @@ export function ReportForm({auth,offerId,accountId}:{auth:Authorized;offerId?:st
           const reader=new FileReader();reader.onload=()=>resolve({name:f.name,data:String(reader.result).split(',')[1]});reader.onerror=()=>reject(new Error('Falha ao ler o anexo.'));reader.readAsDataURL(f)
         })))
         const result=await auth(token=>request<{id:string}>(token,'/users/reports',{category,narrative,offerId,accountId,files:uploads}))
-        setOpen(false);setSent('Denúncia DN-'+String(result.id).padStart(4,'0')+' recebida.');setNarrative('');setCategory('');setFiles([])
+        setOpen(false)
+        setProtocol('DN-' + String(result.id).padStart(4, '0'))
+        setNarrative('');setCategory('');setFiles([])
       }catch(err){setError(err instanceof Error?err.message:'Não foi possível enviar a denúncia.')}finally{setBusy(false)}
     }}><label>Motivo *<select required value={category} onChange={e=>setCategory(e.target.value)}><option value="">Selecione o motivo</option>{['Possível fraude','Preço divergente','Produto não entregue','Anúncio duplicado','Conteúdo inadequado','Outro'].map(s=><option key={s}>{s}</option>)}</select></label>
       <label>Seu relato *<textarea required maxLength={2000} rows={4} value={narrative} onChange={e=>setNarrative(e.target.value)}/></label>

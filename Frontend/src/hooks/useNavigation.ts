@@ -61,26 +61,35 @@ export function useNavigation() {
   useLayoutEffect(() => {
     current.current = navigation
     const url = new URL(navigation.href)
-    if (navigation.kind === 'initial') {
-      if (url.hash) revealDestination(url, false)
-      return
-    }
+    const focus = navigation.kind !== 'initial'
     const position = navigation.kind === 'pop' ? positions.current.get(navigation.key) : undefined
-    revealDestination(url, true, position)
-    if (!position || Math.abs(window.scrollY - position.top) < 1) return
+    if (focus || url.hash) revealDestination(url, focus, position)
 
-    // A page that fetches its content may initially be shorter than its saved scroll position.
-    const observer = new ResizeObserver(() => {
-      window.scrollTo({ ...position, behavior: 'instant' })
-      if (Math.abs(window.scrollY - position.top) < 1) stop()
-    })
-    const stop = () => {
+    let observer: MutationObserver | ResizeObserver
+    const hashReady = () => hashTarget(url) && !document.querySelector('#main-content [aria-busy="true"]')
+    if (!position && url.hash && !hashReady()) {
+      // Wait for async sections above the destination to occupy their final height.
+      observer = new MutationObserver(() => {
+        if (!hashReady()) return
+        stop()
+        revealDestination(url, focus)
+      })
+      observer.observe(document.body, { childList: true, attributeFilter: ['aria-busy'], subtree: true })
+    } else if (position && Math.abs(window.scrollY - position.top) >= 1) {
+      // A page that fetches its content may initially be shorter than its saved scroll position.
+      observer = new ResizeObserver(() => {
+        window.scrollTo({ ...position, behavior: 'instant' })
+        if (Math.abs(window.scrollY - position.top) < 1) stop()
+      })
+      observer.observe(document.getElementById('main-content') ?? document.body)
+    } else return
+
+    function stop() {
       observer.disconnect()
       window.removeEventListener('wheel', stop)
       window.removeEventListener('pointerdown', stop)
       window.removeEventListener('keydown', stop)
     }
-    observer.observe(document.getElementById('main-content') ?? document.body)
     window.addEventListener('wheel', stop, { passive: true })
     window.addEventListener('pointerdown', stop)
     window.addEventListener('keydown', stop)
@@ -110,5 +119,6 @@ export function useNavigation() {
     navigate(destination.href)
   }
 
-  return { pathname: new URL(navigation.href).pathname, handleLinkClick, navigate }
+  const { pathname, hash } = new URL(navigation.href)
+  return { pathname, hash, handleLinkClick, navigate }
 }
