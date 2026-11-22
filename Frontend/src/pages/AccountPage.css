@@ -133,6 +133,8 @@
   .account-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .account-offers > .account-section-heading { align-items: flex-start; flex-wrap: wrap; }
   .account-toolbar { flex: 1; }
+}
+@container my-offers (max-width: 1100px) {
   .account-table-wrap { border: 0; }
   .account-table, .account-table tbody { display: block; }
   .account-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

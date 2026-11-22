@@ -1,0 +1,37 @@
+.account-nav {
+  grid-area: sidebar;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.account-nav-inner { position: sticky; top: 96px; padding: 28px 14px; }
+.account-nav-links { display: grid; gap: 6px; }
+.account-nav-links a, .account-nav-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  font-weight: 600;
+}
+.account-nav-links a:hover { background: var(--surface-soft); }
+.account-nav-links a[aria-current] { background: var(--navy); color: var(--cream); box-shadow: inset 4px 0 var(--accent); }
+.account-nav-links .portal-icon { width: 17px; }
+.account-nav-toggle { display: none; }
+
+@media (max-width: 1000px) {
+  .account-nav { border-right: 0; border-bottom: 1px solid var(--border); }
+  .account-nav-inner { position: static; width: 89%; margin-inline: auto; padding: 6px 0; }
+  .account-nav-toggle { display: flex; width: 100%; justify-content: space-between; padding-inline: 0; border: 0; background: transparent; color: var(--navy); }
+  .account-nav-toggle .portal-icon { width: 14px; }
+  .account-nav-toggle[aria-expanded='true'] .portal-icon { transform: rotate(180deg); }
+  .account-nav-links { display: none; }
+  .account-nav-links.is-open { display: grid; padding-bottom: 8px; }
+}
+
+@media (max-width: 600px) {
+  .account-nav-inner { width: calc(100% - 36px); }
+}

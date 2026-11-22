@@ -1,4 +1,4 @@
-.my-offers-main { padding-top: 44px; }
+.my-offers-main { padding-top: 44px; container: my-offers / inline-size; }
 .my-offers-panel { padding: 26px; }
 .my-offers-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
 .my-offers-tabs > button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 10px 18px; border: 1px solid transparent; border-radius: 10px; background: var(--surface); color: var(--muted); font-size: 15px; font-weight: 600; }
@@ -26,7 +26,7 @@
 .my-offers-note { max-width: none; }
 .my-offers-panel > .editor-success, .my-offers-panel > .editor-error { margin-bottom: 18px; }
 @media (max-width: 1200px) { .my-offers-toolbar { flex-wrap: wrap; gap: 14px; } .my-offers-toolbar .account-search { width: 100%; } .my-offers-toolbar > p { margin-right: auto; margin-left: 0; } }
-@media (max-width: 1100px) {
+@container my-offers (max-width: 1100px) {
   .my-offers-table tr { grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr); }
   .my-offers-table td:first-child.my-offers-select { grid-column: 1; grid-row: 1; width: 28px !important; min-width: 0 !important; padding-inline: 0 !important; }
   .my-offers-table td.my-offers-name { grid-column: 2 / -1; grid-row: 1; width: 100%; }
