@@ -110,7 +110,7 @@ export function PhotoAdjustmentDialog({ source, kind, initial = initialPhotoAdju
     <div className="photo-adjust-footer">
       <p>{kind === 'profile' ? 'A imagem será enviada ao clicar em “Salvar foto”.' : 'A imagem será enviada ao salvar a oferta.'}{pendingCount > 0 && ` Depois desta, faltam ${pendingCount} ${pendingCount === 1 ? 'foto para ajustar' : 'fotos para ajustar'}.`}</p>
       <div><button type="button" className="button button-secondary" disabled={applying} onClick={onClose}>Cancelar</button>
-        <button type="button" className="button button-primary" disabled={applying || !image} onClick={() => void apply()}>{applying ? 'Aplicando...' : 'Aplicar ajuste'}</button></div>
+        <button type="button" className="button button-success" disabled={applying || !image} onClick={() => void apply()}>{applying ? 'Aplicando...' : 'Aplicar ajuste'}</button></div>
     </div>
   </Dialog>
 }

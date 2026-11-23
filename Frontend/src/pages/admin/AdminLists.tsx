@@ -62,7 +62,7 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
       <><button className="mod-name" onClick={()=>setDetail(row)}>{row.title}</button><small>{row.code} · {formatQuantity(Number(row.weight))}</small></>,
       row.producer,<strong>{formatPrice(Number(row.price))}/kg</strong>,<Badge status={row.status}/>,
       row.totalReports?<a className="mod-link" href={'/admin/denuncias?offerId='+row.id}>{row.openReports?row.openReports+' em aberto':'Resolvidas'}</a>:'Nenhuma',
-      <div className="mod-row-actions">{row.status==='DISABLED'&&row.accountStatus!=='ACTIVE'?<small>Conta bloqueada</small>:<button onClick={()=>decideOffer(row,row.status==='DISABLED'?'enable':'disable')}>{row.status==='DISABLED'?'Reativar':'Desativar'}</button>}{superAdmin&&<button className="mod-danger-text" onClick={()=>decideOffer(row,'remove')}>Excluir</button>}</div>,
+      <div className="mod-row-actions">{row.status==='DISABLED'&&row.accountStatus!=='ACTIVE'?<small>Conta bloqueada</small>:<button className={row.status==='DISABLED' ? 'mod-enable-text' : 'mod-disable-text'} onClick={()=>decideOffer(row,row.status==='DISABLED'?'enable':'disable')}>{row.status==='DISABLED'?'Reativar':'Desativar'}</button>}{superAdmin&&<button className="mod-danger-text" onClick={()=>decideOffer(row,'remove')}>Excluir</button>}</div>,
     ]
     if ('email' in row) return [
       <><strong>{row.name}</strong><small>{row.email}</small></>,labels[row.profile],<Badge status={row.status}/>,dateText(row.createdAt),verification(row),
@@ -100,9 +100,9 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
     {detail&&<Dialog className="mod-dialog" titleId="details-title" onClose={()=>setDetail(null)}><div className="mod-dialog-heading"><h2 id="details-title">{'name' in detail?detail.name:detail.title}</h2><button className="mod-icon" aria-label="Fechar" onClick={()=>setDetail(null)}><Icon name="close"/></button></div>
       <p>{detail.code} · <Badge status={detail.status}/></p>
       {'name' in detail?<><dl className="mod-facts">{[['Perfil',labels[detail.profile]],['E-mail',detail.email],['CPF/CNPJ',detail.document],['Contato',detail.phone],['Localização',detail.location],['Cadastro',dateText(detail.createdAt)],['Verificação',verification(detail)],['Ofertas ativas',detail.activeOffers]].map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v ?? '—'}</dd></div>)}</dl>
-      <div className="mod-actions">{detail.status==='PENDING'&&<button className="button button-primary" onClick={()=>decideAccount(detail,'approve')}>Aprovar cadastro</button>}
-      {['BANNED','SUSPENDED'].includes(detail.status)&&<button className="button button-primary" onClick={()=>decideAccount(detail,'restore')}>Reativar conta</button>}
-      {detail.status==='ACTIVE'&&<button className="button button-secondary" onClick={()=>decideAccount(detail,'suspend')}>Suspender conta</button>}
+      <div className="mod-actions">{detail.status==='PENDING'&&<button className="button button-success" onClick={()=>decideAccount(detail,'approve')}>Aprovar cadastro</button>}
+      {['BANNED','SUSPENDED'].includes(detail.status)&&<button className="button button-success" onClick={()=>decideAccount(detail,'restore')}>Reativar conta</button>}
+      {detail.status==='ACTIVE'&&<button className="button button-warning" onClick={()=>decideAccount(detail,'suspend')}>Suspender conta</button>}
       {detail.status!=='BANNED'&&<button className="button mod-danger-button" onClick={()=>decideAccount(detail,'ban')}>Banir conta</button>}</div></>:<><p>{detail.description}</p><p>{detail.producer} · {detail.location} · {formatQuantity(Number(detail.weight))} · {formatPrice(Number(detail.price))}/kg</p></>}
     </Dialog>}
   </>

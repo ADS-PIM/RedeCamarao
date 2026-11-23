@@ -45,7 +45,7 @@ function ReportDetail({r,auth,superAdmin,decide,version,reload}:Pick<Props,'auth
     {r.status!=='RESOLVED'&&<><label htmlFor="report-note">Observação interna *</label><textarea id="report-note" maxLength={2000} rows={3} value={note} onChange={e=>{setNote(e.target.value);setError('')}} placeholder="Descreva a análise e o motivo da decisão para a equipe."/>
       <div className="mod-actions">{r.status==='OPEN'&&<button className="button button-secondary" onClick={()=>start('review')}>Iniciar análise</button>}
         <button className="button button-secondary" onClick={()=>start('archive')}>Arquivar denúncia</button>
-        {offer&&offer.status!=='DISABLED'&&<button className="button button-primary" onClick={()=>start('disable')}>Desativar oferta</button>}
+        {offer&&offer.status!=='DISABLED'&&<button className="button button-warning" onClick={()=>start('disable')}>Desativar oferta</button>}
         {superAdmin&&account&&account.status!=='BANNED'&&<button className="button mod-danger-button" onClick={()=>start('ban')}>Banir conta</button>}</div>
       <small>A decisão exige confirmação. A observação interna fica disponível apenas para a equipe.</small></>}
     {error&&<p role="alert" className="mod-error">{error}</p>}

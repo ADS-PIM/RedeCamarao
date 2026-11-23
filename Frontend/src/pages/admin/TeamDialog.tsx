@@ -45,7 +45,7 @@ export function TeamDialog({ auth, userId, onClose, reload }: {auth:Authorized; 
       {member.id && <label><input type="checkbox" checked={member.active} onChange={e=>setMember({...member,active:e.target.checked})}/> Acesso ativo</label>}
       <label>Justificativa *<textarea required maxLength={2000} value={reason} onChange={e=>setReason(e.target.value)}/></label>
       <div className="mod-actions"><button className="button button-secondary" type="button" disabled={busy} onClick={()=>edit(null)}>Cancelar</button>
-        <button className="button button-primary" disabled={busy}>{busy ? 'Salvando…' : member.id ? 'Salvar permissão' : 'Cadastrar membro'}</button></div>
+        <button className="button button-success" disabled={busy}>{busy ? 'Salvando…' : member.id ? 'Salvar permissão' : 'Cadastrar membro'}</button></div>
     </form> : !data ? <LoadState error={error} retry={()=>setVersion(v=>v+1)}/> : <>
       <button className="button button-primary" onClick={()=>edit(newMember())}><Icon name="plus"/>Adicionar membro</button>
       {data.map(m=><div className="mod-member" key={m.id}><div><strong>{m.name}</strong><small>{m.email}</small><small>{m.role==='SUPER_ADMIN'?'Administrador':'Moderador'} · {m.active?'Ativo':'Inativo'}</small></div>
