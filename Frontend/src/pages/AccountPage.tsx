@@ -244,7 +244,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
               <label className="profile-field-wide">Horário de atendimento<input maxLength={255} value={profileDraft.businessHours ?? ''} onChange={event => setProfileDraft(current => ({ ...current, businessHours: event.target.value }))} /></label>
             </>}
             <div className="account-form-actions profile-field-wide"><button className="button button-secondary" type="button" onClick={() => setProfileEditing(false)} disabled={savingProfile}>Cancelar</button>
-              <button className="button button-primary" type="submit" disabled={savingProfile}>{savingProfile ? 'Salvando...' : 'Salvar perfil'}</button></div>
+              <button className="button button-success" type="submit" disabled={savingProfile}>{savingProfile ? 'Salvando...' : 'Salvar perfil'}</button></div>
           </form> : <dl className="account-profile-details">
             <div><dt>Nome</dt><dd>{profile.name}</dd></div><div><dt>E-mail</dt><dd>{profile.email}</dd></div>
             <div><dt>Telefone</dt><dd>{profile.phone || 'Não informado'}</dd></div><div><dt>Localização</dt><dd>{profile.location || 'Não informada'}</dd></div>

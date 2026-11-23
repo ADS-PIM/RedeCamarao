@@ -3,8 +3,8 @@
 .offer-page .button { min-height: 44px; padding: 10px 16px; border-radius: 8px; font-size: 14px; gap: 8px; }
 .offer-page button:disabled { cursor: not-allowed; }
 .offer-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 18px; }
-.offer-actions .button { background: var(--surface); color: var(--primary); }
-.offer-actions .button[aria-pressed='true'] { border-color: var(--border); background: var(--surface-muted); color: var(--primary-dark); }
+.offer-actions .button[aria-pressed='true'] { border-color: var(--action-green); background: var(--action-green); color: var(--white); }
+.offer-actions .button[aria-pressed='true']:enabled:hover { background: var(--action-green-hover); }
 .offer-actions svg { width: 20px; height: 20px; flex-shrink: 0; }
 .offer-actions .report-status { order: -1; flex-basis: auto; }
 .offer-actions .report-confirmation { align-items: center; min-height: 44px; padding: 3px 12px; font-size: 14px; line-height: 1.25; }

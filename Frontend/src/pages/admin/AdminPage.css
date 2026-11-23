@@ -31,8 +31,10 @@
 .mod-tabs { display:flex; flex-wrap:wrap; gap:5px; }
 .mod-tabs button,.mod-icon,.mod-link,.mod-name,.mod-row-actions button { border:0; color:var(--navy); background:transparent; }
 .mod-tabs button { border-radius:8px; padding:9px 13px; font-weight:600; color:var(--muted); }
-.mod-tabs button[aria-pressed=true] { background:var(--accent-soft); color:var(--navy); }
-.mod-tabs button:hover { background:var(--surface-muted); }
+.mod-tabs button[aria-pressed=true] { background:var(--navy); color:var(--white); }
+.mod-row-actions .mod-enable-text { color:var(--action-green); }
+.mod-row-actions .mod-disable-text { color:var(--action-amber); }
+.mod-tabs button:not([aria-pressed=true]):hover { background:var(--surface-muted); }
 .mod-toolbar { flex-wrap:wrap; margin:16px 0; gap:8px; }
 .mod-search { flex:1 1 225px; gap:8px; color:var(--muted); }
 .mod-search .portal-icon { margin-left:12px; position:absolute; pointer-events:none; }

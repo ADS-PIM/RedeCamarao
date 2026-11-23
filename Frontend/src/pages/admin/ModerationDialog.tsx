@@ -17,6 +17,11 @@ const definitions = {
 export type Decision = { action:keyof typeof definitions; targetId?:string; reportId?:string; note?:string; title:string; detail:string }
 export function ModerationDialog({decision,auth,onClose,onSaved,emailConfigured}:{decision:Decision;emailConfigured:boolean;auth:Authorized;onClose:()=>void;onSaved:()=>void}) {
   const [title,description,submit,defaultReason] = definitions[decision.action]
+  const actionStyle = {
+    disable: 'button-warning', suspend: 'button-warning', remove: 'mod-danger-button', ban: 'mod-danger-button',
+    enable: 'button-success', restore: 'button-success', approve: 'button-success',
+    archive: 'button-primary', review: 'button-primary',
+  } satisfies Record<Decision['action'], string>
   const word = decision.action === 'ban' ? 'BANIR' : decision.action === 'remove' ? 'EXCLUIR' : ''
   const [reason,setReason] = useState<string>(defaultReason)
   const [why,setWhy] = useState('')
@@ -44,7 +49,7 @@ export function ModerationDialog({decision,auth,onClose,onSaved,emailConfigured}
       {decision.action !== 'review' && <p className="mod-notice">{emailConfigured ? 'O aviso ficará na plataforma e será encaminhado por e-mail.' : 'O aviso ficará na plataforma. O e-mail ficará pendente até a configuração do envio.'}</p>}
       {decision.action === 'remove' && <p className="mod-warning">A exclusão é irreversível. O registro de auditoria será preservado.</p>}
       {error && <p role="alert" className="mod-error">{error}</p>}
-      <div className="mod-actions"><button type="button" disabled={busy} className="button button-secondary" onClick={onClose}>Cancelar</button><button disabled={busy} className={'button '+(word ? 'mod-danger-button' : 'button-primary')}>{busy?'Registrando…':submit}</button></div>
+      <div className="mod-actions"><button type="button" disabled={busy} className="button button-secondary" onClick={onClose}>Cancelar</button><button disabled={busy} className={'button '+actionStyle[decision.action]}>{busy?'Registrando…':submit}</button></div>
     </form>
   </Dialog>
 }

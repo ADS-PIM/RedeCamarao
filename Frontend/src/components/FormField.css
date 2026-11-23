@@ -8,6 +8,8 @@
 .is-error, .field-error { color: var(--danger); }
 .is-valid { color: var(--success); }
 .password-toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 42px; height: 44px; background: transparent; border: 0; border-radius: 6px; color: var(--muted); }
+.password-toggle:hover { background: var(--surface-muted); color: var(--ink); }
+.password-toggle[aria-pressed='true'] { background: var(--navy); color: var(--white); }
 .password-toggle svg { width: 20px; height: 20px; }
 .field-error, .field-hint { font-size: 13px; line-height: 1.5; margin-top: 6px; }
 .field-hint { color: var(--muted); }
