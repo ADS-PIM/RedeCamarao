@@ -8,6 +8,14 @@ export type OfferRow = { id: string; code: string; title: string; description: s
 export type AccountRow = { id: string; code: string; name: string; email: string; document: string; profile: string; status: string; verified: boolean; location: string; phone: string; createdAt: string; activeOffers: number }
 export type ReportRow = { id: string; code: string; category: string; status: string; narrative: string; createdAt: string; reporter: string; assignee: string | null; offerId: string | null; offerTitle: string | null; accountId: string; accountName: string; priority: boolean; reportCount: number; files: { id: string; name: string }[] }
 export type HistoryRow = { id: string; actor: string; action: string; reference: string; reason: string; justification: string; note: string | null; createdAt: string }
+export type OverviewData = {
+  highPriorityReports: number
+  accounts: { newAccounts: number; olderPending: number; producers: number; verified: number } | null
+  offers: { total: number; clean: number }
+  reviews: { total: number; onTime: number }
+  pendingReports: Pick<ReportRow, 'id' | 'code' | 'category' | 'status' | 'accountName' | 'offerTitle' | 'priority' | 'createdAt'>[]
+  pendingAccounts: Pick<AccountRow, 'id' | 'code' | 'name' | 'createdAt'>[]
+}
 export type ReportContext = { decision: Omit<HistoryRow,'reference'|'id'> | null; offer: OfferRow | null; account: Pick<AccountRow,'name'|'profile'|'status'|'location'|'activeOffers'|'code'> | null }
 export type Member = { id: string; name: string; email: string; role: string; active: boolean }
 export type Page<T> = { rows: T[]; total: number; page: number }
@@ -15,7 +23,7 @@ export type Filters = Record<string,string>
 export const adminApi = '/admin/moderation'
 export const labels: Record<string,string> = {
   ATIVO:'Ativa', PAUSADO:'Pausada', REVIEW:'Em análise', DISABLED:'Desativada', RASCUNHO:'Rascunho', VENDIDO:'Vendida', EXPIRADO:'Expirada', CANCELADO:'Cancelada',
-  ACTIVE:'Ativa', PENDING:'Pendente', SUSPENDED:'Suspensa', BANNED:'Banida', OPEN:'Aberta', RESOLVED:'Resolvida', BUYER:'Comprador', PRODUCER:'Produtor',
+  ACTIVE:'Ativa', PENDING:'Pendente', SUSPENDED:'Suspensa', BANNED:'Banida', OPEN:'Aberta', RESOLVED:'Resolvida', BUYER:'Comprador', PRODUCER:'Produtor', PRIORITY:'Alta prioridade',
 }
 export const dateText = (value: string, time = false) => new Date(value).toLocaleString('pt-BR', { dateStyle:'short', ...(time && { timeStyle:'short' as const }) })
 export const refCode = (prefix: string, id: string) => prefix + '-' + id.slice(0,8).toUpperCase()

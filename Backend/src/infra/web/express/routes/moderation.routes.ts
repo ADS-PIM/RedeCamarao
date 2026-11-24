@@ -1,7 +1,7 @@
 import { Router, type Response, type RequestHandler } from 'express';
 import type { AuthRequest } from '../../../../../authMiddleware';
 import { connection } from '../../../../util/connection';
-import { summary, listing, filterOptions } from '../../../../service/moderationLists';
+import { summary, overview, listing, filterOptions } from '../../../../service/moderationLists';
 import { isSuperAdmin } from '../../../../../authMiddleware';
 import { controllers } from '../../../../config/composition_root';
 import { moderate, ModerationError, submitReport } from '../../../../service/moderation';
@@ -20,6 +20,7 @@ function endpoint(run: (req: AuthRequest, res: Response) => Promise<unknown>): R
     };
 }
 router.get('/summary',endpoint(async (req,res)=>res.json(await summary(req.admin?.role==='SUPER_ADMIN'))));
+router.get('/overview',endpoint(async (req,res)=>res.json(await overview(req.admin?.role==='SUPER_ADMIN'))));
 router.get('/filters',endpoint(async (_req,res)=>res.json(await filterOptions())));
 router.get('/lists/:section',endpoint(async (req,res)=>res.json(await listing(String(req.params.section),req.query,req.admin?.role==='SUPER_ADMIN'))));
 router.post('/actions',endpoint(async (req,res)=>{ await moderate(req.admin!.adminId!,req.body); res.sendStatus(204); }));
