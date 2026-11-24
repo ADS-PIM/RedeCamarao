@@ -6,7 +6,8 @@ import { saveProfilePhoto } from '../controllers/profilePhoto.controller';
 
 import {
     registrationRateLimit,
-    loginRateLimit
+    loginRateLimit,
+    producerContactRateLimit
 } from '../../../../rateLimit/middleware';
 
 import { createReport, myNotifications } from './moderation.routes';
@@ -18,6 +19,7 @@ router.get('/me/notifications', authUser, myNotifications);
 
 router.get('/producers', (req, res) => controllers.publicProducerController.search(req, res));
 router.get('/producers/:id', (req, res) => controllers.publicProducerController.searchById(req, res));
+router.get('/producers/:id/contact', authUser, producerContactRateLimit, (req, res) => controllers.userController.searchProducerWhatsApp(req, res));
 
 router.post('/register', ...registrationRateLimit, (req, res) => controllers.userController.register(req, res));
 

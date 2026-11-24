@@ -31,16 +31,24 @@
 .product-filters input[aria-invalid='true'] { border-color: #c2313a; background: #fff5f5; }
 .filter-subtitle { font-size: 12px; line-height: 1.5; font-weight: 600; margin-block: 20px 8px; }
 .filter-options { display: grid; gap: 2px; }
-.state-options { max-height: 180px; overflow-y: auto; scrollbar-width: thin; }
+.products-state-picker { position: relative; z-index: 1; min-width: 0; }
+.products-state-picker[open] { z-index: 5; }
+.products-state-picker > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink-soft); font-size: 14px; line-height: 1.5; cursor: pointer; list-style: none; }
+.products-state-picker > summary::-webkit-details-marker { display: none; }
+.products-state-picker > summary::marker { content: ''; }
+.products-state-picker > summary svg { width: 14px; height: 14px; flex: 0 0 auto; transition: transform .15s ease; }
+.products-state-picker[open] > summary, .products-state-picker.has-selection > summary { border-color: var(--accent); box-shadow: 0 0 0 2px rgb(var(--coral-rgb) / 16%); }
+.products-state-picker[open] > summary { border-radius: 8px 8px 0 0; }
+.products-state-picker[open] > summary svg { transform: rotate(180deg); }
+.state-options { position: absolute; top: 100%; left: 0; right: 0; max-height: min(240px, 45vh); overflow-y: auto; padding: 6px 11px; border: 1px solid var(--accent); border-top: 0; border-radius: 0 0 8px 8px; background: var(--surface); box-shadow: 0 5px 14px rgb(var(--navy-rgb) / 10%); overscroll-behavior: contain; scrollbar-width: thin; }
 .filter-option { display: flex; align-items: center; gap: 8px; min-height: 44px; padding-block: 5px; cursor: pointer; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
-.filter-option input { width: 17px; height: 17px; flex-shrink: 0; margin: 0; accent-color: var(--primary); cursor: pointer; }
+.filter-option input { width: 17px; height: 17px; flex-shrink: 0; margin: 0; accent-color: var(--accent); cursor: pointer; }
 .filter-option > span { min-width: 0; overflow-wrap: anywhere; }
 .filter-option small { margin-left: auto; padding-left: 4px; font-size: 11px; }
 .filter-hint { color: var(--muted); font-size: 12px; line-height: 1.6; }
 .price-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .price-fields > div { min-width: 0; }
 .filter-error { color: #b92e36; font-size: 12px; line-height: 1.6; margin-top: 10px; }
-.apply-filters { width: 100%; margin-top: 22px; }
 .products-main .filter-toggle { display: none; }
 
 .products-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 44px; margin-bottom: 20px; }

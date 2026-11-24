@@ -3,9 +3,11 @@ import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { Pagination } from '../components/Pagination'
 import { ProductCard } from '../components/ProductCard'
+import { WhatsAppContact } from '../components/WhatsAppContact'
 import { useProducerProfile } from '../hooks/useProducerProfile'
 import { filterProducerOffers, producerLocation } from '../data/producers'
 import type { ProducerOfferFilter } from '../data/producers'
+import type { UserSession } from '../services/auth'
 import './ProducersPage.css'
 import './ProducerProfilePage.css'
 
@@ -98,9 +100,9 @@ export function ProducerProfilePage({ producerId, auth, session }: { producerId:
             <h2 id="producer-contact-title">Contato</h2>
             <dl className="producer-contact-details">
               <div><dt>Atendimento</dt><dd>{producer.businessHours || 'Horário não informado'}</dd></div>
-              <div><dt>Telefone</dt><dd>{producer.phone || 'Telefone não informado'}</dd></div>
+              <div><dt>Canal direto</dt><dd>WhatsApp</dd></div>
             </dl>
-            <p id="producer-contact-note" className="producer-profile-contact"><Icon name="info" />A integração com WhatsApp estará disponível em uma próxima etapa. A negociação e o pagamento acontecem fora da plataforma.</p>
+            <p id="producer-contact-note" className="producer-profile-contact"><Icon name="info" />O contato por WhatsApp é liberado para usuários cadastrados. A negociação e o pagamento acontecem diretamente entre as partes.</p>
           </section>
           <section className="producer-profile-card" aria-labelledby="producer-location-title">
             <h2 id="producer-location-title">Localização</h2>

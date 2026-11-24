@@ -54,8 +54,6 @@
 .offer-page .offer-contact-button { width: 100%; background: #12845e; border-color: #12845e; color: var(--white); }
 .offer-page .offer-contact-button:hover:not(:disabled) { background: #0e6b4c; }
 .offer-contact-button:disabled { opacity: .65; }
-.offer-contact-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; padding: 12px; border-radius: 8px; background: var(--surface-muted); color: var(--muted); font-size: 12px; line-height: 1.65; }
-.offer-contact-note svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; }
 
 .offer-about h2, .offer-producer h2 { font-size: 22px; line-height: 1.35; letter-spacing: -.3px; overflow-wrap: anywhere; }
 .offer-description-full { margin-top: 20px; color: var(--muted); font-size: 15px; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; }

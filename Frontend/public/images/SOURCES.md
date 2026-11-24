@@ -1,7 +1,10 @@
 # Logo da RedeCamarão
 
-- `logo-redecamarao.png`: original transparente da logo fornecida pelo usuário, mantido como fonte. A versão exibida no cabeçalho, rodapé e ícone é servida pelo Cloudinary, com URL versionada em `src/data/brand.ts`. Republicação: `node Backend/scripts/publish-brand.cjs`. O script usa o hash do original, preserva a transparência e verifica a URL antes de atualizar a referência. As demais fotografias desta pasta são referências locais sem uso nas telas atuais.
-- Instrução da edição: remover somente o fundo claro, inclusive nos espaços internos do símbolo, preservando camarão, onda, contorno, cores e proporções; não redesenhar nem adicionar elementos.
+- `logo-redecamarao.png`: símbolo transparente original, preservado como fonte e usado no favicon.
+- `logo-redecamarao-integrada.svg`: lockup horizontal integrado usado no cabeçalho e rodapé. O SVG inclui o símbolo original para carregar sem uma segunda requisição.
+- `logo-redecamarao-integrada.png`: renderização PNG de alta resolução da mesma composição; usada pelo publicador de marca do Cloudinary.
+- Republicação: `node Backend/scripts/publish-brand.cjs`. O script usa o hash da composição integrada, mantém sua proporção e transparência, verifica a URL e atualiza `src/data/brand.ts`.
+- As fotografias desta pasta são referências locais sem uso nas telas atuais.
 
 # Fotografias ilustrativas do marketplace
 

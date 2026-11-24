@@ -65,17 +65,24 @@ export function ProductsPage() {
     setInput(''); setQuery(''); setDraft(emptyProductFilters); setFilters(emptyProductFilters); setPriceError(null); setPage(1)
   }
 
-  function applyFilters(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const error = validateProductPrices(draft)
-    setPriceError(error)
-    if (error) { document.getElementById(`products-${error.field}`)?.focus(); return }
-    const quantityError = validateCatalogQuantity(draft)
-    if (quantityError) { document.getElementById(`products-lot-${quantityError.field}`)?.focus(); return }
-    setFilters({ ...draft, location: draft.location.trim() })
+  function changeFilters(next: Filters) {
+    const priceError = validateProductPrices(next)
+    const quantityError = validateCatalogQuantity(next)
+    setDraft(next)
+    setPriceError(priceError)
+
+    const nextApplied = { ...next, location: next.location.trim() }
+    if (priceError) {
+      nextApplied.minPrice = filters.minPrice
+      nextApplied.maxPrice = filters.maxPrice
+    }
+    if (quantityError) {
+      nextApplied.minQuantity = filters.minQuantity
+      nextApplied.maxQuantity = filters.maxQuantity
+      nextApplied.quantityUnit = filters.quantityUnit
+    }
+    setFilters(nextApplied)
     setPage(1)
-    setFiltersOpen(false)
-    if (window.matchMedia('(max-width: 1000px)').matches) requestAnimationFrame(() => scrollToResults(true))
   }
 
   function search(event: FormEvent<HTMLFormElement>) {
@@ -113,7 +120,7 @@ export function ProductsPage() {
         </button>
         <aside className={`products-sidebar${filtersOpen ? ' is-open' : ''}`} aria-label="Filtros de produtos">
           <ProductFilters offers={offers} value={draft} unavailable={loading || Boolean(error)} loading={loading} priceError={priceError}
-            onChange={value => { setDraft(value); setPriceError(null) }} onApply={applyFilters} onClear={clearFilters} />
+            onChange={changeFilters} onClear={clearFilters} />
         </aside>
         <section id="product-results" className="product-results" aria-label="Ofertas disponíveis" tabIndex={-1}>
           <div className="products-toolbar">

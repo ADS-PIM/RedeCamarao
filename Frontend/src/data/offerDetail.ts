@@ -1,4 +1,4 @@
-import type { Offer, OfferDetail } from './marketplace'
+import type { Offer, OfferDetail } from './marketplace.ts'
 import { getOfferState } from './products.ts'
 
 export function offerHref(id: string) { return `/produtos/${encodeURIComponent(id)}` }

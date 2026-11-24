@@ -1,5 +1,5 @@
-import type { Offer } from '../data/marketplace'
-import type { EditorPhoto, editorPayload } from '../data/offerEditor'
+import type { Offer } from '../data/marketplace.ts'
+import type { EditorPhoto, editorPayload } from '../data/offerEditor.ts'
 import { apiBaseUrl } from './api.ts'
 
 export type OfferStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SOLD_OUT' | 'CANCELLED' | 'DRAFT'
