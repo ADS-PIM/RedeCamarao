@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { FormField } from '../components/FormField'
 import { Icon } from '../components/Icon'
-import { loginUser } from '../services/auth'
+import { loginAdministrator, loginUser } from '../services/auth'
 import type { UserSession } from '../services/auth'
 import { validateLogin } from '../utils/login'
 import type { LoginData } from '../utils/login'
@@ -15,6 +15,7 @@ type Props = {
 }
 
 export function LoginPage({ restoring, onSessionChange, returnTo }: Props) {
+  const staff = new URLSearchParams(window.location.search).get('acesso') === 'admin'
   const [data, setData] = useState<LoginData>({ email: '', password: '' })
   const [touched, setTouched] = useState<Partial<Record<keyof LoginData, boolean>>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -45,7 +46,7 @@ export function LoginPage({ restoring, onSessionChange, returnTo }: Props) {
     setSubmitting(true)
     setSubmitError('')
     try {
-      const nextSession = await loginUser(data)
+      const nextSession = await (staff ? loginAdministrator(data) : loginUser(data))
       setData({ email: '', password: '' })
       setTouched({})
       onSessionChange(nextSession)
@@ -73,8 +74,8 @@ export function LoginPage({ restoring, onSessionChange, returnTo }: Props) {
 
         <section className="login-card" aria-labelledby="login-title" aria-busy={submitting || restoring}>
               <p className="login-eyebrow">SUA CONTA REDECAMARÃO</p>
-              <h2 id="login-title">Entrar</h2>
-              <p className="login-card-description">Use seu e-mail e senha para acessar sua conta.</p>
+              <h2 id="login-title">{staff ? 'Acesso administrativo' : 'Entrar'}</h2>
+              <p className="login-card-description">{staff ? 'Entre com o e-mail e a senha da equipe.' : 'Use seu e-mail e senha para acessar sua conta.'}</p>
               <form onSubmit={submit} noValidate>
                 <div className="login-fields">
                   <FormField {...fieldProps('email')} label="E-mail" type="email" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="seuemail@exemplo.com.br" maxLength={320} required />
@@ -83,10 +84,10 @@ export function LoginPage({ restoring, onSessionChange, returnTo }: Props) {
                 <button className="button button-primary login-submit" type="submit" disabled={submitting || restoring}>
                   {restoring ? 'Verificando sessão...' : submitting ? 'Entrando...' : 'Entrar'}<Icon name="arrow" />
                 </button>
-                <p className="login-register">Ainda não tem uma conta? <a href={registerHref}>Criar conta</a></p>
+                {staff ? <p className="login-register"><a href="/entrar">Voltar ao acesso do marketplace</a></p> : <><p className="login-register">Ainda não tem uma conta? <a href={registerHref}>Criar conta</a></p><p className="login-register"><a href="/entrar?acesso=admin">Acesso da equipe administrativa</a></p></>}
               </form>
           {submitError && <div className="login-error" role="alert"><Icon name="info" /><p>{submitError}</p></div>}
-          <p className="login-session-note" role="status">{restoring ? 'Aguarde enquanto verificamos seu acesso.' : 'Uma conta para comprar ou vender camarão.'}</p>
+          <p className="login-session-note" role="status">{restoring ? 'Aguarde enquanto verificamos seu acesso.' : staff ? 'Segunda etapa desativada. O acesso da equipe é feito por senha.' : 'Uma conta para comprar ou vender camarão.'}</p>
         </section>
       </div>
     </main>

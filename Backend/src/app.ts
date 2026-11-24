@@ -3,10 +3,12 @@ import dotenv from 'dotenv';
 import path from 'node:path';
 import routes from './infra/web/express/routes/index';
 import { authUser } from '../userAuthMiddleware';
+import { configureRateLimiting } from './rateLimit/middleware';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
+configureRateLimiting(app);
 
 const allowedOrigins = new Set([
     'http://localhost:5173',
@@ -36,6 +38,7 @@ app.use((req, res, next) => {
 // Base64 adds roughly 1/3 to the size: five 10 MB photos plus JSON metadata.
 app.use('/offer/:id/editor', authUser, express.json({ limit: '70mb' }));
 app.use('/offer/editor', authUser, express.json({ limit: '70mb' }));
+app.use('/users/reports', authUser, express.json({ limit: '6mb' }));
 app.use('/users/me/photo', authUser, express.json({ limit: '14mb' }));
 app.use(express.json());
 

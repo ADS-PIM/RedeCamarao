@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { connection } from './src/util/connection';
 import jwt from 'jsonwebtoken';
 import { AdminRole } from './src/domain/model/admin';
 
@@ -42,7 +43,7 @@ export function authToken(req: AuthRequest, res: Response, next: NextFunction): 
         }
 
         
-        jwt.verify(token, accessSecret, (err: jwt.VerifyErrors | null, admin: string | jwt.JwtPayload | undefined) => {
+        jwt.verify(token, accessSecret, async (err: jwt.VerifyErrors | null, admin: string | jwt.JwtPayload | undefined) => {
             if (err) {
                 if (err instanceof jwt.TokenExpiredError) {
                     res.status(401).json({ error: 'Token has expired' });
@@ -61,8 +62,12 @@ export function authToken(req: AuthRequest, res: Response, next: NextFunction): 
                 return;
             }
 
-            req.admin = admin;
-            next();
+            try {
+                const { rows } = await connection.query('SELECT role FROM administrators WHERE id=$1 AND active', [admin.adminId]);
+                if (!rows.length) { res.status(401).json({ error: 'Sessão encerrada.' }); return; }
+                req.admin = { ...admin, role: rows[0].role };
+                next();
+            } catch { res.status(503).json({ error: 'Não foi possível verificar as permissões.' }); }
         });
     } catch (error) {
         res.status(500).json({ error: 'Internal server error during authentication' });

@@ -25,6 +25,8 @@
 .header-account { cursor: pointer; list-style: none; }
 .header-account::-webkit-details-marker { display: none; }
 .header-account .header-account-chevron { width: 13px; height: 13px; margin-left: 2px; color: var(--cream); }
+.header-account:hover, .header-account-menu[open] > summary, .menu-toggle[aria-expanded='true'] { background: #ffffff24; border-radius: 8px; }
+.header-account-menu[open] .header-account-chevron { transform: rotate(180deg); }
 .header-account-menu { position: relative; }
 .header-account-options { position: absolute; z-index: 2; top: calc(100% + 10px); right: 0; display: grid; width: 210px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: 0 8px 24px rgb(var(--navy-rgb) / 9.41%); }
 .header-account-options a { display: flex; align-items: center; min-height: 44px; padding: 10px 12px; color: var(--primary); font-size: 14px; border-radius: 6px; }

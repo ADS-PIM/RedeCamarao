@@ -11,9 +11,13 @@ import type { UserSession } from '../services/auth'
 import './ProducersPage.css'
 import './ProducerProfilePage.css'
 
+import { ReportForm } from '../components/ReportForm'
+import type { Authorized } from '../services/moderation'
+import type { UserSession } from '../services/auth'
+
 const productsPerPage = 4
 
-export function ProducerProfilePage({ producerId, session, restoring, onSessionChange }: { producerId: string; session: UserSession | null; restoring: boolean; onSessionChange: (session: UserSession | null) => void }) {
+export function ProducerProfilePage({ producerId, auth, session }: { producerId: string; auth: Authorized; session: UserSession|null }) {
   const { profile, loading, error, reloadProfile } = useProducerProfile(producerId)
   const [page, setPage] = useState(1)
   const [offerFilter, setOfferFilter] = useState<ProducerOfferFilter>('all')
@@ -76,7 +80,8 @@ export function ProducerProfilePage({ producerId, session, restoring, onSessionC
             <p className="producer-location"><Icon name="pin" /><span>{location}</span></p>
           </div>
           <div className="producer-profile-actions" aria-label="Opções de contato">
-            <WhatsAppContact producerId={producer.id} session={session} restoring={restoring} onSessionChange={onSessionChange} className="button producer-whatsapp-button" message={`Olá! Encontrei o perfil de ${producer.name} na RedeCamarão e gostaria de conversar sobre suas ofertas.`} />
+            {session && session.userType !== 'ADMIN' && session.userId !== producerId && <ReportForm auth={auth} accountId={producerId}/>}
+            <button type="button" className="button producer-whatsapp-button" disabled aria-describedby="producer-contact-note"><Icon name="whatsapp" />WhatsApp em breve</button>
           </div>
         </div>
       </section>

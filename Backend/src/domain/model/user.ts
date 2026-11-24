@@ -17,6 +17,7 @@ export type propsUser = {
     description: string | null;
     businessHours: string | null;
     createdAt: Date;
+    accountStatus?: string;
     profilePicture?: string | null;
 }
 
@@ -51,6 +52,8 @@ export class User {
     public static reconstruct(props: propsUser): User {
         return new User(props);
     }
+
+    get accountStatus() { return this.props.accountStatus ?? 'ACTIVE'; }
 
     get id() {
         return this.props.id;

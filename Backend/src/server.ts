@@ -1,3 +1,4 @@
+import { deliverNotifications } from './service/moderationEmail';
 import app from './app';
 import { connection } from './util/connection';
 
@@ -6,6 +7,7 @@ const PORT = Number(process.env.PORT || 3001);
 async function start() {
   try {
     await connection.query('SELECT 1');
+    setInterval(() => { void deliverNotifications().catch(() => console.error('Fila de notificações indisponível.')); }, 60000).unref();
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT} (PostgreSQL connected)`);
     });

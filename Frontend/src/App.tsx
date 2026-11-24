@@ -1,4 +1,6 @@
+import { lazy, Suspense } from 'react'
 import { Header } from './components/Header'
+import { AccountNavigation } from './components/AccountNavigation'
 import { Footer } from './components/Footer'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { LoginPage } from './pages/LoginPage'
@@ -21,8 +23,10 @@ import { useAuthenticatedAction } from './hooks/useAuthenticatedAction'
 import { fetchMyProfile } from './services/account'
 import './App.css'
 
+const AdminPage = lazy(() => import('./pages/admin/AdminPage').then(module => ({ default: module.AdminPage })))
+
 function App() {
-  const { pathname, handleLinkClick, navigate } = useNavigation()
+  const { pathname, hash, handleLinkClick, navigate } = useNavigation()
   const [session, setSession] = useState<UserSession | null>(null)
   const [restoring, setRestoring] = useState(true)
   const [accountIdentity, setAccountIdentity] = useState<{ id: string; name: string; profilePicture: string | null }>({ id: '', name: '', profilePicture: null })
@@ -34,24 +38,34 @@ function App() {
   const isMarketplace = ['/', '/marketplace', '/marketplace/'].includes(pathname)
   const isProducts = ['/produtos', '/produtos/'].includes(pathname)
   const requestedReturnTo = new URLSearchParams(window.location.search).get('returnTo')
-  const returnAfterAuth = requestedReturnTo && !requestedReturnTo.startsWith('//')
-    && (requestedReturnTo.startsWith('/produtos/') || requestedReturnTo.startsWith('/produtores/')) ? requestedReturnTo : null
+  const staffLogin = new URLSearchParams(window.location.search).get('acesso') === 'admin'
+  const adminReturn = requestedReturnTo && /^\/admin(?:\/(?:ofertas|contas|denuncias|historico))?\/?$/.test(requestedReturnTo) ? requestedReturnTo : '/admin'
+  const returnAfterAuth = requestedReturnTo?.startsWith('/produtos/') && !requestedReturnTo.startsWith('//') ? requestedReturnTo : null
   const offerId = offerIdFromPath(pathname)
   const isProducers = ['/produtores', '/produtores/'].includes(pathname)
   const producerId = producerIdFromPath(pathname)
   const isRegister = ['/registro', '/registro/'].includes(pathname)
   const isLogin = ['/entrar', '/entrar/', '/login', '/login/'].includes(pathname)
   const isAccount = ['/painel', '/painel/', '/perfil', '/perfil/'].includes(pathname)
-  const isAdminArea = ['/admin', '/admin/'].includes(pathname)
+  const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/')
   const editingOfferId = editOfferIdFromPath(pathname)
   const isNewOffer = ['/painel/ofertas/nova', '/painel/ofertas/nova/'].includes(pathname)
   const isMyOffers = ['/painel/ofertas', '/painel/ofertas/'].includes(pathname)
+  const isOfferManagement = isMyOffers || isNewOffer || Boolean(editingOfferId)
+  const producerSection = isAccount ? 'dashboard' : isOfferManagement ? 'offers' : producerId && producerId === session?.userId ? 'profile' : null
+  let accountNavigation = null
+  if (session?.userType === 'PRODUCER' && producerSection) {
+    accountNavigation = <AccountNavigation key={pathname} section={producerSection} producerId={session.userId} />
+  } else if (session?.userType === 'BUYER' && isAccount) {
+    const section = hash === '#salvas' ? 'saved' : hash === '#perfil' ? 'personal' : 'account'
+    accountNavigation = <AccountNavigation key={pathname + hash} section={section} />
+  }
 
   useEffect(() => {
-    if (isLogin && session && !restoring) {
-      navigate(returnAfterAuth ?? (session.userType === 'ADMIN' ? '/admin' : '/painel'), { replace: true })
+    if (isLogin && session && !restoring && (!staffLogin || session.userType === 'ADMIN')) {
+      navigate(returnAfterAuth ?? (session.userType === 'ADMIN' ? adminReturn : '/painel'), { replace: true })
     }
-  }, [isLogin, session, restoring, navigate, returnAfterAuth])
+  }, [isLogin, session, restoring, navigate, returnAfterAuth, staffLogin, adminReturn])
 
   async function handleLogout() {
     if (logoutPending.current) return
@@ -86,28 +100,25 @@ function App() {
   }, [sessionUserId, restoring, session?.userType, withSession, updateAccountName])
 
   return (
-    <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}`} onClick={handleLinkClick}>
+    <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}${accountNavigation ? ' account-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header pending={restoring || Boolean(session && session.userType !== 'ADMIN' && accountIdentity.id !== session.userId)} authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} account={isAccount || isNewOffer || isMyOffers || Boolean(editingOfferId)} editingOffer={isNewOffer || isMyOffers || Boolean(editingOfferId)} producer={session?.userType === 'PRODUCER'} administrator={session?.userType === 'ADMIN'} userId={session?.userId} accountName={accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onLogout={handleLogout} loggingOut={loggingOut} />
+      <Header pending={restoring || Boolean(session && session.userType !== 'ADMIN' && accountIdentity.id !== session.userId)} authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} adminArea={isAdminArea} producer={session?.userType === 'PRODUCER'} administrator={session?.userType === 'ADMIN'} moderator={session?.role === 'ADMIN'} accountName={session?.userType === 'ADMIN' ? session.name : accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onLogout={handleLogout} loggingOut={loggingOut} />
+      {accountNavigation}
       {editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
       {isAdminArea ? (
+        session?.userType === 'ADMIN' && !restoring ? <Suspense fallback={<main id="main-content" className="container account-status" role="status">Carregando área administrativa…</main>}><AdminPage key={session.userId + pathname + window.location.search} pathname={pathname} auth={withSession} session={session}/></Suspense> :
         <main id="main-content" className="account-main">
           {restoring ? (
             <section className="container account-status" role="status"><h1>Carregando área administrativa...</h1></section>
-          ) : session?.userType !== 'ADMIN' ? (
+          ) : (
             <section className="container account-status" role="alert">
               <h1>Acesso restrito</h1>
               <p>Esta área é exclusiva para contas administrativas.</p>
-              <a className="button button-primary" href="/entrar">Entrar</a>
-            </section>
-          ) : (
-            <section className="container account-status">
-              <h1>Área administrativa</h1>
-              <p>Você está conectado como {session.role === 'SUPER_ADMIN' ? 'super administrador' : 'administrador'}.</p>
+              <a className="button button-primary" href={`/entrar?acesso=admin&returnTo=${encodeURIComponent(pathname)}`}>Entrar como equipe</a>
             </section>
           )}
         </main>
-      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} restoring={restoring} onSessionChange={setSession} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} session={session} restoring={restoring} onSessionChange={setSession} /> : isProducers ? <ProducersPage /> : isLogin ? (session ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
+      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} auth={withSession} restoring={restoring} navigate={navigate} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} auth={withSession} session={session} /> : isProducers ? <ProducersPage /> : isLogin ? (session && !(staffLogin && session.userType !== 'ADMIN') ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

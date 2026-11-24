@@ -2,13 +2,15 @@
 .offer-container { padding-block: 32px 40px; }
 .offer-page .button { min-height: 44px; padding: 10px 16px; border-radius: 8px; font-size: 14px; gap: 8px; }
 .offer-page button:disabled { cursor: not-allowed; }
-.offer-topbar { display: flex; align-items: center; justify-content: flex-end; gap: 24px; margin-bottom: 18px; }
-.offer-actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
-.offer-actions .button { background: var(--surface); color: var(--primary); }
-.offer-actions .button[aria-pressed='true'] { border-color: var(--border); background: var(--surface-muted); color: var(--primary-dark); }
+.offer-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 18px; }
+.offer-actions .button[aria-pressed='true'] { border-color: var(--action-green); background: var(--action-green); color: var(--white); }
+.offer-actions .button[aria-pressed='true']:enabled:hover { background: var(--action-green-hover); }
 .offer-actions svg { width: 20px; height: 20px; flex-shrink: 0; }
-.offer-action-feedback { min-height: 22px; margin-bottom: 18px; color: var(--primary-dark); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
-.offer-action-feedback a { color: var(--primary); font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+.offer-actions .report-status { order: -1; flex-basis: auto; }
+.offer-actions .report-confirmation { align-items: center; min-height: 44px; padding: 3px 12px; font-size: 14px; line-height: 1.25; }
+.offer-actions .report-confirmation .portal-icon { margin-top: 0; }
+.offer-actions .report-confirmation p { margin-top: 1px; }
+.offer-action-feedback { order: -2; max-width: 32ch; color: var(--primary-dark); font-size: 13px; line-height: 1.6; text-align: right; overflow-wrap: anywhere; }
 .offer-share-link { max-width: 600px; margin: 0 0 20px auto; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 .offer-share-link label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 600; line-height: 1.6; }
 .offer-share-link input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--page-background); color: var(--navy); font-size: 16px; cursor: text; }
@@ -108,6 +110,7 @@
   .offer-facts > div { padding: 14px; }
 }
 @media (max-width: 1000px) {
+  .offer-actions:has(.report-status) .offer-action-feedback { order: 2; flex-basis: 100%; max-width: none; }
   .offer-layout { grid-template-columns: minmax(0, 1fr); }
   .offer-gallery-main { aspect-ratio: 1.45; max-height: none; }
   .offer-summary, .offer-about, .offer-producer { padding: 26px; }
@@ -116,12 +119,13 @@
   .offer-specifications dt, .offer-specifications dd { font-size: 14px; }
   .offer-producer-facts { max-width: 600px; }
 }
+@media (max-width: 780px) {
+  .offer-actions .report-status, .offer-action-feedback { order: 1; flex-basis: 100%; max-width: none; }
+}
 @media (max-width: 640px) {
   .offer-container { padding-block: 24px 32px; }
-  .offer-topbar { align-items: stretch; flex-direction: column; gap: 16px; margin-bottom: 12px; }
-  .offer-actions { align-self: flex-start; }
+  .offer-actions { margin-bottom: 12px; }
   .offer-actions .button { min-height: 46px; }
-  .offer-action-feedback { margin-bottom: 16px; }
   .offer-layout { gap: 20px; }
   .offer-gallery { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .offer-gallery-main { aspect-ratio: 1.25; border-radius: 12px; }
@@ -148,8 +152,7 @@
   .offer-lightbox-image img { max-height: 65svh; }
 }
 @media (max-width: 360px) {
-  .offer-actions { width: 100%; }
-  .offer-actions .button { flex: 1; padding-inline: 10px; }
+  .offer-actions > .button { flex: 1 1 auto; padding-inline: 10px; }
   .offer-summary-labels { align-items: flex-start; flex-direction: column; }
   .offer-title { font-size: 26px; }
   .offer-detail-price { font-size: 32px; }

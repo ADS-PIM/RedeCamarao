@@ -49,7 +49,7 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 
 ## Painel do produtor
 
-- `/painel` mostra indicadores, até três ofertas recentes e os dados do perfil. Os botões levam ao cadastro com fotos ou à página de gerenciamento. Compradores continuam com ofertas salvas e dados pessoais.
+- `/painel` mostra indicadores, até três ofertas recentes e os dados do perfil. Os botões levam ao cadastro com fotos ou à página de gerenciamento. Na conta do comprador, o menu lateral reúne Minha conta, Ofertas salvas, Dados pessoais e Explorar ofertas. No celular, essas opções abrem pelo botão “Menu do comprador”.
 - `/painel/ofertas` é a página **Minhas ofertas**, com abas Todas, Ativas, Pausadas, Rascunhos e Encerradas quando houver, contagens reais, busca sem acentos por nome/código, ordenação e paginação de seis itens. No celular, as linhas viram cartões.
 - A lista usa a capa cadastrada, com fallback identificado como ilustrativo, e a data real de atualização. `GET /offer/user/:userId` retorna `updatedAt` e `coverPhoto` e exige o ID do dono do token. Rascunhos são omitidos da busca geral e suas fotos são restritas ao dono.
 - Pausar, ativar e remover usam confirmação em diálogo nativo. A seleção da página permite pausar ofertas ativas em lote. Duplicar abre o cadastro com campos copiados e novas datas; as fotos do novo lote devem ser adicionadas.
@@ -57,7 +57,7 @@ Interface em React, TypeScript e Vite. O marketplace está disponível em `/` e 
 
 ## Cadastro e edição de ofertas
 
-- “Editar” no painel abre `/painel/ofertas/:id/editar`, mantendo header, footer e a navegação sem recarregamento. A página exige conta de produtor e carrega apenas ofertas da própria conta; “Minhas ofertas” fica ativo no header.
+- “Editar” no painel abre `/painel/ofertas/:id/editar` e carrega as ofertas da própria conta de produtor. O cabeçalho mantém os links do marketplace. O menu lateral reúne Painel, Minhas ofertas e Perfil público, com Minhas ofertas selecionada durante a edição e o cadastro. Em telas menores, o botão “Menu do produtor” expande essas opções.
 - “Cadastrar nova oferta” abre `/painel/ofertas/nova`, usando o mesmo formulário, galeria e prévia da edição. Cidade e estado começam com a localização do produtor; após o sucesso, a edição da nova oferta é aberta sem recarregar o documento.
 - Formulário com fotos, título, descrição, tipo, tamanho, preço em formato brasileiro, quantidades mínima/máxima, cidade, estado e disponibilidade. A validação mantém os campos preenchidos e destaca o primeiro erro. A prévia reflete os dados locais e a capa escolhida, sem gravar.
 - Até cinco fotos JPG/PNG de até 10 MB cada, com seleção de capa e remoção antes de salvar. O indicador de preenchimento verifica cinco critérios objetivos; não avalia nitidez ou qualidade visual das fotos.

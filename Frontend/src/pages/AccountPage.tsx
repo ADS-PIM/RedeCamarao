@@ -5,6 +5,7 @@ import { Icon } from '../components/Icon'
 import { ProfilePhotoEditor } from '../components/ProfilePhotoEditor'
 import { useAuthenticatedAction } from '../hooks/useAuthenticatedAction'
 import { ProductCard } from '../components/ProductCard'
+import { ModerationNotifications } from '../components/ModerationNotifications'
 import { formatPrice } from '../data/marketplace'
 import type { OfferDetail } from '../data/marketplace'
 import { readSavedOffers, savedOffersKey, setOfferSaved } from '../data/offerDetail'
@@ -193,6 +194,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
           </button>}
         </section>
 
+        <ModerationNotifications auth={withSession}/>
         {profile.userType === 'PRODUCER' && <>
           <section className="account-metrics" aria-label="Resumo das ofertas">
             <article><div><span>Ofertas ativas</span><span className="account-metric-icon"><Icon name="box" /></span></div><strong>{activeCount}</strong><small>Disponíveis no marketplace</small></article>
@@ -207,7 +209,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
           </section>
         </>}
 
-        {profile.userType === 'BUYER' && <section id="salvas" className="buyer-saved" aria-labelledby="buyer-saved-title">
+        {profile.userType === 'BUYER' && <section id="salvas" className="buyer-saved" aria-labelledby="buyer-saved-title" aria-busy={savedOffersLoading}>
           <div className="account-section-heading">
             <div><p className="account-eyebrow">SUAS ESCOLHAS</p><h2 id="buyer-saved-title">Ofertas salvas</h2>
               <p>{savedOfferIds.length} {savedOfferIds.length === 1 ? 'oferta salva neste navegador' : 'ofertas salvas neste navegador'}</p></div>
@@ -242,7 +244,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
               <label className="profile-field-wide">Horário de atendimento<input maxLength={255} value={profileDraft.businessHours ?? ''} onChange={event => setProfileDraft(current => ({ ...current, businessHours: event.target.value }))} /></label>
             </>}
             <div className="account-form-actions profile-field-wide"><button className="button button-secondary" type="button" onClick={() => setProfileEditing(false)} disabled={savingProfile}>Cancelar</button>
-              <button className="button button-primary" type="submit" disabled={savingProfile}>{savingProfile ? 'Salvando...' : 'Salvar perfil'}</button></div>
+              <button className="button button-success" type="submit" disabled={savingProfile}>{savingProfile ? 'Salvando...' : 'Salvar perfil'}</button></div>
           </form> : <dl className="account-profile-details">
             <div><dt>Nome</dt><dd>{profile.name}</dd></div><div><dt>E-mail</dt><dd>{profile.email}</dd></div>
             <div><dt>Telefone</dt><dd>{profile.phone || 'Não informado'}</dd></div><div><dt>Localização</dt><dd>{profile.location || 'Não informada'}</dd></div>

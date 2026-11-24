@@ -22,6 +22,8 @@ export class UpdateOffer implements UseCase<UpdateOfferInput, void> {
         if (!offer) throw new ApplicationError('OFFER_NOT_FOUND', 'Oferta não encontrada');
         if (offer.userId !== userId) throw new ApplicationError('FORBIDDEN', 'Acesso negado');
 
+        if (data.status === 'ACTIVE' && offer.adminDisabled) throw new ApplicationError('FORBIDDEN', 'Somente a administração pode reativar esta oferta.');
+
         if ((data.minimumQuantity ?? offer.minimumQuantity) > (data.maximumQuantity ?? offer.maximumQuantity)) {
             throw new ApplicationError('INVALID_QUANTITY_RANGE', 'A quantidade mínima não pode exceder a quantidade máxima');
         }

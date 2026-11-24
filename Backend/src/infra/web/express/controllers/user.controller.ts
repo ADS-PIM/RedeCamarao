@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
+import { connection } from '../../../../util/connection';
 import jwt from 'jsonwebtoken';
 
 import { randomUUID } from 'node:crypto';
@@ -124,6 +125,11 @@ export class UserController {
                 return res.status(401).json({ error: 'Invalid email or password' });
             }
 
+            if (user.accountStatus !== 'ACTIVE') {
+                const latest = await connection.query('SELECT message FROM moderation_notifications WHERE user_id=$1 ORDER BY id DESC LIMIT 1',[user.id]);
+                const status = user.accountStatus === 'PENDING' ? 'Seu cadastro de produtor aguarda aprovação.' : 'O acesso à sua conta está bloqueado.';
+                return res.status(403).json({ error: status + (latest.rows[0] ? ' ' + latest.rows[0].message : '') });
+            }
             const accessSecret = process.env.JWT_ACCESS_SECRET;
             const refreshSecret = process.env.JWT_REFRESH_SECRET;
 
@@ -142,6 +148,7 @@ export class UserController {
 
             await this.createRefreshToken.execute({ id: refreshTokenId, userId: user.id, token: refreshToken, expiresAt });
 
+            res.clearCookie('refreshToken', { ...refreshCookieOptions, maxAge: undefined, path: '/admin' });
             res.cookie('userRefreshToken', refreshToken, refreshCookieOptions);
             return res.status(200).json({ accessToken, userId: user.id, userType: user.userType });
         } catch (error: any) {
@@ -182,7 +189,7 @@ export class UserController {
             }
 
             const user = await this.searchByIdUser.execute(payload.userId);
-            if (!user) {
+            if (!user || user.accountStatus !== 'ACTIVE') {
                 return res.status(401).json({ error: 'Invalid session' });
             }
 
@@ -262,7 +269,7 @@ export class UserController {
             });
         }
 
-            if (user.userType !== UserType.PRODUCER) {
+            if (user.userType !== UserType.PRODUCER || user.accountStatus !== 'ACTIVE') {
             return res.status(404).json({
                 error: 'Producer not found'
             });

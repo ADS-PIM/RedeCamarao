@@ -1,13 +1,24 @@
-import { RefreshTokenInterface } from '../../../domain/interfaces/RefreshTokenDAOInterface';
+import { AdminRefreshTokenInterface, AdminTokenRotation } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../../../util/connection';
 import type { QueryResultRow } from 'pg';
 import { RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
-export class RefreshTokenDAOPostgres implements RefreshTokenInterface {
+import { createHash } from 'node:crypto';
+
+const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
+
+export class RefreshTokenDAOPostgres implements AdminRefreshTokenInterface {
+    async rotate(rotation: AdminTokenRotation): Promise<boolean> {
+        const result = await connection.query(`UPDATE refresh_tokens SET id=$1, "tokenHash"=$2, "expiresAt"=$3, "createdAt"=now()
+            WHERE id=$4 AND "tokenHash"=$5 AND "adminId"=$6 AND "revokedAt" IS NULL AND "expiresAt">now()`,
+            [rotation.id, hashToken(rotation.token), rotation.expiresAt, rotation.previousId, hashToken(rotation.previousToken), rotation.adminId]);
+        return result.rowCount === 1;
+    }
+
     async create(id: string, token: string, adminId: string, expiresAt: Date): Promise<void> {
         try {
             await connection.query(
                 `INSERT INTO refresh_tokens (id, "tokenHash", "adminId", "expiresAt", "createdAt") VALUES ($1, $2, $3, $4, $5)`,
-                [id, token, adminId, expiresAt, new Date()]
+                [id, hashToken(token), adminId, expiresAt, new Date()]
             );
         } catch (error) {
             console.error('Error creating refresh token:', error);
@@ -18,8 +29,8 @@ export class RefreshTokenDAOPostgres implements RefreshTokenInterface {
     async findByToken(token: string): Promise<RefreshTokenRow | null> {
         try {
             const { rows } = await connection.query<QueryResultRow>(
-                'SELECT id FROM refresh_tokens WHERE "tokenHash" = $1',
-                [token]
+                'SELECT id FROM refresh_tokens WHERE "tokenHash" = $1 AND "revokedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP',
+                [hashToken(token)]
             );
             if (rows.length === 0) return null;
             return { id: String(rows[0].id) };
@@ -31,7 +42,7 @@ export class RefreshTokenDAOPostgres implements RefreshTokenInterface {
 
     async deleteByToken(token: string): Promise<void> {
         try {
-            await connection.query('DELETE FROM refresh_tokens WHERE "tokenHash" = $1', [token]);
+            await connection.query('DELETE FROM refresh_tokens WHERE "tokenHash" = $1', [hashToken(token)]);
         } catch (error) {
             console.error('Error deleting refresh token:', error);
             throw new Error('Failed to delete refresh token');

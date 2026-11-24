@@ -1,20 +1,8 @@
 node_modules
 /uploads/
+/test
 .env
 # Testes locais
-/test/
-/tests/
-/database/tests/
-*.test.*
-*.spec.*
-!/test/
-/test/*
-!/test/cloudinary.test.cjs
-!/test/profile-photo.test.cjs
-!/test/offer-editor.test.cjs
-!/test/offer-delete.test.cjs
-!/test/postgres.test.cjs
-!/test/offer-cover.test.cjs
-!/test/offer-photos.test.cjs
+
 /database/certs/
 *.local.log

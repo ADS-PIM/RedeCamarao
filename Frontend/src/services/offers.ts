@@ -1,4 +1,4 @@
-import type { Offer, OfferDetail } from '../data/marketplace.ts'
+import type { Offer, OfferDetail } from '../data/marketplace'
 import { apiBaseUrl } from './api.ts'
 
 export function isOffer(value: unknown): value is Offer {
