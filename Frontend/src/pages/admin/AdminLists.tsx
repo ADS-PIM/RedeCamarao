@@ -27,18 +27,23 @@ type Props = {section:Section;auth:Authorized;superAdmin:boolean;summary:Summary
 export function AdminLists({section,auth,superAdmin,summary,options,version,reload,decide,team}:Props) {
   const [filters,setFilters]=useState<Filters>(()=> {
     const search=new URLSearchParams(window.location.search)
-    const f:Filters=section==='history'?{days:search.has('accountId')?'':'7'}:{}
-    for (const key of ['q','status','id','accountId']) if(search.get(key)) f[key]=search.get(key)!
+    const f:Filters=section==='history'?{days:search.get('days')??(search.has('accountId')?'':'7')}:{}
+    for (const key of ['q','status','id','accountId','sort']) if(search.get(key)) f[key]=search.get(key)!
     return f
   })
   const [page,setPage]=useState(1)
   const [more,setMore]=useState(false)
-  const [detail,setDetail]=useState<AccountRow|OfferRow|null>(null)
+  const [selectedDetail,setDetail]=useState<AccountRow|OfferRow|null>(null)
+  const [showLinkedAccount,setShowLinkedAccount]=useState(true)
   const [exporting,setExporting]=useState(false)
   const [error,setError]=useState('')
   const query=useModerationData<Page<Row>>(auth,listPath(section,filters,page),version)
   function filter(values:Filters) { setPage(1);setFilters(old=>({...old,...values,id:''})) }
   const offers=section==='offers', accounts=section==='accounts', history=section==='history'
+  const detail=selectedDetail ?? (accounts && showLinkedAccount && filters.id
+    ? query.data?.rows.find((row):row is AccountRow=>'email' in row && row.id===filters.id)
+    : null)
+  function closeDetail() { setDetail(null);setShowLinkedAccount(false) }
   const counts=offers?summary.offers:summary.accounts
   const total=Object.values(counts).reduce((a,b)=>a+b,0)
   async function exportList() {
@@ -56,7 +61,7 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
     } catch(e) {setError(e instanceof Error?e.message:'Falha na exportação.')} finally {setExporting(false)}
   }
   function decideOffer(row:OfferRow,action:Decision['action']) { decide({action,targetId:row.id,title:row.title,detail:[row.code,row.producer,formatQuantity(Number(row.weight))].join(' · ')}) }
-  function decideAccount(row:AccountRow,action:Decision['action']) { setDetail(null);decide({action,targetId:row.id,title:row.name,detail:[row.code,labels[row.profile],row.activeOffers+' oferta(s) ativa(s)'].join(' · ')}) }
+  function decideAccount(row:AccountRow,action:Decision['action']) { closeDetail();decide({action,targetId:row.id,title:row.name,detail:[row.code,labels[row.profile],row.activeOffers+' oferta(s) ativa(s)'].join(' · ')}) }
   function cells(row:Row) {
     if ('title' in row) return [
       <><button className="mod-name" onClick={()=>setDetail(row)}>{row.title}</button><small>{row.code} · {formatQuantity(Number(row.weight))}</small></>,
@@ -85,9 +90,11 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
         <label className="mod-search"><Icon name="search"/><input type="search" aria-label="Buscar" placeholder={offers?'Buscar por título, código ou produtor':accounts?'Buscar por nome, e-mail ou CPF/CNPJ':'Buscar por código da conta ou oferta'} value={filters.q||''} onChange={e=>filter({q:e.target.value})}/></label>
         {offers&&<SelectFilter label="Categoria" value={filters.category||''} change={category=>filter({category})} options={[['','Categoria: todas'],...options.categories.map((s):[string,string]=>[s,s])]}/>}
         {accounts&&<SelectFilter label="Status" value={filters.status||''} change={status=>filter({status})} options={[['','Status: todos'],...['ACTIVE','PENDING','SUSPENDED','BANNED'].map(choice)]}/>}
+        {accounts&&<SelectFilter label="Ordenar contas" value={filters.sort||''} change={sort=>filter({sort})} options={[['','Mais recentes primeiro'],['oldest','Mais antigas primeiro']]}/>}
         {!history&&<button className="button button-secondary" aria-expanded={more} onClick={()=>setMore(!more)}><Icon name="filters"/>Mais filtros</button>}
       </div>
       {history&&filters.accountId&&<p className="mod-toolbar">Histórico desta conta <button className="mod-link" onClick={()=>filter({accountId:''})}>Ver todas as contas</button></p>}
+      {accounts&&filters.id&&<p className="mod-toolbar">Cadastro selecionado <button className="mod-link" onClick={()=>filter({})}>Ver todas as contas</button></p>}
       {more&&<div className="mod-toolbar"><input aria-label="Localização" placeholder="Cidade ou estado" value={filters.location||''} onChange={e=>filter({location:e.target.value})}/>
         {offers&&<><SelectFilter label="Status da oferta" value={filters.status||''} change={status=>filter({status})} options={[['','Todos os status'],...['ATIVO','REVIEW','PAUSADO','DISABLED','VENDIDO','CANCELADO','EXPIRADO','RASCUNHO'].map(choice)]}/><label><input type="checkbox" checked={filters.reported==='true'} onChange={e=>filter({reported:String(e.target.checked)})}/> Com denúncias abertas</label></>}
         <button className="mod-link" onClick={()=>{setFilters({});setPage(1)}}>Limpar filtros</button></div>}
@@ -97,7 +104,7 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
     </section>
     {history?<section className="mod-panel mod-security"><div><h2>Permissões e segurança</h2><p>Administradores gerenciam contas e exclusões. Moderadores analisam ofertas e denúncias.</p><small>Segunda etapa desativada · Acesso por senha · {summary.team.SUPER_ADMIN||0} administrador(es) · {summary.team.ADMIN||0} moderador(es)</small></div>{superAdmin&&<button className="button button-secondary" onClick={team}>Gerenciar equipe</button>}</section>:
     <aside className="mod-notice"><strong>{offers?'Moderação de ofertas':'Gestão de acesso com responsabilidade'}</strong><p>{offers?'A desativação retira a oferta do marketplace. Somente a administração pode reativá-la. O histórico permanece disponível após a exclusão.':'Banir uma conta bloqueia o acesso e desativa suas ofertas. O motivo é obrigatório e o titular recebe uma notificação.'}</p></aside>}
-    {detail&&<Dialog className="mod-dialog" titleId="details-title" onClose={()=>setDetail(null)}><div className="mod-dialog-heading"><h2 id="details-title">{'name' in detail?detail.name:detail.title}</h2><button className="mod-icon" aria-label="Fechar" onClick={()=>setDetail(null)}><Icon name="close"/></button></div>
+    {detail&&<Dialog className="mod-dialog" titleId="details-title" onClose={closeDetail}><div className="mod-dialog-heading"><h2 id="details-title">{'name' in detail?detail.name:detail.title}</h2><button className="mod-icon" aria-label="Fechar" onClick={closeDetail}><Icon name="close"/></button></div>
       <p>{detail.code} · <Badge status={detail.status}/></p>
       {'name' in detail?<><dl className="mod-facts">{[['Perfil',labels[detail.profile]],['E-mail',detail.email],['CPF/CNPJ',detail.document],['Contato',detail.phone],['Localização',detail.location],['Cadastro',dateText(detail.createdAt)],['Verificação',verification(detail)],['Ofertas ativas',detail.activeOffers]].map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v ?? '—'}</dd></div>)}</dl>
       <div className="mod-actions">{detail.status==='PENDING'&&<button className="button button-success" onClick={()=>decideAccount(detail,'approve')}>Aprovar cadastro</button>}

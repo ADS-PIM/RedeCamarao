@@ -3,7 +3,7 @@ import { Dialog } from '../../components/Dialog'
 import { Icon } from '../../components/Icon'
 import { useModerationData } from '../../hooks/useModerationData'
 import { adminApi, authorizedFetch, dateText, download, listPath, refCode, type Authorized, type Page, type ReportRow, type HistoryRow, type Summary, type ReportContext, labels } from '../../services/moderation'
-import { LoadState, PageHeading, Pages, SelectFilter, Tabs } from './AdminShared'
+import { Badge, LoadState, PageHeading, Pages, SelectFilter, Tabs } from './AdminShared'
 import type { Decision } from './ModerationDialog'
 
 type Props={auth:Authorized;superAdmin:boolean;summary:Summary;version:number;reload:()=>void;decide:(d:Decision)=>void}
@@ -26,7 +26,7 @@ function ReportDetail({r,auth,superAdmin,decide,version,reload}:Pick<Props,'auth
     catch (e) {setError(e instanceof Error?e.message:'Falha ao baixar o anexo.')}
   }
   return <article className="mod-panel mod-case">
-    <div className="mod-dialog-heading"><h2>{r.code} · {r.category}</h2>{r.priority&&<span className="mod-badge s-BANNED">Alta prioridade</span>}</div>
+    <div className="mod-dialog-heading"><h2>{r.code} · {r.category}</h2>{r.priority&&<Badge status="PRIORITY"/>}</div>
     <p>Recebida em {dateText(r.createdAt,true)} · Responsável: {r.assignee||'A atribuir'}</p>
     <div className="mod-target"><strong>{r.offerTitle||r.accountName} · {r.offerId?refCode('OF',r.offerId):refCode('CT',r.accountId)}</strong><small>{r.accountName} · Conta {refCode('CT',r.accountId)}</small>
       <div className="mod-row-actions">{r.offerId&&<button onClick={()=>setShow('offer')}>Ver oferta ↗</button>}<button onClick={()=>setShow('account')}>Ver conta ↗</button></div>
@@ -54,22 +54,27 @@ function ReportDetail({r,auth,superAdmin,decide,version,reload}:Pick<Props,'auth
   </article>
 }
 export function AdminReports({auth,superAdmin,summary,version,reload,decide}:Props) {
-  const [status,setStatus]=useState(new URLSearchParams(window.location.search).get('offerId')?'':'OPEN')
+  const search=new URLSearchParams(window.location.search)
+  const [reportId,setReportId]=useState(search.get('id')||'')
+  const [offerId,setOfferId]=useState(search.get('offerId')||'')
+  const [status,setStatus]=useState(reportId||offerId?'':search.get('status')==='PRIORITY'?'PRIORITY':'OPEN')
   const [sort,setSort]=useState('priority')
   const [page,setPage]=useState(1)
   const [selected,setSelected]=useState('')
   const [policy,setPolicy]=useState(false)
-  const [offerId,setOfferId]=useState(new URLSearchParams(window.location.search).get('offerId')||'')
-  const results=useModerationData<Page<ReportRow>>(auth,listPath('reports',{status,sort,offerId},page,5),version)
+  const results=useModerationData<Page<ReportRow>>(auth,listPath('reports',{status,sort,offerId,id:reportId},page,5),version)
   const active=results.data?.rows.find(r=>r.id===selected)??results.data?.rows[0]
-  const names:Record<string,string>={...(offerId?{'':'Todas'}:{}),OPEN:'Abertas',REVIEW:'Em análise',RESOLVED:'Resolvidas'}
+  const names:Record<string,string>={...(offerId?{'':'Todas'}:{}),OPEN:'Abertas',REVIEW:'Em análise',PRIORITY:'Prioritárias',RESOLVED:'Resolvidas'}
+  const title=reportId?'Denúncia selecionada':status?'Denúncias '+names[status].toLowerCase():'Denúncias desta oferta'
+  function changeQueue(next:string) {setStatus(next);setPage(1);setSelected('');setReportId('')}
   return <>
     <PageHeading title="Denúncias" description="Analise evidências e tome decisões para proteger a comunidade." action={<button className="button button-secondary" onClick={()=>setPolicy(true)}>Políticas de moderação</button>}/>
-    <Tabs items={Object.entries(names).map(([s,name])=>[s,offerId?name:name+'  '+(summary.reports[s]||0)])} value={status} change={s=>{setStatus(s);setPage(1);setSelected('')}}/>
-    <div className="mod-report-layout"><section className="mod-panel mod-queue"><h2>{status?'Denúncias '+names[status].toLowerCase():'Denúncias desta oferta'}</h2>
-      <SelectFilter label="Ordenar denúncias" value={sort} change={s=>{setSort(s);setPage(1)}} options={[['priority','Prioridade: mais alta primeiro'],['recent','Mais recentes primeiro']]}/>
-      {offerId&&<button className="mod-link" onClick={()=>{setOfferId('');setStatus('OPEN');setPage(1)}}>Limpar filtro de oferta</button>}
-      {results.data?<>{results.data.rows.map(r=><button key={r.id} aria-pressed={active?.id===r.id} className="mod-case-card" onClick={()=>setSelected(r.id)}><strong>{r.category}</strong><small>{r.offerId?refCode('OF',r.offerId):refCode('CT',r.accountId)} · {dateText(r.createdAt,true)}</small><span className={'mod-badge '+(r.priority?'s-BANNED':'')}>{r.priority?'Alta prioridade':r.status==='OPEN'?'Aguardando análise':labels[r.status]}</span></button>)}
+    <Tabs items={Object.entries(names).map(([s,name])=>[s,offerId||s==='PRIORITY'?name:name+'  '+(summary.reports[s]||0)])} value={status} change={changeQueue}/>
+    <div className="mod-report-layout"><section className="mod-panel mod-queue"><h2>{title}</h2>
+      {!reportId&&<SelectFilter label="Ordenar denúncias" value={sort} change={s=>{setSort(s);setPage(1)}} options={[['priority','Prioridade: mais alta primeiro'],['recent','Mais recentes primeiro']]}/>}
+      {reportId&&<button className="mod-link" onClick={()=>changeQueue(offerId?'':'OPEN')}>Voltar à fila</button>}
+      {offerId&&<button className="mod-link" onClick={()=>{setOfferId('');changeQueue('OPEN')}}>Limpar filtro de oferta</button>}
+      {results.data?<>{results.data.rows.map(r=><button key={r.id} aria-pressed={active?.id===r.id} className="mod-case-card" onClick={()=>setSelected(r.id)}><strong>{r.category}</strong><small>{r.offerId?refCode('OF',r.offerId):refCode('CT',r.accountId)} · {dateText(r.createdAt,true)}</small><Badge status={r.priority?'PRIORITY':r.status}/></button>)}
         {!active&&<p className="mod-empty">Nenhuma denúncia nesta fila.</p>}<Pages page={results.data.page} size={5} total={results.data.total} noun="denúncias" change={setPage}/></>:<LoadState error={results.error} retry={reload}/>}
     </section>{active&&<ReportDetail key={active.id+active.status} r={active} {...{auth,superAdmin,version,decide,reload}}/>}</div>
     {policy&&<Dialog titleId="policy-title" className="mod-dialog" onClose={()=>setPolicy(false)}><h2 id="policy-title">Políticas de moderação</h2><p>Analise o relato, os anexos e o histórico da conta. Registre separadamente a observação interna e a justificativa que o titular receberá.</p><p>Arquive relatos sem elementos para intervenção. Desative a oferta quando a publicação precisar de correção. Encaminhe casos de fraude ou reincidência à administração para avaliação da conta.</p><button className="button button-secondary" onClick={()=>setPolicy(false)}>Fechar</button></Dialog>}

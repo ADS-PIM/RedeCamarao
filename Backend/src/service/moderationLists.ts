@@ -2,10 +2,11 @@ import { connection } from '../util/connection';
 import { ModerationError } from './moderation';
 
 type Filters = Record<string, unknown>;
+const reportPriority = "category IN ('Possível fraude','Produto não entregue')";
 const reportsQuery = `(SELECT r.id::text, 'DN-' || lpad(r.id::text,greatest(4,length(r.id::text)), '0') AS code,
     r.category, r.status, r.narrative, r.created_at AS "createdAt", r.reporter_name AS reporter, r.assignee,
     r.offer_id AS "offerId", r.offer_title AS "offerTitle", r.account_id AS "accountId", r.account_name AS "accountName",
-    r.category IN ('Possível fraude','Produto não entregue') AS priority,
+    r.${reportPriority} AS priority,
     (SELECT count(*)::int FROM moderation_reports x WHERE x.account_id=r.account_id AND x.offer_id IS NOT DISTINCT FROM r.offer_id) AS "reportCount",
     coalesce((SELECT json_agg(json_build_object('id',e.id::text,'name',e.name) ORDER BY id) FROM moderation_evidence e WHERE e.report_id=r.id),'[]') AS files
     FROM moderation_reports r) records`;
@@ -17,6 +18,42 @@ export async function summary(superAdmin: boolean) {
     const [offers,reports,accounts,team] = await Promise.all([counts('admin_offer_list'),counts('moderation_reports'),
         superAdmin ? counts('admin_account_list') : {},connection.query('SELECT role,count(*)::int AS n FROM administrators WHERE active GROUP BY role')]);
     return { offers,reports,accounts,emailConfigured:Boolean(process.env.RESEND_API_KEY?.trim() && process.env.EMAIL_FROM?.trim()),team:Object.fromEntries(team.rows.map(r=>[r.role,r.n])) };
+}
+
+export async function overview(superAdmin: boolean) {
+    const [reports, accounts, offers, reviews, pendingReports, pendingAccounts] = await Promise.all([
+        connection.query(`SELECT count(*)::int AS "highPriority"
+            FROM moderation_reports WHERE status <> 'RESOLVED' AND ${reportPriority}`),
+        superAdmin ? connection.query(`SELECT
+            (count(*) FILTER (WHERE "createdAt" >= now() - interval '30 days'))::int AS "newAccounts",
+            (count(*) FILTER (WHERE account_status = 'PENDING' AND "createdAt" < now() - interval '24 hours'))::int AS "olderPending",
+            (count(*) FILTER (WHERE user_type = 'PRODUCER' AND account_status = 'ACTIVE'))::int AS producers,
+            (count(*) FILTER (WHERE user_type = 'PRODUCER' AND account_status = 'ACTIVE' AND verified))::int AS verified
+            FROM users`) : null,
+        connection.query(`SELECT count(*)::int AS total,
+            (count(*) FILTER (WHERE NOT EXISTS (
+                SELECT 1 FROM moderation_reports r WHERE r.offer_id = o.id AND r.created_at >= now() - interval '30 days'
+            )))::int AS clean FROM admin_offer_list o WHERE o.status = 'ATIVO'`),
+        connection.query(`WITH first_reviews AS (
+            SELECT report_id, min(created_at) AS reviewed_at FROM moderation_history
+            WHERE report_id IS NOT NULL GROUP BY report_id
+            HAVING min(created_at) >= now() - interval '30 days'
+        )
+        SELECT count(*)::int AS total,
+            (count(*) FILTER (WHERE f.reviewed_at <= r.created_at + interval '24 hours'))::int AS "onTime"
+        FROM first_reviews f JOIN moderation_reports r ON r.id = f.report_id`),
+        listing('reports', { status: 'PENDING', size: '3' }, superAdmin),
+        superAdmin ? listing('accounts', { status: 'PENDING', sort: 'oldest', size: '2' }, true) : null,
+    ]);
+    return {
+        highPriorityReports: reports.rows[0].highPriority,
+        accounts: accounts?.rows[0] ?? null,
+        offers: offers.rows[0],
+        reviews: reviews.rows[0],
+        pendingReports: pendingReports.rows.map(({ id, code, category, status, accountName, offerTitle, priority, createdAt }) =>
+            ({ id, code, category, status, accountName, offerTitle, priority, createdAt })),
+        pendingAccounts: pendingAccounts?.rows.map(({ id, code, name, createdAt }) => ({ id, code, name, createdAt })) ?? [],
+    };
 }
 
 export async function listing(section: string, query: Filters, superAdmin: boolean) {
@@ -42,8 +79,12 @@ export async function listing(section: string, query: Filters, superAdmin: boole
         if (documentQuery) search(['document'],String(query.q).replace(/\D/g,''));
         else search(['name','email','code','document'],query.q);
         search(['location'],query.location);
+        if (query.sort === 'oldest') order='"createdAt" ASC,id ASC';
     } else if (section === 'reports') {
-        source=reportsQuery; eq('status',query.status); eq('"offerId"',query.offerId);
+        source=reportsQuery; eq('"offerId"',query.offerId); eq('id',query.id);
+        if (query.status === 'PRIORITY' || query.status === 'PENDING') conditions.push("status <> 'RESOLVED'");
+        else eq('status',query.status);
+        if (query.status === 'PRIORITY') conditions.push('priority');
         if (query.sort !== 'recent') order='priority DESC,'+order;
     } else if (section === 'history') {
         source=historyQuery; eq('action',query.action); eq('"actorId"',query.actor);
