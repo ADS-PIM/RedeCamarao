@@ -126,6 +126,8 @@ export const passwordResetRateLimit = rateLimit('PASSWORD_RECOVERY', 'password-r
 export const registrationRateLimit = [rateLimit('REGISTRATION', 'registration:ip', ipKey), rateLimit('REGISTRATION', 'registration:email', emailKey)];
 export const publicReadRateLimit = rateLimit('PUBLIC', 'public:ip', ipKey);
 export const authenticatedRateLimit = rateLimit('AUTHENTICATED', 'authenticated:user', adminKey);
+export const producerContactRateLimit = rateLimit('MESSAGE', 'producer-contact:user', req =>
+    (req as Request & { user?: { userId?: string } }).user?.userId);
 export const anonymousRateLimit = rateLimit('ANONYMOUS', 'anonymous:ip', ipKey);
 export const messageRateLimit = rateLimit('MESSAGE', 'message:ip', ipKey);
 export const sessionRateLimit = rateLimit('SESSION', 'session', sessionKey);

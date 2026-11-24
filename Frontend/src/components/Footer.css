@@ -2,8 +2,8 @@
 .footer-inner { padding-block: 40px 0; }
 .footer-main { display: grid; grid-template-columns: minmax(0, 390px) minmax(180px, 220px); justify-content: space-between; align-items: start; gap: 32px 64px; padding-bottom: 36px; }
 .footer-about { min-width: 0; }
-.footer-brand { display: inline-flex; align-items: center; min-height: 72px; gap: 12px; font-size: 32px; font-weight: 400; line-height: 1.2; letter-spacing: -1px; color: var(--cream); white-space: nowrap; }
-.footer-brand .brand-logo { width: 72px; height: 72px; }
+.footer-brand { display: inline-flex; align-items: center; min-height: 72px; gap: 0; font-size: 0; line-height: 0; color: var(--cream); }
+.footer-brand .brand-logo { width: 260px; height: auto; }
 .footer-brand strong { color: var(--accent); font-weight: 750; }
 .footer-brand:hover { color: var(--cream); text-decoration: none; }
 .footer-description { max-width: 380px; margin-top: 18px; color: var(--on-dark-muted); font-size: 15px; line-height: 1.7; overflow-wrap: anywhere; }
@@ -21,16 +21,16 @@
 .site-footer :focus-visible { outline-color: var(--accent); }
 @media (max-width: 800px) {
   .footer-main { gap: 32px; grid-template-columns: minmax(0, 1fr) minmax(160px, 200px); }
-  .footer-brand { font-size: 27px; gap: 10px; }
-  .footer-brand .brand-logo { width: 60px; height: 60px; }
+  .footer-brand .brand-logo { width: 230px; }
   .footer-bottom { align-items: flex-start; flex-direction: column; gap: 6px; }
 }
 @media (max-width: 600px) {
   .footer-inner { padding-top: 32px; }
   .footer-main { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-bottom: 28px; }
-  .footer-brand { min-height: 60px; font-size: 27px; }
+  .footer-brand { min-height: 60px; }
+  .footer-brand .brand-logo { width: 210px; }
   .footer-description { margin-top: 14px; }
-  .footer-links { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 16px; }
+  .footer-links { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .footer-links a, .footer-legal-links a { min-height: 44px; }
   .footer-bottom { padding-block: 18px; gap: 8px; }
   .footer-legal-links { gap: 0 20px; }

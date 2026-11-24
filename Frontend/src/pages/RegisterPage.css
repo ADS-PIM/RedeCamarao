@@ -19,7 +19,7 @@
 .profile-options { border: 0; padding: 0; margin: 18px 0 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-width: 0; }
 .profile-option { position: relative; display: flex; align-items: center; gap: 12px; min-height: 96px; padding: 14px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; }
 .profile-option:hover { border-color: var(--primary); background: var(--surface-hover); }
-.profile-option.is-selected { border: 2px solid var(--primary); background: var(--accent-soft); padding: 13.5px; }
+.profile-option.is-selected { border: 2px solid var(--accent); background: var(--accent-soft); padding: 13.5px; }
 .profile-option:has(input:focus-visible) { outline: none; border-color: var(--field-focus-border); box-shadow: var(--field-focus-ring); }
 .profile-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .profile-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--page-background); display: flex; align-items: center; justify-content: center; color: var(--primary); }
@@ -29,7 +29,7 @@
 .profile-copy strong { display: block; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
 .profile-copy > span { display: block; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .radio-indicator { flex: 0 0 20px; width: 20px; height: 20px; border: 1.5px solid var(--border); border-radius: 50%; background: var(--surface); }
-.is-selected .radio-indicator { border: 6px solid var(--primary); }
+.is-selected .radio-indicator { border: 6px solid var(--accent); }
 .access-section { border-top: 1px solid var(--border); padding-top: 20px; }
 .access-section h2 { margin-bottom: 20px; }
 .fields-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
@@ -42,7 +42,7 @@
 .terms-field { margin-top: 22px; }
 .terms-line { display: flex; gap: 12px; align-items: flex-start; }
 .terms-line input { appearance: none; width: 22px; height: 22px; margin: 0; border: 1px solid var(--border); border-radius: 4px; flex-shrink: 0; cursor: pointer; }
-.terms-line input:checked { appearance: auto; accent-color: var(--primary); }
+.terms-line input:checked { appearance: auto; accent-color: var(--accent); }
 .terms-line input[aria-invalid='true'] { border-color: var(--danger); }
 .terms-line label { color: var(--muted); font-size: 12px; line-height: 1.6; cursor: pointer; }
 .terms-line a:hover { text-decoration: underline; color: var(--primary); }

@@ -1,4 +1,4 @@
-import type { Offer } from './marketplace'
+import type { Offer } from './marketplace.ts'
 import { getOfferState } from './products.ts'
 import { brazilianStates } from '../utils/registration.ts'
 
@@ -7,7 +7,6 @@ export type Producer = {
   name: string
   description: string | null
   location: string | null
-  phone: string | null
   businessHours: string | null
   profilePicture?: string | null
   activeOfferCount: number
@@ -22,11 +21,12 @@ const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u0
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric: true })
 
 export function producerHref(id: string) { return `/produtores/${encodeURIComponent(id)}` }
-export function producerWhatsAppHref(phone: string | null) {
+export function producerWhatsAppHref(phone: string | null, message?: string) {
   const digits = phone?.replace(/\D/g, '') ?? ''
   const localNumber = digits.startsWith('55') && [12, 13].includes(digits.length) ? digits.slice(2) : digits
   if (!/^[1-9]{2}\d{8,9}$/.test(localNumber)) return null
-  return `https://wa.me/55${localNumber}`
+  const text = message?.trim()
+  return `https://wa.me/55${localNumber}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 }
 
 export function producerIdFromPath(pathname: string) {

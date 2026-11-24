@@ -11,7 +11,7 @@
 .my-offers-toolbar > p { margin-left: auto; color: var(--muted); font-size: 13px; white-space: nowrap; }
 .my-offers-toolbar .account-filter select { width: 220px; }
 .my-offers-select { width: 36px !important; min-width: 36px !important; padding-inline: 10px !important; }
-.my-offers-select input { width: 19px; height: 19px; margin: 0; accent-color: var(--primary); cursor: pointer; }
+.my-offers-select input { width: 19px; height: 19px; margin: 0; accent-color: var(--accent); cursor: pointer; }
 .my-offers-table td.my-offers-name { width: 32%; white-space: normal; }
 .my-offers-table .account-offer-name { width: 100%; min-width: 190px; gap: 12px; }
 .my-offers-table .account-offer-name > div { max-width: 100%; }

@@ -280,7 +280,6 @@ export class UserController {
             name: user.name,
             description: user.description,
             location: user.location,
-            phone: user.phone,
             businessHours: user.businessHours,
             profilePicture: user.profilePicture,
         });
@@ -322,6 +321,43 @@ export class UserController {
             return res.status(500).json({
                 error: 'Error searching user'
             });
+        }
+    }
+
+    public async searchProducerWhatsApp(req: UserAuthRequest, res: Response): Promise<Response> {
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.setHeader('Vary', 'Authorization');
+
+        try {
+            const authenticatedUserId = req.user?.userId;
+            if (!authenticatedUserId) {
+                return res.status(401).json({ error: 'Acesso não autorizado' });
+            }
+
+            const authenticatedUser = await this.searchByIdUser.execute(authenticatedUserId);
+            if (!authenticatedUser || ![UserType.BUYER, UserType.PRODUCER].includes(authenticatedUser.userType)) {
+                return res.status(401).json({ error: 'É necessário ter uma conta ativa para acessar contatos' });
+            }
+
+            const producerId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            if (!producerId || !producerId.trim() || producerId.length > 36) {
+                return res.status(400).json({ error: 'ID do produtor inválido' });
+            }
+
+            const producer = await this.searchByIdUser.execute(producerId);
+            if (!producer || producer.userType !== UserType.PRODUCER) {
+                return res.status(404).json({ error: 'Produtor não encontrado' });
+            }
+
+            const phone = producer.phone?.trim();
+            if (!phone) {
+                return res.status(404).json({ error: 'Este produtor ainda não informou um telefone para WhatsApp' });
+            }
+
+            return res.status(200).json({ phone });
+        } catch (error: unknown) {
+            console.error('Error searching producer WhatsApp contact:', error);
+            return res.status(500).json({ error: 'Não foi possível carregar o contato do produtor' });
         }
     }
 

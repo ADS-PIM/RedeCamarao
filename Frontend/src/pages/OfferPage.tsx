@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { OfferGallery } from '../components/OfferGallery'
 import { ProductCard } from '../components/ProductCard'
+import { WhatsAppContact } from '../components/WhatsAppContact'
 import { useOfferDetail } from '../hooks/useOfferDetail'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
 import { formatDate, formatPrice } from '../data/marketplace'
@@ -31,6 +32,7 @@ export function OfferPage({ offerId, session, restoring, auth, navigate }: { off
   const [showShareLink, setShowShareLink] = useState(false)
   const shareLinkRef = useRef<HTMLInputElement>(null)
   const userId = session?.userId
+  const saved = Boolean(userId && readSavedOffers({ getItem: key => key === savedOffersKey ? savedOffersSnapshot : null }).includes(offerId))
 
   useEffect(() => {
     document.title = `${loading ? 'Oferta de camarão' : error ? 'Oferta indisponível' : offer?.title ?? 'Oferta não encontrada'} | RedeCamarão`
@@ -118,8 +120,7 @@ export function OfferPage({ offerId, session, restoring, auth, navigate }: { off
               <div><dt><Icon name="pin" />Localização</dt><dd>{offer.location}</dd></div>
               <div><dt><Icon name="calendar" />Disponibilidade</dt><dd>Até {formatDate(offer.endDate)}</dd></div>
             </dl>
-            <div className="offer-contact-actions"><button type="button" className="button offer-contact-button" disabled aria-describedby="offer-contact-future"><Icon name="whatsapp" />WhatsApp em breve</button></div>
-            <p id="offer-contact-future" className="offer-contact-note"><Icon name="info" />Em breve, você poderá conversar diretamente com o produtor pelo WhatsApp para combinar preço, retirada e demais condições.</p>
+            <div className="offer-contact-actions"><WhatsAppContact producerId={producer.id} session={session} restoring={restoring} onSessionChange={onSessionChange} className="button offer-contact-button" message={`Olá! Tenho interesse na oferta “${offer.title}” da RedeCamarão e gostaria de conversar sobre preço, retirada e disponibilidade.`} /></div>
           </section>
 
           <section className="offer-about" aria-labelledby="offer-about-title">
@@ -138,7 +139,7 @@ export function OfferPage({ offerId, session, restoring, auth, navigate }: { off
               <div><dt>Ofertas ativas</dt><dd>{producer.activeOfferCount}</dd></div>
               {producer.businessHours && <div><dt>Horário de atendimento</dt><dd>{producer.businessHours}</dd></div>}
             </dl>
-            <div className="offer-producer-contact"><p>O contato com o produtor será feito pelo WhatsApp. Esse recurso estará disponível em breve.</p></div>
+            <div className="offer-producer-contact"><p>A negociação e o pagamento são combinados diretamente entre comprador e produtor.</p></div>
             <a className="button button-secondary" href={producerHref(producer.id)}>Ver perfil do produtor<Icon name="arrow" /></a>
           </aside>
         </div>
