@@ -25,15 +25,13 @@ function subscribeToSavedOffers(notify: () => void) {
   return () => window.removeEventListener('storage', onStorage)
 }
 
-export function OfferPage({ offerId, session, restoring, auth, navigate }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized; navigate: (href: string) => void }) {
+export function OfferPage({ offerId, session, restoring, auth, navigate, onSessionChange }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized; navigate: (href: string) => void; onSessionChange: (session: UserSession | null) => void }) {
   const { offer, loading, error, reloadOffer } = useOfferDetail(offerId)
   const { offers, loading: relatedLoading, error: relatedError, reloadOffers } = useMarketplaceOffers()
   const [feedback, setFeedback] = useState('')
   const [showShareLink, setShowShareLink] = useState(false)
   const shareLinkRef = useRef<HTMLInputElement>(null)
   const userId = session?.userId
-  const saved = Boolean(userId && readSavedOffers({ getItem: key => key === savedOffersKey ? savedOffersSnapshot : null }).includes(offerId))
-
   useEffect(() => {
     document.title = `${loading ? 'Oferta de camarão' : error ? 'Oferta indisponível' : offer?.title ?? 'Oferta não encontrada'} | RedeCamarão`
   }, [offer, loading, error])
