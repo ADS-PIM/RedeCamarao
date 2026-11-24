@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { Avatar } from './Avatar'
 import { Brand } from './Brand'
@@ -7,13 +7,15 @@ import './Header.css'
 export function Header({ pending = false, authenticated = false, marketplace = false, products = false, producers = false, adminArea = false, producer = false, administrator = false, moderator = false, accountName = '', profilePicture, onLogout, loggingOut = false }: { pending?: boolean; authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; adminArea?: boolean; producer?: boolean; administrator?: boolean; moderator?: boolean; accountName?: string; profilePicture?: string | null; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoutError, setLogoutError] = useState('')
-  const [headerHidden, setHeaderHidden] = useState(false)
+  const [headerHidden, setHeaderHidden] = useState(() => window.scrollY > (window.innerWidth <= 1240 ? 64 : 80))
   const headerRef = useRef<HTMLElement>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let previousY = Math.max(0, window.scrollY)
     let frame = 0
+    const header = headerRef.current
+    setHeaderHidden(previousY > (header?.offsetHeight ?? 80))
     const update = () => {
       frame = 0
       const currentY = Math.max(0, window.scrollY)
