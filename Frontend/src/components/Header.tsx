@@ -113,8 +113,7 @@ export function Header({ pending = false, authenticated = false, marketplace = f
                 <Icon name="chevron" className="header-account-chevron" />
               </summary>
               <div className="header-account-options" onClick={event => { if ((event.target as HTMLElement).closest('a')) { event.currentTarget.closest('details')?.removeAttribute('open'); setMenuOpen(false) } }}>
-                {administrator && <a href="/admin">Área administrativa</a>}
-                {!administrator && <a href="/painel">Ver perfil</a>}
+                <a href={administrator ? '/admin/perfil' : '/painel#perfil'}>Acessar perfil</a>
                 <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}><Icon name="logout" />{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
                 {logoutError && <p className="header-logout-error" role="alert">{logoutError}</p>}
               </div>

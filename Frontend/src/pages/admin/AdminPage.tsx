@@ -5,6 +5,7 @@ import { adminApi, type Authorized, type Summary, type Options } from '../../ser
 import type { UserSession } from '../../services/auth'
 import { LoadState } from './AdminShared'
 import { AdminOverview } from './AdminOverview'
+import { AdminProfile } from './AdminProfile'
 import { AdminLists } from './AdminLists'
 import { AdminReports } from './AdminReports'
 import { ModerationDialog, type Decision } from './ModerationDialog'
@@ -17,8 +18,9 @@ const sections = [
   {id:'accounts',title:'Contas',url:'/admin/contas',icon:'people'},
   {id:'reports',title:'Denúncias',url:'/admin/denuncias',icon:'flag'},
   {id:'history',title:'Histórico de ações',url:'/admin/historico',icon:'clock'},
+  {id:'profile',title:'Meu perfil',url:'/admin/perfil',icon:'shield'},
 ] as const satisfies readonly { id: string; title: string; url: string; icon: IconName }[]
-export function AdminPage({pathname,auth,session}:{pathname:string;auth:Authorized;session:UserSession}) {
+export function AdminPage({pathname,auth,session,onNameSaved}:{pathname:string;auth:Authorized;session:UserSession;onNameSaved:(name:string)=>void}) {
   const [version,setVersion]=useState(0)
   const [decision,setDecision]=useState<Decision|null>(null)
   const [team,setTeam]=useState(false)
@@ -26,7 +28,7 @@ export function AdminPage({pathname,auth,session}:{pathname:string;auth:Authoriz
   const [menuOpen,setMenuOpen]=useState(false)
   const superAdmin=session.role==='SUPER_ADMIN'
   const section=sections.find(s=>s.url===pathname.replace(/\/$/,''))
-  const summary=useModerationData<Summary>(auth,adminApi+'/summary',version,true)
+  const summary=useModerationData<Summary>(auth,section?.id==='profile'?'':adminApi+'/summary',version,true)
   const usesListFilters=section?.id==='offers'||section?.id==='history'||section?.id==='accounts'&&superAdmin
   const options=useModerationData<Options>(auth,usesListFilters?adminApi+'/filters':'',version,true)
   const reload=()=>setVersion(v=>v+1)
@@ -42,6 +44,7 @@ export function AdminPage({pathname,auth,session}:{pathname:string;auth:Authoriz
     </div>
     <div className="mod-content">{success&&<p className="mod-success" role="status"><Icon name="check"/>{success}</p>}
     {!section?<h1>Página não encontrada</h1>:section.id==='accounts'&&!superAdmin?<section className="mod-panel"><h1>Acesso restrito</h1><p>Somente administradores podem gerenciar contas.</p></section>:
+    section.id==='profile'?<AdminProfile userId={session.userId} auth={auth} onNameSaved={onNameSaved}/>:
     !summary.data?<LoadState error={summary.error} retry={reload}/>:
     section.id==='overview'?<AdminOverview {...props} summary={summary.data}/>:section.id==='reports'?<AdminReports {...props} summary={summary.data}/>:
     options.data?<AdminLists key={section.id} {...props} section={section.id} summary={summary.data} options={options.data} team={()=>setTeam(true)}/>:

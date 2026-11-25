@@ -28,10 +28,10 @@ export const dateText = (value: string, time = false) => new Date(value).toLocal
 export const refCode = (prefix: string, id: string) => prefix + '-' + id.slice(0,8).toUpperCase()
 export const listPath = (section: string, filters: Filters, page = 1, size = 6) =>
   adminApi + '/lists/' + section + '?' + new URLSearchParams({ ...filters,page:String(page),size:String(size) })
-export async function authorizedFetch(token: string, path: string, body?: unknown) {
+export async function authorizedFetch(token: string, path: string, body?: unknown, method = body === undefined ? 'GET' : 'POST') {
   if (!apiBaseUrl) throw new Error('A API está indisponível.')
   const response = await fetch(apiBaseUrl.replace(/\/+$/,'') + path, {
-    method: body === undefined ? 'GET' : 'POST',
+    method,
     headers: { Authorization:'Bearer ' + token, ...(body !== undefined && { 'Content-Type':'application/json' }) },
     ...(body !== undefined && { body:JSON.stringify(body) }), signal:AbortSignal.timeout(30000),
   })

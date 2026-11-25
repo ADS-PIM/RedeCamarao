@@ -41,7 +41,7 @@ function App() {
   const isProducts = ['/produtos', '/produtos/'].includes(pathname)
   const requestedReturnTo = new URLSearchParams(window.location.search).get('returnTo')
   const staffLogin = new URLSearchParams(window.location.search).get('acesso') === 'admin'
-  const adminReturn = requestedReturnTo && /^\/admin(?:\/(?:ofertas|contas|denuncias|historico))?\/?$/.test(requestedReturnTo) ? requestedReturnTo : '/admin'
+  const adminReturn = requestedReturnTo && /^\/admin(?:\/(?:ofertas|contas|denuncias|historico|perfil))?\/?$/.test(requestedReturnTo) ? requestedReturnTo : '/admin'
   const returnAfterAuth = requestedReturnTo && (offerIdFromPath(requestedReturnTo) || producerIdFromPath(requestedReturnTo)) ? requestedReturnTo : null
   const offerId = offerIdFromPath(pathname)
   const isProducers = ['/produtores', '/produtores/'].includes(pathname)
@@ -108,7 +108,8 @@ function App() {
       {accountNavigation}
       {editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
       {isAdminArea ? (
-        session?.userType === 'ADMIN' && !restoring ? <Suspense fallback={<main id="main-content" className="container account-status" role="status">Carregando área administrativa…</main>}><AdminPage key={session.userId + pathname + window.location.search} pathname={pathname} auth={withSession} session={session}/></Suspense> :
+        session?.userType === 'ADMIN' && !restoring ? <Suspense fallback={<main id="main-content" className="container account-status" role="status">Carregando área administrativa…</main>}><AdminPage key={session.userId + pathname + window.location.search} pathname={pathname} auth={withSession} session={session}
+          onNameSaved={name => setSession(current => current?.userType === 'ADMIN' && current.userId === session.userId ? { ...current, name } : current)} /></Suspense> :
         <main id="main-content" className="account-main">
           {restoring ? (
             <section className="container account-status" role="status"><h1>Carregando área administrativa...</h1></section>
