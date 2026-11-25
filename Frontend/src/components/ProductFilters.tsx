@@ -1,6 +1,6 @@
 import { Icon } from './Icon'
 import { brazilianStates } from '../utils/registration'
-import { getOfferSize, getOfferState, sizeOptions } from '../data/products'
+import { filterProductOffers, getOfferSize, getOfferState, sizeOptions } from '../data/products'
 import type { ProductFilters as Filters, SizeFilter } from '../data/products'
 import { shrimpTypeOptions } from '../data/catalogFilters'
 import { QuantityRangeFields } from './QuantityRangeFields'
@@ -8,6 +8,8 @@ import type { Offer } from '../data/marketplace'
 
 type Props = {
   offers: Offer[]
+  query: string
+  applied: Filters
   value: Filters
   unavailable: boolean
   loading: boolean
@@ -20,13 +22,15 @@ function toggle<T>(values: T[], value: T) {
   return values.includes(value) ? values.filter(item => item !== value) : [...values, value]
 }
 
-export function ProductFilters({ offers, value, unavailable, loading, priceError, onChange, onClear }: Props) {
+export function ProductFilters({ offers, query, applied, value, unavailable, loading, priceError, onChange, onClear }: Props) {
   const states = new Map<string, number>()
   const sizes = new Map<SizeFilter, number>()
-  offers.forEach(offer => {
+  filterProductOffers(offers, query, { ...applied, states: [] }).forEach(offer => {
     const state = getOfferState(offer.location)
-    const size = getOfferSize(offer.size)
     if (state) states.set(state, (states.get(state) ?? 0) + 1)
+  })
+  filterProductOffers(offers, query, { ...applied, sizes: [] }).forEach(offer => {
+    const size = getOfferSize(offer.size)
     if (size) sizes.set(size, (sizes.get(size) ?? 0) + 1)
   })
 

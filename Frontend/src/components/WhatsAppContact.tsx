@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { producerWhatsAppHref } from '../data/producers'
-import { useAuthenticatedAction } from '../hooks/useAuthenticatedAction'
+import type { Authorized } from '../services/moderation'
 import { fetchProducerWhatsAppPhone } from '../services/producers'
 import type { UserSession } from '../services/auth'
 import './WhatsAppContact.css'
@@ -11,17 +11,16 @@ type Props = {
   offerId?: string
   session: UserSession | null
   restoring: boolean
-  onSessionChange: (session: UserSession | null) => void
+  auth: Authorized
   message?: string
   className: string
 }
 
-export function WhatsAppContact({ producerId, offerId, session, restoring, onSessionChange, message, className }: Props) {
+export function WhatsAppContact({ producerId, offerId, session, restoring, auth, message, className }: Props) {
   const [opening, setOpening] = useState(false)
   const [showAccountPrompt, setShowAccountPrompt] = useState(false)
   const [feedback, setFeedback] = useState('')
   const pending = useRef(false)
-  const withSession = useAuthenticatedAction(session, onSessionChange)
   const returnTo = window.location.pathname
   const loginHref = `/entrar?returnTo=${encodeURIComponent(returnTo)}`
   const registerHref = `/registro?returnTo=${encodeURIComponent(returnTo)}`
@@ -49,7 +48,7 @@ export function WhatsAppContact({ producerId, offerId, session, restoring, onSes
     } catch { /* If popups are blocked, use the current tab after retrieving the contact. */ }
 
     try {
-      const phone = await withSession(token => fetchProducerWhatsAppPhone(producerId, token, undefined, offerId))
+      const phone = await auth(token => fetchProducerWhatsAppPhone(producerId, token, undefined, offerId))
       const href = producerWhatsAppHref(phone, message)
       if (!href) throw new Error('Este produtor ainda não informou um telefone válido para WhatsApp.')
       if (popup) popup.location.replace(href)

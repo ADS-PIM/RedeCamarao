@@ -30,6 +30,7 @@ export class SearchPublicProducerById implements UseCase<string, PublicProducerD
                 maximumQuantity: offer.maximumQuantity,
                 minimumQuantity: offer.minimumQuantity,
                 coverPhoto: offer.coverPhoto,
+                createdAt: offer.createdAt,
                 location: offer.location,
                 startDate: offer.startDate,
                 endDate: offer.endDate

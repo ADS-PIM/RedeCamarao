@@ -3,6 +3,25 @@ import { getOfferSize, getOfferState } from './offerAttributes.ts'
 import type { SizeFilter } from './products.ts'
 import { parseMeasuredValue } from './offerUnits.ts'
 import type { WeightUnit } from './offerUnits.ts'
+import { brazilianStates } from '../utils/registration.ts'
+
+export const wholesaleMinimumKg = 500
+
+export function catalogSearchWords(value: string) {
+  return normalizeSearch(value).split(/\s+/).filter(Boolean)
+}
+
+export function normalizeSearch(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+}
+
+export function matchesCatalogSearch(offer: Offer, words: string[]) {
+  if (!words.length) return true
+  const state = getOfferState(offer.location)
+  const stateName = brazilianStates.find(item => item.code === state)?.name ?? ''
+  const text = normalizeSearch(`${offer.title} ${offer.description} ${offer.type ?? ''} ${offer.size} ${offer.location} ${state ?? ''} ${stateName} ${offer.weight} kg`)
+  return words.every(word => text.includes(word))
+}
 
 export const shrimpTypeOptions = [
   { id: 'gray', label: 'Camarão cinza' },

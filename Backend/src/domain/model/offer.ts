@@ -10,6 +10,7 @@ export enum OfferStatus {
 }
 
 export type propsOffer = {
+    shelf?: 'featured' | 'wholesale' | 'regional';
     id: string;
     userId: string;
     title: string;
@@ -49,6 +50,8 @@ export class Offer {
     public static reconstruct(props: propsOffer) {
         return new Offer(props);
     }
+
+    public get shelf() { return this.props.shelf; }
 
     public get id () {
         return this.props.id;

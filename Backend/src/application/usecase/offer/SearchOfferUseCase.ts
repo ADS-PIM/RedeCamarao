@@ -1,4 +1,4 @@
-import { MarketplaceList, OfferDAOInterface } from '../../../domain/interfaces/offer/OfferDAOInterface';
+import { MarketplaceList, MarketplaceRegion, OfferDAOInterface } from '../../../domain/interfaces/offer/OfferDAOInterface';
 import { OfferSearchDTO } from '../../dto/offerDTO/OfferSearchDTO';
 import { UseCase } from '../useCase';
 import { OfferStatus } from '../../../domain/model/offer';
@@ -8,6 +8,8 @@ export type PublicOfferDTO = Omit<OfferSearchDTO, 'userId' | 'status'> & {
     maximumQuantity: number;
     minimumQuantity: number;
     coverPhoto: string | null;
+    createdAt: Date;
+    shelf?: 'featured' | 'wholesale' | 'regional';
 };
 
 export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
@@ -30,12 +32,14 @@ export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
         }));
     }
 
-    public async executePublic(list: MarketplaceList = 'recent'): Promise<PublicOfferDTO[]> {
-        const offers = await this.offerDAO.searchActive(list);
+    public async executePublic(list: MarketplaceList = 'recent', region?: MarketplaceRegion): Promise<PublicOfferDTO[]> {
+        const offers = await this.offerDAO.searchActive(list, region);
         return offers.map(offer => ({
             id: offer.id,
             title: offer.title,
             description: offer.description,
+            createdAt: offer.createdAt,
+            shelf: offer.shelf,
             type: offer.type,
             size: offer.size,
             price: offer.price,

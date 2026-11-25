@@ -1,6 +1,6 @@
 import type { Offer } from './marketplace.ts'
 import { brazilianStates } from '../utils/registration.ts'
-import { emptyCatalogSelection, matchesCatalogFilters, validateCatalogQuantity } from './catalogFilters.ts'
+import { catalogSearchWords, emptyCatalogSelection, matchesCatalogSearch, matchesCatalogFilters, normalizeSearch, validateCatalogQuantity } from './catalogFilters.ts'
 import type { CatalogSelection } from './catalogFilters.ts'
 import { getOfferState } from './offerAttributes.ts'
 export { getOfferState, getOfferSize } from './offerAttributes.ts'
@@ -33,7 +33,6 @@ export const emptyProductFilters: ProductFilters = {
   ...emptyCatalogSelection, location: '', minPrice: '', maxPrice: '', quantities: [],
 }
 export const productsPerPage = 6
-const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
 
 export function getQuantityBand(weight: number): QuantityFilter {
   if (weight <= 25) return 'up-to-25'
@@ -60,16 +59,15 @@ export function validateProductPrices(filters: ProductFilters): { field: 'minPri
 
 export function filterProductOffers(offers: Offer[], query: string, filters: ProductFilters) {
   if (validateProductPrices(filters) || validateCatalogQuantity(filters)) return []
-  const words = normalize(query).split(/\s+/).filter(Boolean)
-  const locationWords = normalize(filters.location).split(/[^a-z0-9]+/).filter(Boolean)
+  const words = catalogSearchWords(query)
+  const locationWords = normalizeSearch(filters.location).split(/[^a-z0-9]+/).filter(Boolean)
   const minimum = parseProductPrice(filters.minPrice)
   const maximum = parseProductPrice(filters.maxPrice)
   return offers.filter(offer => {
     const state = getOfferState(offer.location)
     const stateName = brazilianStates.find(item => item.code === state)?.name ?? ''
-    const searchable = normalize(`${offer.title} ${offer.description} ${offer.type ?? ''} ${offer.size} ${offer.location} ${stateName} ${offer.weight} kg`)
-    const searchableLocation = normalize(`${offer.location} ${stateName} ${state ?? ''}`).replace(/[^a-z0-9]+/g, ' ')
-    return words.every(word => searchable.includes(word))
+    const searchableLocation = normalizeSearch(`${offer.location} ${stateName} ${state ?? ''}`).replace(/[^a-z0-9]+/g, ' ')
+    return matchesCatalogSearch(offer, words)
       && locationWords.every(word => searchableLocation.includes(word))
       && matchesCatalogFilters(offer, filters)
       && (minimum === null || offer.price >= minimum)

@@ -43,7 +43,10 @@ export class OfferController {
     public async searchPublic(req: UserAuthRequest, res: Response): Promise<Response> {
         try {
             const list = req.query.list;
-            const offers = await this.searchOffer.executePublic(list === 'featured' || list === 'popular' ? list : 'recent');
+            const { uf, stateName } = req.query;
+            const region = typeof uf === 'string' && /^[A-Z]{2}$/.test(uf)
+                ? { code: uf, name: typeof stateName === 'string' ? stateName.slice(0, 40) : uf } : undefined;
+            const offers = await this.searchOffer.executePublic(list === 'featured' || list === 'popular' || list === 'showcase' ? list : 'recent', region);
             return res.status(200).json(offers);
         } catch (error: unknown) {
             const response = applicationErrorResponse(error, res);

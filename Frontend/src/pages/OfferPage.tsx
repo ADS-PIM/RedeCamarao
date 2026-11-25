@@ -25,7 +25,7 @@ function subscribeToSavedOffers(notify: () => void) {
   return () => window.removeEventListener('storage', onStorage)
 }
 
-export function OfferPage({ offerId, session, restoring, auth, navigate, onSessionChange }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized; navigate: (href: string) => void; onSessionChange: (session: UserSession | null) => void }) {
+export function OfferPage({ offerId, session, restoring, auth, navigate }: { offerId: string; session: UserSession | null; restoring: boolean; auth: Authorized; navigate: (href: string) => void }) {
   const { offer, loading, error, reloadOffer } = useOfferDetail(offerId)
   const { offers, loading: relatedLoading, error: relatedError, reloadOffers } = useMarketplaceOffers()
   const [feedback, setFeedback] = useState('')
@@ -118,7 +118,7 @@ export function OfferPage({ offerId, session, restoring, auth, navigate, onSessi
               <div><dt><Icon name="pin" />Localização</dt><dd>{offer.location}</dd></div>
               <div><dt><Icon name="calendar" />Disponibilidade</dt><dd>Até {formatDate(offer.endDate)}</dd></div>
             </dl>
-            <div className="offer-contact-actions"><WhatsAppContact producerId={producer.id} offerId={offer.id} session={session} restoring={restoring} onSessionChange={onSessionChange} className="button offer-contact-button" message={`Olá! Tenho interesse na oferta “${offer.title}” da RedeCamarão e gostaria de conversar sobre preço, retirada e disponibilidade.`} /></div>
+            <div className="offer-contact-actions"><WhatsAppContact producerId={producer.id} offerId={offer.id} session={session} restoring={restoring} auth={auth} className="button offer-contact-button" message={`Olá! Tenho interesse na oferta “${offer.title}” da RedeCamarão e gostaria de conversar sobre preço, retirada e disponibilidade.`} /></div>
           </section>
 
           <section className="offer-about" aria-labelledby="offer-about-title">

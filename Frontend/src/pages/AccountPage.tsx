@@ -29,7 +29,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
   session: UserSession | null
   restoring?: boolean
   onSessionChange: (session: UserSession | null) => void
-  onProfileLoad?: (name: string, profilePicture?: string | null) => void
+  onProfileLoad?: (name: string, profilePicture: string | null, location: string | null) => void
 }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [offers, setOffers] = useState<ManagedOffer[]>([])
@@ -105,7 +105,7 @@ function AccountPage({ session, restoring = false, onSessionChange, onProfileLoa
   }, [profile?.userType, savedOfferIds, savedRequestKey])
   useEffect(() => {
     document.title = `${profile?.name ?? 'Minha conta'} | RedeCamarão`
-    if (profile) onProfileLoad?.(profile.name, profile.profilePicture ?? null)
+    if (profile) onProfileLoad?.(profile.name, profile.profilePicture ?? null, profile.location)
   }, [profile, onProfileLoad])
 
   const activeCount = offers.filter(offer => isPublishedOffer(offer)).length

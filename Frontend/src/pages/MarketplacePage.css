@@ -78,22 +78,31 @@
 .category-filter-summary > button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; min-height: 44px; padding: 8px 0 8px 10px; border: 0; background: transparent; color: var(--primary); font-size: 13px; font-weight: 600; }
 .category-filter-summary > button:hover, .market-clear-filters:hover { text-decoration: underline; text-underline-offset: 3px; }
 .category-filter-summary > button svg { width: 15px; height: 15px; }
-.offers-section { padding-top: 48px; scroll-margin-top: 24px; }
+.marketplace-main { --page-background: #F7F1E8; }
+.market-shelves { margin-top: 48px; scroll-margin-top: 24px; }
+.offers-section + .offers-section { margin-top: clamp(32px, 4vw, 52px); }
 .section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 24px; }
 .section-heading > div { min-width: 0; }
 .section-heading .market-eyebrow { margin-bottom: 8px; }
 .marketplace-main .view-all { flex-shrink: 0; }
 .offer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
-.offer-card { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgb(var(--navy-rgb) / 1.96%); display: flex; flex-direction: column; }
+.offer-card { min-width: 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgb(var(--navy-rgb) / 1.96%); display: flex; flex-direction: column; }
 .offer-content { padding: 20px; display: flex; flex-direction: column; flex: 1; }
-.offer-labels { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; font-weight: 700; line-height: 1.5; color: var(--primary); text-transform: uppercase; }
-.offer-labels > span { overflow-wrap: anywhere; }
-.offer-labels .offer-availability { padding: 3px 7px; border-radius: 5px; background: #eef8f2; color: #11774f; text-transform: none; white-space: nowrap; }
-.offer-card h3 { font-size: 18px; line-height: 1.4; font-weight: 650; margin-top: 16px; overflow-wrap: anywhere; }
-.offer-description { color: var(--muted); font-size: 14px; line-height: 1.6; margin-top: 10px; overflow-wrap: anywhere; }
-.offer-specs { display: flex; flex-direction: column; gap: 8px; color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 18px; padding-bottom: 20px; }
-.offer-specs span { display: flex; align-items: flex-start; gap: 5px; overflow-wrap: anywhere; }
-.offer-specs svg { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
+.offer-card-heading { display: flex; align-items: center; gap: 12px; }
+.offer-thumb { display: grid; place-items: center; flex: 0 0 60px; height: 60px; overflow: hidden; border-radius: 9px; background: #faf1e8; color: #ae6042; }
+.offer-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.offer-thumb svg { width: 26px; height: 26px; }
+.offer-card-identity { min-width: 0; }
+.offer-type-label { color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.offer-card h3 { margin-top: 3px; font-size: 18px; line-height: 1.35; font-weight: 650; }
+.offer-card-identity, .offer-description, .offer-tags span, .offer-location { overflow-wrap: anywhere; }
+.offer-description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); font-size: 14px; line-height: 1.55; margin-top: 12px; }
+.offer-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.offer-tags span { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; color: var(--ink-soft); background: #f2f3f5; font-size: 12px; font-weight: 600; }
+.offer-tags svg, .offer-location svg { width: 13px; height: 13px; flex-shrink: 0; }
+.offer-location { display: flex; align-items: baseline; gap: 6px; margin-block: 10px 16px; color: var(--muted); font-size: 13px; }
+.market-shelf-empty { padding: 16px 18px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-size: 14px; }
+.market-catalog-link { display: flex; justify-content: center; margin-top: 32px; }
 .offer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: auto; }
 .offer-price { color: var(--brand-dark); font-size: 24px; line-height: 1.4; font-weight: 750; overflow-wrap: anywhere; }
 .offer-price small { color: var(--muted); font-size: 12px; font-weight: 400; white-space: nowrap; }
@@ -145,10 +154,9 @@
   .category-card strong { font-size: 13px; }
   .category-icon { width: 34px; height: 40px; }
   .category-icon svg { width: 22px; height: 22px; }
-  .offers-section { padding-top: 36px; }
-  .section-heading { align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+  .market-shelves { margin-top: 36px; }
+  .section-heading { align-items: flex-start; gap: 12px; }
   .offer-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .offer-specs { flex-direction: row; flex-wrap: wrap; justify-content: space-between; }
   .offer-content { padding: 20px; }
 }
 @media (max-width: 420px) {

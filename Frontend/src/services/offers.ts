@@ -1,5 +1,6 @@
 import type { Offer, OfferDetail } from '../data/marketplace'
 import { apiBaseUrl } from './api.ts'
+import { brazilianStates } from '../utils/registration.ts'
 
 export function isOffer(value: unknown): value is Offer {
   if (!value || typeof value !== 'object') return false
@@ -69,14 +70,17 @@ export async function recordOfferView(id: string, baseUrl = apiBaseUrl) {
   try { sessionStorage.setItem(key, '1') } catch { /* The in-memory set still covers this page. */ }
 }
 
-export type MarketplaceList = 'recent' | 'popular' | 'featured'
+export type MarketplaceList = 'recent' | 'popular' | 'featured' | 'showcase'
 
-export async function fetchMarketplaceOffers(baseUrl = apiBaseUrl, list: MarketplaceList = 'recent'): Promise<Offer[]> {
+export async function fetchMarketplaceOffers(baseUrl = apiBaseUrl, list: MarketplaceList = 'recent', state = ''): Promise<Offer[]> {
   if (!baseUrl) throw new Error('O acesso às ofertas está temporariamente indisponível.')
 
   let response: Response
   try {
-    const query = list === 'recent' ? '' : `?list=${list}`
+    const region = brazilianStates.find(item => item.code === state)
+    const query = list === 'recent' ? '' : '?' + new URLSearchParams({
+      list, ...(list === 'showcase' && region ? { uf: region.code, stateName: region.name } : {}),
+    })
     response = await fetch(`${baseUrl.replace(/\/+$/, '')}/offer/marketplace${query}`, {
       signal: AbortSignal.timeout(15000),
     })

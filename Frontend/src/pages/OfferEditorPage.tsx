@@ -20,7 +20,7 @@ import './OfferEditorPage.css'
 
 export function OfferEditorPage({ offerId, session, restoring, onSessionChange, onProfileLoad, onCreated }: {
   offerId?: string; session: UserSession | null; restoring: boolean;
-  onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string, profilePicture?: string | null) => void
+  onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string, profilePicture: string | null, location: string | null) => void
   onCreated: (href: string) => void
 }) {
   const [values, setValues] = useState<OfferEditorValues | null>(null)
@@ -54,7 +54,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
       setLoading(true); setLoadError(''); setMissing(false)
       const profile = await action(fetchMyProfile)
       if (!active) return
-      setName(profile.name); onProfileLoad(profile.name, profile.profilePicture ?? null)
+      setName(profile.name); onProfileLoad(profile.name, profile.profilePicture ?? null, profile.location)
       if (!offerId) {
         const duplicateId = new URLSearchParams(window.location.search).get('duplicar')
         const source = duplicateId ? (await action(token => fetchMyOffers(token, userId))).find(item => item.id === duplicateId) : null
@@ -69,7 +69,7 @@ export function OfferEditorPage({ offerId, session, restoring, onSessionChange, 
       const currentPhotos = await action(token => fetchEditorPhotos(token, offerId))
       if (active) {
         setOriginal(offer); setValues(initialEditorValues(offer)); setPhotos(currentPhotos)
-        setName(profile.name); onProfileLoad(profile.name, profile.profilePicture ?? null); setDirty(false)
+        setName(profile.name); onProfileLoad(profile.name, profile.profilePicture ?? null, profile.location); setDirty(false)
       }
     }).catch(error => { if (active) setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar esta oferta.') })
       .finally(() => { if (active) setLoading(false) })

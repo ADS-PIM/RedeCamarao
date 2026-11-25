@@ -2,14 +2,13 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
 import { QuantityRangeFields } from '../components/QuantityRangeFields'
-import { Pagination } from '../components/Pagination'
-import { filterOffers, formatPrice } from '../data/marketplace'
-import type { Offer } from '../data/marketplace'
-import { emptyCatalogSelection, shrimpTypeOptions } from '../data/catalogFilters'
+import { MarketplaceOfferCard } from '../components/MarketplaceOfferCard'
+import { filterOffers } from '../data/marketplace'
+import { catalogHref, filteredShelves, shelfTitles, type Shelf } from '../data/showcase'
+import { emptyCatalogSelection, shrimpTypeOptions, validateCatalogQuantity } from '../data/catalogFilters'
 import type { CatalogSelection } from '../data/catalogFilters'
 import { sizeOptions } from '../data/products'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
-import { offerHref } from '../data/offerDetail'
 import { brazilianStates } from '../utils/registration'
 import './MarketplacePage.css'
 
@@ -22,50 +21,39 @@ function scrollToOffers() {
   document.getElementById('ofertas')?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' })
 }
 
-const offersPerPage = 4
+const shelfOrder: Shelf[] = ['featured', 'wholesale', 'regional']
 
-function MarketplaceResults({ offers }: { offers: Offer[] }) {
-  const [page, setPage] = useState(1)
-  const totalPages = Math.ceil(offers.length / offersPerPage)
-  const currentPage = Math.min(page, totalPages)
-  const visible = offers.slice((currentPage - 1) * offersPerPage, currentPage * offersPerPage)
-  return <>
-    <div className="offer-grid">
-      {visible.map(offer => <article className="offer-card" key={offer.id}>
-        <div className="offer-content">
-          <div className="offer-labels"><span>{offer.type || 'Camarão'}</span><span className="offer-availability"><span aria-hidden="true">●</span> Disponível</span></div>
-          <h3>{offer.title}</h3>
-          <p className="offer-description">{offer.description}</p>
-          <div className="offer-specs"><span>{offer.size} · {offer.weight} kg</span><span><Icon name="pin" />{offer.location}</span></div>
-          <div className="offer-bottom"><p className="offer-price">{formatPrice(offer.price)} <small>/ kg</small></p><a className="button button-secondary" aria-label={`Ver oferta: ${offer.title}`} href={offerHref(offer.id)}>Ver oferta</a></div>
-        </div>
-      </article>)}
-    </div>
-    <Pagination label="Páginas de ofertas" currentPage={currentPage} totalPages={totalPages} onChange={next => { setPage(next); scrollToOffers() }} />
-  </>
-}
-
-export function MarketplacePage() {
+export function MarketplacePage({ profileState = '' }: { profileState?: string }) {
   const [input, setInput] = useState('')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<CatalogSelection>(emptyCatalogSelection)
+  const [invalidQuantity, setInvalidQuantity] = useState<Pick<CatalogSelection, 'minQuantity' | 'maxQuantity' | 'quantityUnit'> | null>(null)
   const filtering = Boolean(query.trim() || filters.types.length || filters.sizes.length || filters.states.length || filters.minQuantity || filters.maxQuantity)
-  const { offers, loading, error, reloadOffers } = useMarketplaceOffers(filtering ? 'popular' : 'featured')
+  const { offers, loadedAt, loading, error, reloadOffers } = useMarketplaceOffers(filtering ? 'popular' : 'showcase', filtering ? '' : profileState)
   const filteredOffers = filterOffers(offers, query, filters)
   const chips = [
     ...(query ? [{ id: 'query', label: `Busca: ${query}`, remove: () => { setInput(''); setQuery('') } }] : []),
     ...shrimpTypeOptions.filter(item => filters.types.includes(item.id)).map(item => ({ id: item.id, label: item.label, remove: () => setFilters(current => ({ ...current, types: toggle(current.types, item.id) })) })),
     ...sizeOptions.filter(item => filters.sizes.includes(item.id)).map(item => ({ id: item.id, label: item.label, remove: () => setFilters(current => ({ ...current, sizes: toggle(current.sizes, item.id) })) })),
     ...brazilianStates.filter(item => filters.states.includes(item.code)).map(item => ({ id: item.code, label: item.name, remove: () => setFilters(current => ({ ...current, states: toggle(current.states, item.code) })) })),
-    ...(['minQuantity', 'maxQuantity'] as const).filter(field => filters[field]).map(field => ({ id: field, label: `${field === 'minQuantity' ? 'Lote a partir de' : 'Lote até'} ${filters[field]} ${filters.quantityUnit}`, remove: () => setFilters(current => ({ ...current, [field]: '' })) })),
+    ...(['minQuantity', 'maxQuantity'] as const).filter(field => filters[field]).map(field => ({ id: field, label: `${field === 'minQuantity' ? 'Lote a partir de' : 'Lote até'} ${filters[field]} ${filters.quantityUnit}`, remove: () => { setInvalidQuantity(null); setFilters(current => ({ ...current, [field]: '' })) } })),
   ]
-  const offersDescription = loading
-    ? 'Carregando ofertas...'
-    : error
-      ? 'Consulte as ofertas dos produtores assim que a conexão for restabelecida.'
-      : filtering
-        ? `${filteredOffers.length} ${filteredOffers.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}${query ? ` para “${query}”` : ''}`
-        : `${offers.length} ${offers.length === 1 ? 'oferta em destaque' : 'ofertas em destaque'}`
+  const regionalStates = filters.states.length ? filters.states : profileState ? [profileState] : []
+  const shelves = filtering ? filteredShelves(filteredOffers, regionalStates, loadedAt) : {
+    featured: offers.filter(offer => offer.shelf === 'featured'),
+    wholesale: offers.filter(offer => offer.shelf === 'wholesale'),
+    regional: offers.filter(offer => offer.shelf === 'regional'),
+  }
+  const descriptions = {
+    featured: filtering ? `${filteredOffers.length} ${filteredOffers.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}` : 'Destaques por consultas de contato e visitas.',
+    wholesale: 'Lotes com mais de 500 kg disponíveis.',
+    regional: `Últimas 24 horas · ${regionalStates.length ? regionalStates.join(', ') : 'Todos os estados'}`,
+  }
+  const emptyMessages = {
+    featured: filtering ? 'Nenhuma oferta corresponde aos filtros selecionados.' : 'Ainda não há ofertas disponíveis.',
+    wholesale: 'Nenhum outro lote acima de 500 kg disponível.',
+    regional: 'Nenhum outro lote publicado nas últimas 24 horas nesta seleção.',
+  }
 
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -73,7 +61,18 @@ export function MarketplacePage() {
     scrollToOffers()
   }
 
-  function clearFilters() { setInput(''); setQuery(''); setFilters(emptyCatalogSelection) }
+  function changeQuantity(next: CatalogSelection) {
+    const { minQuantity, maxQuantity, quantityUnit } = next
+    const quantity = { minQuantity, maxQuantity, quantityUnit }
+    if (validateCatalogQuantity(next)) {
+      setInvalidQuantity(quantity)
+      return
+    }
+    setInvalidQuantity(null)
+    setFilters(current => ({ ...current, ...quantity }))
+  }
+
+  function clearFilters() { setInput(''); setQuery(''); setInvalidQuantity(null); setFilters(emptyCatalogSelection) }
 
   return (
     <main id="main-content" className="marketplace-main">
@@ -107,7 +106,7 @@ export function MarketplacePage() {
         <section className="category-section" aria-labelledby="category-title">
           <div className="market-filter-heading"><div><h2 id="category-title">Encontre o lote certo</h2>
             <p className="section-description">Combine os filtros. Você pode selecionar mais de uma opção em cada grupo.</p></div>
-            {filtering && <button className="market-clear-filters" type="button" onClick={clearFilters}>Limpar filtros<Icon name="close" /></button>}
+            {(filtering || invalidQuantity) && <button className="market-clear-filters" type="button" onClick={clearFilters}>Limpar filtros<Icon name="close" /></button>}
           </div>
           <div className="market-filter-grid">
             <div role="group" aria-labelledby="market-type-title" className={`market-filter-card${filters.types.length ? ' is-selected' : ''}`}>
@@ -124,7 +123,7 @@ export function MarketplacePage() {
             </div>
             <div role="group" aria-labelledby="market-lot-title" className={`market-filter-card${filters.minQuantity || filters.maxQuantity ? ' is-selected' : ''}`}>
               <h3 id="market-lot-title"><Icon name="box" />Lote disponível</h3><p>Defina a quantidade total do lote</p>
-              <QuantityRangeFields idPrefix="market-lot" value={filters} onChange={setFilters} />
+              <QuantityRangeFields idPrefix="market-lot" value={{ ...filters, ...invalidQuantity }} onChange={changeQuantity} />
             </div>
             <div role="group" aria-labelledby="market-region-title" className={`market-filter-card${filters.states.length ? ' is-selected' : ''}`}>
               <h3 id="market-region-title"><Icon name="pin" />Região</h3><p>Selecione um ou mais estados</p>
@@ -138,21 +137,22 @@ export function MarketplacePage() {
           {chips.length > 0 && <div className="market-active-filters" aria-label="Filtros ativos">{chips.map(chip => <button type="button" key={chip.id} onClick={chip.remove} aria-label={`Remover filtro: ${chip.label}`}>{chip.label}<Icon name="close" /></button>)}</div>}
         </section>
 
-        <section className="offers-section" id="ofertas" aria-labelledby="offers-title">
-          <div className="section-heading">
-            <div>
-              <h2 id="offers-title">{filtering ? 'Ofertas encontradas' : 'Ofertas disponíveis'}</h2>
-              <p className="section-description">{offersDescription}</p>
-            </div>
-            {!filtering && <a className="button button-secondary view-all" href="/produtos"><Icon name="arrow" />Ver todas</a>}
-          </div>
-          <div aria-live="polite" aria-atomic="true" aria-busy={loading}>
-            {loading && <div className="offers-loading" role="status">Carregando ofertas...</div>}
-            {!loading && error && <div className="empty-offers" role="alert"><Icon name="info" /><h3>Não foi possível carregar as ofertas</h3><p>{error}</p><button type="button" className="button button-secondary" onClick={reloadOffers}>Tentar novamente</button></div>}
-            {!loading && !error && filteredOffers.length > 0 && <MarketplaceResults key={JSON.stringify([query, filters])} offers={filteredOffers} />}
-            {!loading && !error && filteredOffers.length === 0 && <div className="empty-offers"><Icon name="search" /><h3>{offers.length === 0 ? 'Ainda não há ofertas disponíveis' : 'Nenhuma oferta encontrada'}</h3><p>{offers.length === 0 ? 'Novas ofertas aparecerão aqui quando forem publicadas pelos produtores.' : 'Tente outro produto, tamanho ou região.'}</p></div>}
-          </div>
-        </section>
+        <div id="ofertas" className="market-shelves" aria-busy={loading}>
+          {loading ? <div className="offers-loading" role="status">Carregando ofertas...</div>
+            : error ? <div className="empty-offers" role="alert"><Icon name="info" /><h3>Não foi possível carregar as ofertas</h3><p>{error}</p><button className="button button-secondary" onClick={reloadOffers}>Tentar novamente</button></div>
+              : shelfOrder.map(shelf => <section key={shelf} className="offers-section" aria-labelledby={`shelf-${shelf}`}>
+                <div className="section-heading">
+                  <div><h2 id={`shelf-${shelf}`}>{shelf === 'featured' && filtering ? 'Ofertas encontradas' : shelfTitles[shelf]}</h2>
+                    <p className="section-description">{descriptions[shelf]}</p></div>
+                  <a className="button button-secondary view-all" aria-label={`Ver todas: ${shelfTitles[shelf]}`}
+                    href={catalogHref(shelf, shelf === 'regional' ? { ...filters, states: regionalStates } : filters, query)}>Ver todas <Icon name="arrow" /></a>
+                </div>
+                {shelves[shelf].length ? <div className="offer-grid">
+                  {shelves[shelf].map(offer => <MarketplaceOfferCard key={offer.id} offer={offer} />)}
+                </div> : <p className="market-shelf-empty">{emptyMessages[shelf]}</p>}
+              </section>)}
+          <footer className="market-catalog-link"><a className="button button-secondary" href="/produtos">Explorar catálogo completo de ofertas <Icon name="arrow" /></a></footer>
+        </div>
       </div>
     </main>
   )

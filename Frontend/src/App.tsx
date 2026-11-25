@@ -21,6 +21,7 @@ import { offerIdFromPath } from './data/offerDetail'
 import { useNavigation } from './hooks/useNavigation'
 import { useAuthenticatedAction } from './hooks/useAuthenticatedAction'
 import { fetchMyProfile } from './services/account'
+import { getOfferState } from './data/offerAttributes'
 import './App.css'
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage').then(module => ({ default: module.AdminPage })))
@@ -29,10 +30,11 @@ function App() {
   const { pathname, hash, handleLinkClick, navigate } = useNavigation()
   const [session, setSession] = useState<UserSession | null>(null)
   const [restoring, setRestoring] = useState(true)
-  const [accountIdentity, setAccountIdentity] = useState<{ id: string; name: string; profilePicture: string | null }>({ id: '', name: '', profilePicture: null })
+  const [accountIdentity, setAccountIdentity] = useState<{ id: string; name: string; profilePicture: string | null; state?: string }>({ id: '', name: '', profilePicture: null })
   const [loggingOut, setLoggingOut] = useState(false)
   const logoutPending = useRef(false)
-  const updateAccountName = useCallback((name: string, profilePicture: string | null = null) => setAccountIdentity({ id: session?.userId ?? '', name, profilePicture }), [session?.userId])
+  const updateAccountName = useCallback((name: string, profilePicture: string | null, location: string | null) =>
+    setAccountIdentity({ id: session?.userId ?? '', name, profilePicture, state: getOfferState(location ?? '') ?? undefined }), [session?.userId])
   const withSession = useAuthenticatedAction(session, setSession)
   const sessionUserId = session?.userId
   const isMarketplace = ['/', '/marketplace', '/marketplace/'].includes(pathname)
@@ -40,7 +42,7 @@ function App() {
   const requestedReturnTo = new URLSearchParams(window.location.search).get('returnTo')
   const staffLogin = new URLSearchParams(window.location.search).get('acesso') === 'admin'
   const adminReturn = requestedReturnTo && /^\/admin(?:\/(?:ofertas|contas|denuncias|historico))?\/?$/.test(requestedReturnTo) ? requestedReturnTo : '/admin'
-  const returnAfterAuth = requestedReturnTo?.startsWith('/produtos/') && !requestedReturnTo.startsWith('//') ? requestedReturnTo : null
+  const returnAfterAuth = requestedReturnTo && (offerIdFromPath(requestedReturnTo) || producerIdFromPath(requestedReturnTo)) ? requestedReturnTo : null
   const offerId = offerIdFromPath(pathname)
   const isProducers = ['/produtores', '/produtores/'].includes(pathname)
   const producerId = producerIdFromPath(pathname)
@@ -92,7 +94,7 @@ function App() {
     if (!sessionUserId || restoring || session?.userType === 'ADMIN') return
     let active = true
     void withSession(fetchMyProfile).then(profile => {
-      if (active) updateAccountName(profile.name, profile.profilePicture ?? null)
+      if (active) updateAccountName(profile.name, profile.profilePicture ?? null, profile.location)
     }).catch(() => {
       if (active) setAccountIdentity({ id: sessionUserId, name: '', profilePicture: null })
     })
@@ -118,7 +120,7 @@ function App() {
             </section>
           )}
         </main>
-      ) : isMarketplace ? <MarketplacePage /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} auth={withSession} restoring={restoring} navigate={navigate} onSessionChange={setSession} /> : isProducts ? <ProductsPage /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} auth={withSession} session={session} /> : isProducers ? <ProducersPage /> : isLogin ? (session && !(staffLogin && session.userType !== 'ADMIN') ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
+      ) : isMarketplace ? <MarketplacePage profileState={accountIdentity.id === sessionUserId ? accountIdentity.state : undefined} /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} auth={withSession} restoring={restoring} navigate={navigate} /> : isProducts ? <ProductsPage key={window.location.search} /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} auth={withSession} session={session} restoring={restoring} /> : isProducers ? <ProducersPage /> : isLogin ? (session && !(staffLogin && session.userType !== 'ADMIN') ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

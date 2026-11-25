@@ -1,6 +1,6 @@
 import { ApplicationError } from '../../../application/errors/ApplicationError';
 import { connection } from '../../../util/connection';
-import { OfferDAOInterface, OfferUpdateData, MarketplaceList } from '../../../domain/interfaces/offer/OfferDAOInterface';
+import { OfferDAOInterface, OfferUpdateData, MarketplaceList, MarketplaceRegion } from '../../../domain/interfaces/offer/OfferDAOInterface';
 import { publicOfferCondition } from './offerPopularity';
 import { Offer, OfferStatus } from '../../../domain/model/offer';
 import type { propsOffer } from '../../../domain/model/offer';
@@ -38,10 +38,39 @@ export class OfferDAOPostgres implements OfferDAOInterface {
         return rows.map(reconstructOffer);
     }
 
-    public async searchActive(list: MarketplaceList = 'recent'): Promise<Offer[]> {
+    public async searchActive(list: MarketplaceList = 'recent', region?: MarketplaceRegion): Promise<Offer[]> {
         const popularityOrder = list === 'recent' ? '' : `
             (SELECT COUNT(*) FROM offer_contacts WHERE offer_id = offers.id) DESC,
             COALESCE((SELECT views FROM offer_views WHERE offer_id = offers.id), 0) DESC,`;
+        if (list === 'showcase') {
+            const { rows } = await connection.query<QueryResultRow & propsOffer>(`
+                WITH eligible AS (
+                    SELECT id, weight, "createdAt",
+                        ("createdAt" BETWEEN now() - interval '24 hours' AND now()
+                            AND ($1::text IS NULL OR trim(location) ~* ('(^|[[:space:],/–-])' || $1 || '$')
+                                OR translate(lower(trim(regexp_replace(location, '^.*[,/–-]', ''))),'áâãéêíóôõúç','aaaeeiooouc')
+                                 = translate(lower($2),'áâãéêíóôõúç','aaaeeiooouc'))) AS fresh
+                    FROM offers WHERE ${publicOfferCondition}
+                ), featured AS (
+                    SELECT id FROM eligible offers ORDER BY ${popularityOrder} "createdAt" DESC, id DESC LIMIT 4
+                ), wholesale AS (
+                    SELECT id FROM eligible WHERE weight > 500 AND id NOT IN (SELECT id FROM featured)
+                    ORDER BY fresh, weight DESC, "createdAt" DESC, id DESC LIMIT 4
+                ), regional AS (
+                    SELECT id FROM eligible WHERE fresh AND id NOT IN (SELECT id FROM featured UNION ALL SELECT id FROM wholesale)
+                    ORDER BY "createdAt" DESC, id DESC LIMIT 4
+                ), picks AS (
+                    SELECT id, 'featured' AS shelf FROM featured UNION ALL
+                    SELECT id, 'wholesale' FROM wholesale UNION ALL SELECT id, 'regional' FROM regional
+                )
+                SELECT ${offerColumns}, ${coverPhotoColumn}, shelf
+                FROM offers JOIN picks USING (id)
+                ORDER BY CASE WHEN shelf='featured' THEN (SELECT count(*) FROM offer_contacts WHERE offer_id=offers.id) END DESC,
+                    CASE WHEN shelf='featured' THEN COALESCE((SELECT views FROM offer_views WHERE offer_id=offers.id), 0) END DESC,
+                    CASE WHEN shelf='wholesale' THEN weight END DESC, "createdAt" DESC, id DESC`,
+                [region?.code ?? null, region?.name ?? null]);
+            return rows.map(reconstructOffer);
+        }
         const { rows } = await connection.query<QueryResultRow & propsOffer>(
             `SELECT ${offerColumns}, ${coverPhotoColumn} FROM offers
             WHERE ${publicOfferCondition}

@@ -39,3 +39,4 @@ node_modules
 !/tests/photo-adjustment.test.ts
 !/tests/offer-photo-save.test.ts
 !/tests/catalog-filters.test.ts
+!/tests/showcase.test.ts

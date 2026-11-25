@@ -25,7 +25,7 @@ function SelectAll({ checked, partial, onChange }: { checked: boolean; partial: 
   return <input ref={ref} type="checkbox" checked={checked} onChange={onChange} aria-label="Selecionar ofertas desta página" />
 }
 export function MyOffersPage({ session, restoring, onSessionChange, onProfileLoad }: {
-  session: UserSession | null; restoring: boolean; onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string, profilePicture?: string | null) => void
+  session: UserSession | null; restoring: boolean; onSessionChange: (session: UserSession | null) => void; onProfileLoad: (name: string, profilePicture: string | null, location: string | null) => void
 }) {
   const [offers, setOffers] = useState<ManagedOffer[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,7 +51,7 @@ export function MyOffersPage({ session, restoring, onSessionChange, onProfileLoa
     Promise.resolve().then(async () => {
       setLoading(true); setLoadError('')
       const [data, profile] = await Promise.all([action(token => fetchMyOffers(token, userId)), action(fetchMyProfile)])
-      if (active) { setOffers(data); onProfileLoad(profile.name, profile.profilePicture ?? null) }
+      if (active) { setOffers(data); onProfileLoad(profile.name, profile.profilePicture ?? null, profile.location) }
     }).catch(error => { if (active) setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar suas ofertas.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }

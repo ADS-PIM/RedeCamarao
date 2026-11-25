@@ -1,8 +1,10 @@
 import { getOfferState } from './products.ts'
-import { matchesCatalogFilters, validateCatalogQuantity } from './catalogFilters.ts'
+import { catalogSearchWords, matchesCatalogSearch, matchesCatalogFilters, normalizeSearch, validateCatalogQuantity, wholesaleMinimumKg } from './catalogFilters.ts'
 import type { CatalogSelection } from './catalogFilters.ts'
 
 export type Offer = {
+  createdAt?: string
+  shelf?: 'featured' | 'wholesale' | 'regional'
   coverPhoto?: string | null
   id: string
   title: string
@@ -32,22 +34,19 @@ export type OfferProducer = {
 }
 export type OfferDetail = Offer & { createdAt: string; photos: OfferPhoto[]; producer: OfferProducer }
 
-const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-
 export function filterOffers(offers: Offer[], query: string, category: Category | CatalogSelection | null, region = '') {
   const selection = category && typeof category === 'object' ? category : null
   if (selection && validateCatalogQuantity(selection)) return []
-  const words = normalize(query.trim()).split(/\s+/).filter(Boolean)
+  const words = catalogSearchWords(query)
   return offers.filter(offer => {
-    const text = normalize(`${offer.title} ${offer.description} ${offer.type ?? ''} ${offer.location} ${offer.size} ${offer.weight} kg`)
-    const type = normalize(offer.type ?? '')
-    const size = normalize(offer.size)
-    return words.every(word => text.includes(word))
+    const type = normalizeSearch(offer.type ?? '')
+    const size = normalizeSearch(offer.size)
+    return matchesCatalogSearch(offer, words)
       && (!selection || matchesCatalogFilters(offer, selection))
       && (category !== 'gray' || type.includes('cinza'))
       && (category !== 'white' || type.includes('branco'))
       && (category !== 'large' || size.includes('grande') || size.includes('large'))
-      && (category !== 'bulk' || offer.weight > 50)
+      && (category !== 'bulk' || offer.weight > wholesaleMinimumKg)
       && (!region || getOfferState(offer.location) === region)
   })
 }

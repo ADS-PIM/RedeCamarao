@@ -5,6 +5,7 @@ import { ProductCard } from '../components/ProductCard'
 import { Pagination } from '../components/Pagination'
 import { ProductFilters } from '../components/ProductFilters'
 import { useMarketplaceOffers } from '../hooks/useMarketplaceOffers'
+import { readCatalogEntry, matchesShelf, shelfTitles } from '../data/showcase'
 import { formatPrice } from '../data/marketplace'
 import { emptyProductFilters, filterProductOffers, parseProductPrice, productsPerPage, quantityOptions, sizeOptions, sortProductOffers, validateProductPrices } from '../data/products'
 import type { ProductFilters as Filters, ProductSort } from '../data/products'
@@ -27,20 +28,24 @@ function scrollToResults(focus = false) {
 }
 
 export function ProductsPage() {
-  const { offers, loading, error, reloadOffers } = useMarketplaceOffers()
-  const [input, setInput] = useState('')
-  const [query, setQuery] = useState('')
-  const [draft, setDraft] = useState<Filters>(emptyProductFilters)
-  const [filters, setFilters] = useState<Filters>(emptyProductFilters)
+  const { offers, loadedAt, loading, error, reloadOffers } = useMarketplaceOffers()
+  const [entry] = useState(() => readCatalogEntry(window.location.search))
+  const [shelf, setShelf] = useState(entry.shelf)
+  const [input, setInput] = useState(entry.query)
+  const [query, setQuery] = useState(entry.query)
+  const [draft, setDraft] = useState<Filters>({ ...emptyProductFilters, ...entry.selection })
+  const [filters, setFilters] = useState<Filters>(draft)
   const [priceError, setPriceError] = useState<ReturnType<typeof validateProductPrices>>(null)
   const [sort, setSort] = useState<ProductSort>('recent')
   const [page, setPage] = useState(1)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const results = sortProductOffers(filterProductOffers(offers, query, filters), sort)
+  const sectionOffers = shelf === 'featured' ? offers : offers.filter(offer => matchesShelf(offer, shelf, loadedAt))
+  const results = sortProductOffers(filterProductOffers(sectionOffers, query, filters), sort)
   const pageCount = Math.max(1, Math.ceil(results.length / productsPerPage))
   const currentPage = Math.min(page, pageCount)
   const visible = results.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage)
   const chips: { id: string; label: string; remove: () => void }[] = []
+  if (shelf !== 'featured') chips.push({ id: 'section', label: shelfTitles[shelf], remove: () => { setShelf('featured'); setPage(1) } })
 
   function removeApplied(key: keyof Filters, value?: string) {
     setFilters(current => removeFilter(current, key, value))
@@ -62,6 +67,7 @@ export function ProductsPage() {
   if (filters.maxPrice) chips.push({ id: 'maxPrice', label: `Até ${formatPrice(parseProductPrice(filters.maxPrice)!)}`, remove: () => removeApplied('maxPrice') })
 
   function clearFilters() {
+    setShelf('featured')
     setInput(''); setQuery(''); setDraft(emptyProductFilters); setFilters(emptyProductFilters); setPriceError(null); setPage(1)
   }
 
@@ -119,7 +125,7 @@ export function ProductsPage() {
           <Icon name={filtersOpen ? 'close' : 'filters'} />{filtersOpen ? 'Fechar filtros' : 'Filtrar ofertas'}
         </button>
         <aside className={`products-sidebar${filtersOpen ? ' is-open' : ''}`} aria-label="Filtros de produtos">
-          <ProductFilters offers={offers} value={draft} unavailable={loading || Boolean(error)} loading={loading} priceError={priceError}
+          <ProductFilters offers={sectionOffers} query={query} applied={filters} value={draft} unavailable={loading || Boolean(error)} loading={loading} priceError={priceError}
             onChange={changeFilters} onClear={clearFilters} />
         </aside>
         <section id="product-results" className="product-results" aria-label="Ofertas disponíveis" tabIndex={-1}>
