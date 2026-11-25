@@ -18,22 +18,18 @@ type Props = {
 
 export function WhatsAppContact({ producerId, offerId, session, restoring, auth, message, className }: Props) {
   const [opening, setOpening] = useState(false)
-  const [showAccountPrompt, setShowAccountPrompt] = useState(false)
   const [feedback, setFeedback] = useState('')
   const pending = useRef(false)
   const returnTo = window.location.pathname
   const loginHref = `/entrar?returnTo=${encodeURIComponent(returnTo)}`
-  const registerHref = `/registro?returnTo=${encodeURIComponent(returnTo)}`
 
   async function openWhatsApp() {
     if (restoring || pending.current) return
-    setShowAccountPrompt(false)
-    setFeedback('')
-
     if (!session) {
-      setShowAccountPrompt(true)
+      window.location.assign(loginHref)
       return
     }
+    setFeedback('')
     if (session.userType === 'ADMIN') {
       setFeedback('O acesso aos contatos é exclusivo para contas de comprador ou produtor.')
       return
@@ -68,9 +64,7 @@ export function WhatsAppContact({ producerId, offerId, session, restoring, auth,
       <button type="button" className={className} disabled={restoring || opening} onClick={openWhatsApp}>
         <Icon name="whatsapp" />{restoring ? 'Verificando acesso...' : opening ? 'Abrindo WhatsApp...' : 'Conversar pelo WhatsApp'}
       </button>
-      {(showAccountPrompt || feedback) && <p className="whatsapp-contact-status" role="status">
-        {showAccountPrompt ? <>Para acessar o WhatsApp do produtor, <a href={loginHref}>entre</a> ou <a href={registerHref}>crie uma conta</a>.</> : feedback}
-      </p>}
+      {feedback && <p className="whatsapp-contact-status" role="status">{feedback}</p>}
     </div>
   )
 }
