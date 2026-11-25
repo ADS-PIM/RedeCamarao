@@ -12,20 +12,15 @@ export interface RefreshTokenInterface {
     deleteByUserId(userId: string): Promise<void>
 }
 
-export type AdminTokenRotation = {
+export type RefreshTokenRotation = {
     previousToken: string;
     previousId: string;
-    adminId: string;
+    ownerId: string;
     id: string;
     token: string;
     expiresAt: Date;
 }
 
-export interface AdminRefreshTokenInterface extends RefreshTokenInterface {
-    rotate(rotation: AdminTokenRotation): Promise<boolean>
-}
-
-export interface ConsumableRefreshTokenInterface extends RefreshTokenInterface {
-    // Returns a valid token and invalidates it in the same transaction.
-    consume(token: string): Promise<RefreshTokenRow | null>
+export interface RotatingRefreshTokenInterface extends RefreshTokenInterface {
+    rotate(rotation: RefreshTokenRotation): Promise<{ id: string; expiresAt: Date } | null>
 }

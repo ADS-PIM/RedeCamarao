@@ -1,11 +1,9 @@
-import { ConsumableRefreshTokenInterface, RefreshTokenRow } from '../../../domain/interfaces/RefreshTokenDAOInterface';
+import type { RefreshTokenRotation, RefreshTokenRow, RotatingRefreshTokenInterface } from '../../../domain/interfaces/RefreshTokenDAOInterface';
 import { connection } from '../../../util/connection';
 import type { QueryResultRow } from 'pg';
-import { createHash } from 'node:crypto';
+import { hashToken, matchesRefreshCookie, rotateRefreshToken } from './refreshTokenRotation';
 
-const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
-
-export class UserRefreshTokenDAOPostgres implements ConsumableRefreshTokenInterface {
+export class UserRefreshTokenDAOPostgres implements RotatingRefreshTokenInterface {
     async create(id: string, token: string, userId: string, expiresAt: Date): Promise<void> {
         try {
             await connection.query(
@@ -32,43 +30,14 @@ export class UserRefreshTokenDAOPostgres implements ConsumableRefreshTokenInterf
         }
     }
 
-    async consume(token: string): Promise<RefreshTokenRow | null> {
-        const db = await connection.connect();
-
-        try {
-            await db.query('BEGIN');
-
-            const { rows } = await db.query<QueryResultRow>(
-                'SELECT id, "userId" FROM user_refresh_tokens WHERE "tokenHash" = $1 AND "revokedAt" IS NULL AND "expiresAt" > CURRENT_TIMESTAMP FOR UPDATE',
-                [hashToken(token)]
-            );
-
-            if (rows.length === 0) {
-                await db.query('ROLLBACK');
-                return null;
-            }
-
-            await db.query(
-                'UPDATE user_refresh_tokens SET "revokedAt" = CURRENT_TIMESTAMP WHERE id = $1',
-                [rows[0].id]
-            );
-
-            await db.query('COMMIT');
-
-            return { id: String(rows[0].id), userId: String(rows[0].userId) };
-        } catch (error) {
-            await db.query('ROLLBACK');
-            console.error('Error consuming user refresh token:', error);
-            throw new Error('Failed to consume user refresh token');
-        } finally {
-            db.release();
-        }
+    rotate(rotation: RefreshTokenRotation) {
+        return rotateRefreshToken('user_refresh_tokens', rotation);
     }
 
     async deleteByToken(token: string): Promise<void> {
         try {
             await connection.query(
-                'UPDATE user_refresh_tokens SET "revokedAt" = CURRENT_TIMESTAMP WHERE "tokenHash" = $1 AND "revokedAt" IS NULL',
+                `UPDATE user_refresh_tokens SET "revokedAt" = CURRENT_TIMESTAMP WHERE ${matchesRefreshCookie} AND "revokedAt" IS NULL`,
                 [hashToken(token)]
             );
         } catch (error) {

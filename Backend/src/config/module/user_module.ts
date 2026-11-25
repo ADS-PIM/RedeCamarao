@@ -16,7 +16,7 @@ import { UpdateUser } from '../../application/usecase/user/UpdateUserUseCase';
 import { DeleteUser } from '../../application/usecase/user/DeleteUserUseCase'
 
 import { CreateRefreshToken } from '../../application/usecase/refresh_token/CreateRefreshTokenUseCase';
-import { ConsumeRefreshToken } from '../../application/usecase/refresh_token/ConsumeRefreshTokenUseCase';
+import { RotateRefreshToken } from '../../application/usecase/refresh_token/RotateRefreshTokenUseCase';
 import { DeleteByToken } from '../../application/usecase/refresh_token/DeleteByTokenUseCase';
 import { DeleteByUserId } from '../../application/usecase/refresh_token/DeleteByUserIdUseCase';
 
@@ -44,9 +44,7 @@ const createRefreshToken = new CreateRefreshToken(
     userRefreshTokenDAO
 );
 
-const consumeRefreshToken = new ConsumeRefreshToken(
-    userRefreshTokenDAO
-);
+const rotateRefreshToken = new RotateRefreshToken(userRefreshTokenDAO, 'userId');
 
 const deleteByToken = new DeleteByToken(
     userRefreshTokenDAO
@@ -65,7 +63,7 @@ export const userController = new UserController(
     updateUser,
     deleteUser,
     createRefreshToken,
-    consumeRefreshToken,
+    rotateRefreshToken,
     deleteByToken,
     deleteByUserId
 );

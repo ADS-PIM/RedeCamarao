@@ -7,6 +7,7 @@ import { PasswordResetDAOPostgres } from '../../infra/bd/postgres/passwordReset.
 import { RefreshTokenDAOPostgres } from "../../infra/bd/postgres/adminRefreshToken.Postgres.dao";
 
 import { CreateRefreshToken } from "../../application/usecase/refresh_token/CreateRefreshTokenUseCase";
+import { RotateRefreshToken } from "../../application/usecase/refresh_token/RotateRefreshTokenUseCase";
 import { DeleteByToken } from "../../application/usecase/refresh_token/DeleteByTokenUseCase";
 import { SearchByEmailAdmin } from '../../application/usecase/admin/SearchAdminByEmailUseCase';
 import { SearchByIdAdmin } from '../../application/usecase/admin/SearchAdminByIdUseCase';
@@ -37,7 +38,7 @@ export const adminController = new AdminController(
     searchByIdAdmin,
     searchPublicById,
     createRefreshToken,
-    rotation => refreshTokenDAO.rotate(rotation),
+    new RotateRefreshToken(refreshTokenDAO, 'adminId'),
     deleteByToken,
     updateAdmin,
     deleteAdmin,

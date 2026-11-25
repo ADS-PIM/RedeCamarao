@@ -1,6 +1,8 @@
 node_modules
 /uploads/
-/test
+/test/*
+!/test/refresh-rotation.test.cjs
+test/
 .env
 # Testes locais
 

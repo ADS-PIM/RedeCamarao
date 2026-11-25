@@ -21,7 +21,7 @@ import { UpdateAdmin } from '../../../../application/usecase/admin/UpdateAdminUs
 
 import { CreateRefreshToken } from '../../../../application/usecase/refresh_token/CreateRefreshTokenUseCase';
 import { DeleteByToken } from '../../../../application/usecase/refresh_token/DeleteByTokenUseCase';
-import type { AdminRefreshTokenInterface } from '../../../../domain/interfaces/RefreshTokenDAOInterface';
+import { RotateRefreshToken } from '../../../../application/usecase/refresh_token/RotateRefreshTokenUseCase';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
@@ -41,7 +41,7 @@ export class AdminController {
         private searchByIdAdmin: SearchByIdAdmin,
         private searchPublicById: SearchPublicById,
         private createRefreshToken: CreateRefreshToken,
-        private rotateRefreshToken: AdminRefreshTokenInterface['rotate'],
+        private rotateRefreshToken: RotateRefreshToken,
         private deleteByToken: DeleteByToken,
         private updateAdmin: UpdateAdmin,
         private deleteAdmin: DeleteAdmin,
@@ -117,7 +117,6 @@ export class AdminController {
             try {
                 payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
             } catch (error) {
-                await this.deleteByToken.execute(refreshToken).catch(() => {});
                 return res.status(401).json({ message: 'Invalid or expired refresh token' });
             }
 
@@ -131,14 +130,9 @@ export class AdminController {
             if (!current?.active) return res.status(401).json({ error: 'Sessão encerrada.' });
             const newAccessToken = jwt.sign({ adminId, role: current.role, amr: ['pwd'] }, process.env.JWT_ACCESS_SECRET, { expiresIn: '5m' });
 
-            const newRefreshTokenId = crypto.randomUUID();
-            const newRefreshToken = jwt.sign({ adminId, role: current.role, amr: ['pwd'] }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d', jwtid: newRefreshTokenId });
-            const newRefreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-            const rotated = await this.rotateRefreshToken({ previousToken: refreshToken, previousId: payload.jti, adminId,
-                id: newRefreshTokenId, token: newRefreshToken, expiresAt: newRefreshExpiresAt });
-            if (!rotated) return res.status(401).json({ error: 'Sessão encerrada.' });
-
-            res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
+            const newRefreshToken = await this.rotateRefreshToken.execute(refreshToken, payload.jti, adminId, process.env.JWT_REFRESH_SECRET);
+            if (!newRefreshToken) return res.status(401).json({ error: 'Sessão encerrada.' });
+            if (newRefreshToken !== refreshToken) res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
             return res.status(200).json({ accessToken: newAccessToken, userId: adminId, userType: 'ADMIN', name: current.name, role: current.role });
         } catch (error: any) {
             console.error('Error during token refresh:', error);

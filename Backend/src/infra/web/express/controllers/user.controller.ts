@@ -23,7 +23,7 @@ import { UpdateUser } from '../../../../application/usecase/user/UpdateUserUseCa
 import { DeleteUser } from '../../../../application/usecase/user/DeleteUserUseCase';
 
 import { CreateRefreshToken } from '../../../../application/usecase/refresh_token/CreateRefreshTokenUseCase';
-import { ConsumeRefreshToken } from '../../../../application/usecase/refresh_token/ConsumeRefreshTokenUseCase';
+import { RotateRefreshToken } from '../../../../application/usecase/refresh_token/RotateRefreshTokenUseCase';
 import { DeleteByToken } from '../../../../application/usecase/refresh_token/DeleteByTokenUseCase';
 import { DeleteByUserId } from '../../../../application/usecase/refresh_token/DeleteByUserIdUseCase';
 
@@ -60,7 +60,7 @@ export class UserController {
         private deleteUser: DeleteUser,
 
         private createRefreshToken: CreateRefreshToken,
-        private consumeRefreshToken: ConsumeRefreshToken,
+        private rotateRefreshToken: RotateRefreshToken,
         private deleteByToken: DeleteByToken,
         private deleteByUserId: DeleteByUserId
     ) {}
@@ -176,16 +176,10 @@ export class UserController {
             try {
                 payload = jwt.verify(refreshToken, refreshSecret);
             } catch {
-                await this.deleteByToken.execute(refreshToken).catch(() => {});
                 return res.status(401).json({ error: 'Invalid or expired refresh token' });
             }
 
             if (typeof payload === 'string' || typeof payload.userId !== 'string' || !payload.userId || !payload.jti) {
-                return res.status(401).json({ error: 'Invalid refresh token' });
-            }
-
-            const storedToken = await this.consumeRefreshToken.execute(refreshToken);
-            if (!storedToken || storedToken.id !== payload.jti || storedToken.userId !== payload.userId) {
                 return res.status(401).json({ error: 'Invalid refresh token' });
             }
 
@@ -198,15 +192,9 @@ export class UserController {
                 { userId: user.id, userType: user.userType }, accessSecret, { expiresIn: '5m' }
             );
 
-            const newRefreshTokenId = randomUUID();
-            const newRefreshToken = jwt.sign(
-                { userId: user.id, userType: user.userType }, refreshSecret, { expiresIn: '7d', jwtid: newRefreshTokenId }
-            );
-            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-            await this.createRefreshToken.execute({ id: newRefreshTokenId, userId: user.id, token: newRefreshToken, expiresAt });
-
-            res.cookie('userRefreshToken', newRefreshToken, refreshCookieOptions);
+            const newRefreshToken = await this.rotateRefreshToken.execute(refreshToken, payload.jti, user.id, refreshSecret);
+            if (!newRefreshToken) return res.status(401).json({ error: 'Invalid refresh token' });
+            if (newRefreshToken !== refreshToken) res.cookie('userRefreshToken', newRefreshToken, refreshCookieOptions);
             return res.status(200).json({ accessToken, userId: user.id, userType: user.userType });
         } catch (error: any) {
             console.error('Error refreshing token:', error);

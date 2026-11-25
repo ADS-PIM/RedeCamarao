@@ -30,6 +30,8 @@ function App() {
   const { pathname, hash, handleLinkClick, navigate } = useNavigation()
   const [session, setSession] = useState<UserSession | null>(null)
   const [restoring, setRestoring] = useState(true)
+  const [restoreError, setRestoreError] = useState('')
+  const [restoreAttempt, setRestoreAttempt] = useState(0)
   const [accountIdentity, setAccountIdentity] = useState<{ id: string; name: string; profilePicture: string | null; state?: string }>({ id: '', name: '', profilePicture: null })
   const [loggingOut, setLoggingOut] = useState(false)
   const logoutPending = useRef(false)
@@ -85,10 +87,18 @@ function App() {
   useEffect(() => {
     let active = true
     restoreSession().then(value => { if (active) setSession(value) })
-      .catch(() => { /* An unavailable or expired session leaves the login form available. */ })
+      .catch((error: unknown) => {
+        if (active) setRestoreError(error instanceof Error ? error.message : 'Não foi possível recuperar sua sessão.')
+      })
       .finally(() => { if (active) setRestoring(false) })
     return () => { active = false }
-  }, [])
+  }, [restoreAttempt])
+
+  function retrySession() {
+    setRestoreError('')
+    setRestoring(true)
+    setRestoreAttempt(attempt => attempt + 1)
+  }
 
   useEffect(() => {
     if (!sessionUserId || restoring || session?.userType === 'ADMIN') return
@@ -104,9 +114,17 @@ function App() {
   return (
     <div className={`app-shell${isMarketplace ? ' marketplace-shell' : ''}${accountNavigation ? ' account-shell' : ''}`} onClick={handleLinkClick}>
       <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-      <Header pending={restoring || Boolean(session && session.userType !== 'ADMIN' && accountIdentity.id !== session.userId)} authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} adminArea={isAdminArea} producer={session?.userType === 'PRODUCER'} administrator={session?.userType === 'ADMIN'} moderator={session?.role === 'ADMIN'} accountName={session?.userType === 'ADMIN' ? session.name : accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onLogout={handleLogout} loggingOut={loggingOut} />
+      <Header pending={restoring || Boolean(session && session.userType !== 'ADMIN' && accountIdentity.id !== session.userId)} authenticated={Boolean(session)} marketplace={isMarketplace} products={isProducts || Boolean(offerId)} producers={isProducers || Boolean(producerId)} adminArea={isAdminArea} producer={session?.userType === 'PRODUCER'} administrator={session?.userType === 'ADMIN'} moderator={session?.role === 'ADMIN'} accountName={session?.userType === 'ADMIN' ? session.name : accountIdentity.id === session?.userId ? accountIdentity.name : ''} profilePicture={accountIdentity.id === session?.userId ? accountIdentity.profilePicture : null} onRetrySession={restoreError && !session ? retrySession : undefined} onLogout={handleLogout} loggingOut={loggingOut} />
       {accountNavigation}
-      {editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
+      {restoreError && !session && (isAccount || isOfferManagement || isAdminArea) ? (
+        <main id="main-content" className="account-main">
+          <section className="container account-status">
+            <h1>Não foi possível verificar sua sessão</h1>
+            <p role="alert">{restoreError}</p>
+            <button type="button" className="button button-primary" onClick={retrySession}>Tentar novamente</button>
+          </section>
+        </main>
+      ) : editingOfferId || isNewOffer ? <OfferEditorPage key={`${session?.userId ?? 'anonymous'}:${editingOfferId ?? 'new'}`} offerId={editingOfferId ?? undefined} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} onCreated={navigate} /> : isMyOffers ? <MyOffersPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : <>
       {isAdminArea ? (
         session?.userType === 'ADMIN' && !restoring ? <Suspense fallback={<main id="main-content" className="container account-status" role="status">Carregando área administrativa…</main>}><AdminPage key={session.userId + pathname + window.location.search} pathname={pathname} auth={withSession} session={session}
           onNameSaved={name => setSession(current => current?.userType === 'ADMIN' && current.userId === session.userId ? { ...current, name } : current)} /></Suspense> :
@@ -121,7 +139,7 @@ function App() {
             </section>
           )}
         </main>
-      ) : isMarketplace ? <MarketplacePage profileState={accountIdentity.id === sessionUserId ? accountIdentity.state : undefined} /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} auth={withSession} restoring={restoring} navigate={navigate} /> : isProducts ? <ProductsPage key={window.location.search} /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} auth={withSession} session={session} restoring={restoring} /> : isProducers ? <ProducersPage /> : isLogin ? (session && !(staffLogin && session.userType !== 'ADMIN') ? null : <LoginPage restoring={restoring} onSessionChange={setSession} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
+      ) : isMarketplace ? <MarketplacePage profileState={accountIdentity.id === sessionUserId ? accountIdentity.state : undefined} /> : offerId ? <OfferPage key={offerId} offerId={offerId} session={session} auth={withSession} restoring={restoring} navigate={navigate} /> : isProducts ? <ProductsPage key={window.location.search} /> : producerId ? <ProducerProfilePage key={producerId} producerId={producerId} auth={withSession} session={session} restoring={restoring} /> : isProducers ? <ProducersPage /> : isLogin ? (session && !(staffLogin && session.userType !== 'ADMIN') ? null : <LoginPage restoring={restoring} onSessionChange={value => { setRestoreError(''); setSession(value) }} returnTo={returnAfterAuth ?? undefined} />) : isRegister ? <RegisterPage returnTo={returnAfterAuth ?? undefined} /> : isAccount ? <AccountPage key={session?.userId ?? 'anonymous'} session={session} restoring={restoring} onSessionChange={setSession} onProfileLoad={updateAccountName} /> : (
         <main id="main-content" className="unavailable-page container">
           <h1>Esta página ainda não está disponível.</h1>
           <p>Você já pode criar sua conta na RedeCamarão.</p>

@@ -20,6 +20,7 @@ CREATE TABLE user_refresh_tokens (
     id char(36) not null,
     "userId" char(36) not null,
     "tokenHash" char(64) not null,
+    "previousTokenHash" char(64),
     "createdAt" TIMESTAMPTZ not null default current_timestamp,
     "expiresAt" TIMESTAMPTZ not null,
     "revokedAt" TIMESTAMPTZ default NULL,
@@ -76,6 +77,7 @@ create table "refresh_tokens" (
     "id" char(36) not null,
     "adminId" char(36) not null,
     "tokenHash" char(64) not null,
+    "previousTokenHash" char(64),
     "createdAt" TIMESTAMPTZ not null default current_timestamp,
     "expiresAt" TIMESTAMPTZ not null,
     "revokedAt" TIMESTAMPTZ default null,
@@ -109,6 +111,10 @@ CREATE INDEX offers_user_id_idx ON offers ("userId");
 CREATE INDEX offer_photos_offer_id_idx ON "offerPhotos" ("offerId");
 CREATE INDEX user_refresh_tokens_user_id_idx ON user_refresh_tokens ("userId");
 CREATE INDEX refresh_tokens_admin_id_idx ON refresh_tokens ("adminId");
+CREATE INDEX user_refresh_tokens_previous_hash_idx ON user_refresh_tokens ("previousTokenHash")
+    WHERE "previousTokenHash" IS NOT NULL AND "revokedAt" IS NULL;
+CREATE INDEX refresh_tokens_previous_hash_idx ON refresh_tokens ("previousTokenHash") WHERE "previousTokenHash" IS NOT NULL;
+CREATE INDEX refresh_tokens_current_hash_idx ON refresh_tokens ("tokenHash");
 CREATE INDEX rate_limit_buckets_expires_at_ms_idx ON rate_limit_buckets (expires_at_ms);
 
 CREATE FUNCTION set_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$

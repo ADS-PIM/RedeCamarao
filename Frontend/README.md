@@ -130,7 +130,8 @@ Em desenvolvimento, o frontend usa automaticamente `http://localhost:3001`, inde
 - E-mail e senha com validações ao sair do campo e ao enviar, botão de mostrar/ocultar senha e bloqueio de envios duplicados.
 - Envio para `POST /users/login` com `credentials: 'include'`, usando a mesma `VITE_API_URL` do cadastro. Erros de credenciais, limite de tentativas e conexão são exibidos em português.
 - O access token fica apenas no estado em memória. Senhas e tokens não são gravados em `localStorage` ou `sessionStorage`. O backend gerencia o refresh token por cookie HttpOnly.
-- Ao abrir o app, `POST /users/refresh` tenta restaurar a sessão; chamadas simultâneas compartilham a mesma requisição para evitar rotação duplicada. Uma sessão expirada ou um servidor indisponível libera o formulário para novo login.
+- Ao abrir o app, `POST /users/refresh` tenta restaurar a sessão. Se retornar 401, o app verifica a sessão administrativa em `POST /admin/refresh`. Uma falha temporária permite tentar novamente.
+- Durante os 30 segundos após a rotação, recargas e abas que ainda enviam o cookie imediatamente anterior recebem o mesmo substituto. O logout encerra a sessão com qualquer um desses dois cookies durante esse período.
 - O sucesso mostra a confirmação de acesso e a opção de sair (`POST /users/logout`). O cabeçalho passa a exibir “Minha conta”, e a sessão permanece disponível ao navegar pelo header.
 - O backend deve permitir a origem exata do frontend em `FRONTEND_URL` e credenciais no CORS. Cookies em produção exigem HTTPS conforme a configuração existente do backend.
 

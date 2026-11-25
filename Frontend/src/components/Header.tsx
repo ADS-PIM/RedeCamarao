@@ -4,7 +4,7 @@ import { Avatar } from './Avatar'
 import { Brand } from './Brand'
 import './Header.css'
 
-export function Header({ pending = false, authenticated = false, marketplace = false, products = false, producers = false, adminArea = false, producer = false, administrator = false, moderator = false, accountName = '', profilePicture, onLogout, loggingOut = false }: { pending?: boolean; authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; adminArea?: boolean; producer?: boolean; administrator?: boolean; moderator?: boolean; accountName?: string; profilePicture?: string | null; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
+export function Header({ pending = false, authenticated = false, marketplace = false, products = false, producers = false, adminArea = false, producer = false, administrator = false, moderator = false, accountName = '', profilePicture, onLogout, onRetrySession, loggingOut = false }: { pending?: boolean; authenticated?: boolean; marketplace?: boolean; products?: boolean; producers?: boolean; adminArea?: boolean; producer?: boolean; administrator?: boolean; moderator?: boolean; accountName?: string; profilePicture?: string | null; onRetrySession?: () => void; onLogout?: () => Promise<void>; loggingOut?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const [headerHidden, setHeaderHidden] = useState(() => window.scrollY > (window.innerWidth <= 1240 ? 64 : 80))
@@ -117,7 +117,9 @@ export function Header({ pending = false, authenticated = false, marketplace = f
                 <button type="button" className="header-logout" disabled={loggingOut} onClick={() => { setLogoutError(''); void onLogout?.().catch(error => setLogoutError(error instanceof Error ? error.message : 'Não foi possível sair agora.')) }}><Icon name="logout" />{loggingOut ? 'Saindo...' : 'Sair da conta'}</button>
                 {logoutError && <p className="header-logout-error" role="alert">{logoutError}</p>}
               </div>
-            </details> : authenticated ? <a className="button button-primary" href="/painel" onClick={() => setMenuOpen(false)}>Minha conta</a> : <>
+            </details> : authenticated ? <a className="button button-primary" href="/painel" onClick={() => setMenuOpen(false)}>Minha conta</a> : onRetrySession ? (
+              <button type="button" className="button button-primary" onClick={onRetrySession}>Tentar recuperar sessão</button>
+            ) : <>
               <a className="login-link" href="/entrar" onClick={() => setMenuOpen(false)}>Entrar</a>
               <a className="button button-primary" href="/registro" onClick={() => setMenuOpen(false)}>Criar conta</a>
             </>}

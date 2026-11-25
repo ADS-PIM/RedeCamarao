@@ -65,13 +65,15 @@ export function restoreSession(baseUrl = apiBaseUrl): Promise<UserSession | null
   if (!baseUrl) return Promise.resolve(null)
   // Share the request so React Strict Mode does not rotate the same cookie twice.
   refreshRequest ??= (async () => {
+    const unavailable = 'Não foi possível recuperar sua sessão agora. Tente novamente em instantes.'
     const userResponse = await request('users', 'refresh', undefined, baseUrl)
     if (userResponse.ok) return readSession(userResponse)
+    if (userResponse.status !== 401) throw new Error(unavailable)
 
     const adminResponse = await request('admin', 'refresh', undefined, baseUrl)
     if (adminResponse.ok) return readSession(adminResponse)
-    if (userResponse.status === 401 && adminResponse.status === 401) return null
-    throw new Error('Não foi possível recuperar sua sessão. Entre novamente.')
+    if (adminResponse.status === 401) return null
+    throw new Error(unavailable)
   })().finally(() => { refreshRequest = undefined })
   return refreshRequest
 }
