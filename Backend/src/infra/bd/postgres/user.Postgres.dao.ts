@@ -80,11 +80,11 @@ export class UserDAOPostgres implements UserDAOInterface, PublicProducerDAOInter
                 email,
                 "hashPassword",
                 "CPF_CNPJ",
-                user_type, account_status,
+                user_type,
                 location,
                 phone,
                 "createdAt"
-            ) VALUES ($1, $2, $3, $4, $5, $6, $10, $7, $8, $9)`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
             [
                 user.id,
                 user.name,
@@ -94,8 +94,7 @@ export class UserDAOPostgres implements UserDAOInterface, PublicProducerDAOInter
                 user.userType,
                 user.location,
                 user.phone,
-                user.createdAt,
-                user.userType === UserType.PRODUCER ? 'PENDING' : 'ACTIVE'
+                user.createdAt
             ]
         );
     }

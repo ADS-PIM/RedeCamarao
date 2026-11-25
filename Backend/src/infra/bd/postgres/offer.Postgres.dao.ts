@@ -1,6 +1,7 @@
 import { ApplicationError } from '../../../application/errors/ApplicationError';
 import { connection } from '../../../util/connection';
-import { OfferDAOInterface, OfferUpdateData } from '../../../domain/interfaces/offer/OfferDAOInterface';
+import { OfferDAOInterface, OfferUpdateData, MarketplaceList } from '../../../domain/interfaces/offer/OfferDAOInterface';
+import { publicOfferCondition } from './offerPopularity';
 import { Offer, OfferStatus } from '../../../domain/model/offer';
 import type { propsOffer } from '../../../domain/model/offer';
 import type { QueryResultRow } from 'pg';
@@ -37,13 +38,15 @@ export class OfferDAOPostgres implements OfferDAOInterface {
         return rows.map(reconstructOffer);
     }
 
-    public async searchActive(): Promise<Offer[]> {
+    public async searchActive(list: MarketplaceList = 'recent'): Promise<Offer[]> {
+        const popularityOrder = list === 'recent' ? '' : `
+            (SELECT COUNT(*) FROM offer_contacts WHERE offer_id = offers.id) DESC,
+            COALESCE((SELECT views FROM offer_views WHERE offer_id = offers.id), 0) DESC,`;
         const { rows } = await connection.query<QueryResultRow & propsOffer>(
             `SELECT ${offerColumns}, ${coverPhotoColumn} FROM offers
-            WHERE status = 'ATIVO' AND NOT admin_disabled AND EXISTS (SELECT 1 FROM users u WHERE u.id=offers."userId" AND u.account_status='ACTIVE')
-                AND start_availability_date <= CURRENT_DATE
-                AND end_availability_date >= CURRENT_DATE
-            ORDER BY "createdAt" DESC, id DESC`
+            WHERE ${publicOfferCondition}
+            ORDER BY ${popularityOrder} "createdAt" DESC, id DESC
+            ${list === 'featured' ? 'LIMIT 4' : ''}`
         );
 
         return rows.map(reconstructOffer);

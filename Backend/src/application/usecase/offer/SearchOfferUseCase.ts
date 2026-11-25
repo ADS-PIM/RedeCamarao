@@ -1,4 +1,4 @@
-import { OfferDAOInterface } from '../../../domain/interfaces/offer/OfferDAOInterface';
+import { MarketplaceList, OfferDAOInterface } from '../../../domain/interfaces/offer/OfferDAOInterface';
 import { OfferSearchDTO } from '../../dto/offerDTO/OfferSearchDTO';
 import { UseCase } from '../useCase';
 import { OfferStatus } from '../../../domain/model/offer';
@@ -30,8 +30,8 @@ export class SearchOffer implements UseCase<void, OfferSearchDTO[]> {
         }));
     }
 
-    public async executePublic(): Promise<PublicOfferDTO[]> {
-        const offers = await this.offerDAO.searchActive();
+    public async executePublic(list: MarketplaceList = 'recent'): Promise<PublicOfferDTO[]> {
+        const offers = await this.offerDAO.searchActive(list);
         return offers.map(offer => ({
             id: offer.id,
             title: offer.title,

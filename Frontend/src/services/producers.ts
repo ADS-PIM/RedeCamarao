@@ -35,11 +35,12 @@ export async function fetchProducerProfile(id: string, baseUrl = apiBaseUrl): Pr
   return { producer: data.producer, offers: data.offers }
 }
 
-export async function fetchProducerWhatsAppPhone(id: string, token: string, baseUrl = apiBaseUrl): Promise<string> {
+export async function fetchProducerWhatsAppPhone(id: string, token: string, baseUrl = apiBaseUrl, offerId?: string): Promise<string> {
   if (!baseUrl) throw new Error('O acesso aos contatos está temporariamente indisponível.')
   let response: Response
   try {
-    response = await fetch(`${baseUrl.replace(/\/+$/, '')}/users/producers/${encodeURIComponent(id)}/contact`, {
+    const query = offerId ? `?offerId=${encodeURIComponent(offerId)}` : ''
+    response = await fetch(`${baseUrl.replace(/\/+$/, '')}/users/producers/${encodeURIComponent(id)}/contact${query}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
       signal: AbortSignal.timeout(15000),

@@ -8,6 +8,7 @@ import './WhatsAppContact.css'
 
 type Props = {
   producerId: string
+  offerId?: string
   session: UserSession | null
   restoring: boolean
   onSessionChange: (session: UserSession | null) => void
@@ -15,7 +16,7 @@ type Props = {
   className: string
 }
 
-export function WhatsAppContact({ producerId, session, restoring, onSessionChange, message, className }: Props) {
+export function WhatsAppContact({ producerId, offerId, session, restoring, onSessionChange, message, className }: Props) {
   const [opening, setOpening] = useState(false)
   const [showAccountPrompt, setShowAccountPrompt] = useState(false)
   const [feedback, setFeedback] = useState('')
@@ -48,7 +49,7 @@ export function WhatsAppContact({ producerId, session, restoring, onSessionChang
     } catch { /* If popups are blocked, use the current tab after retrieving the contact. */ }
 
     try {
-      const phone = await withSession(token => fetchProducerWhatsAppPhone(producerId, token))
+      const phone = await withSession(token => fetchProducerWhatsAppPhone(producerId, token, undefined, offerId))
       const href = producerWhatsAppHref(phone, message)
       if (!href) throw new Error('Este produtor ainda não informou um telefone válido para WhatsApp.')
       if (popup) popup.location.replace(href)

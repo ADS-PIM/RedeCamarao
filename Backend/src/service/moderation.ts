@@ -8,15 +8,13 @@ export class ModerationError extends Error {
 }
 export const actions = {
     disable: 'Oferta desativada', enable: 'Oferta reativada', remove: 'Oferta excluída',
-    ban: 'Conta banida', restore: 'Conta reativada', approve: 'Cadastro aprovado',
+    ban: 'Conta banida', restore: 'Conta reativada',
     suspend: 'Conta suspensa', review: 'Denúncia em análise', archive: 'Denúncia arquivada',
 } as const;
 type Action = keyof typeof actions;
 export const reportCategories = ['Possível fraude', 'Preço divergente', 'Produto não entregue', 'Anúncio duplicado', 'Conteúdo inadequado', 'Outro'];
-const pendingBan = 'Cadastro pendente banido';
-const pendingRestore = 'Cadastro devolvido à análise';
 const offerActions: Action[] = ['disable', 'enable', 'remove'];
-const accountActions: Action[] = ['ban', 'restore', 'approve', 'suspend'];
+const accountActions: Action[] = ['ban', 'restore', 'suspend'];
 export function requiredText(input: unknown, max: number, label: string) {
     if (typeof input !== 'string' || !input.trim() || input.trim().length > max)
         throw new ModerationError(400, 'Confira o campo ' + label + '.');
@@ -60,7 +58,7 @@ export async function moderate(actorId: string, input: Record<string, unknown>) 
         const target = fromReport ? (offerActions.includes(action) ? report.offer_id : report.account_id) : requiredText(input.targetId,36,'referência');
         let offerId: string | null = report?.offer_id ?? null;
         let accountId = report?.account_id ?? target;
-        let description: string = actions[action];
+        const description = actions[action];
         let offer;
         if (offerActions.includes(action)) {
             offerId = target;
@@ -86,19 +84,10 @@ export async function moderate(actorId: string, input: Record<string, unknown>) 
         } else if (accountActions.includes(action)) {
             if (!account) throw new ModerationError(404,'Conta não encontrada.');
             reference = 'CT-' + accountId.slice(0,8).toUpperCase();
-            const allowed: Record<string,string[]> = { ban:['ACTIVE','SUSPENDED','PENDING'], restore:['BANNED','SUSPENDED'], approve:['PENDING'], suspend:['ACTIVE'] };
+            const allowed: Record<string,string[]> = { ban:['ACTIVE','SUSPENDED'], restore:['BANNED','SUSPENDED'], suspend:['ACTIVE'] };
             if (!allowed[action].includes(account.account_status)) conflict('A situação da conta mudou. Atualize a lista.');
-            let status = action === 'ban' ? 'BANNED' : action === 'suspend' ? 'SUSPENDED' : 'ACTIVE';
-            if (action === 'ban' && account.account_status === 'PENDING') description = pendingBan;
-            if (action === 'restore' && account.account_status === 'BANNED') {
-                const lastBan = await db.query('SELECT action FROM moderation_history WHERE account_id=$1 AND action=ANY($2::text[]) ORDER BY id DESC LIMIT 1',
-                    [accountId, [actions.ban, pendingBan]]);
-                if (lastBan.rows[0]?.action === pendingBan) {
-                    status = 'PENDING';
-                    description = pendingRestore;
-                }
-            }
-            await db.query("UPDATE users SET account_status=$2, verified=CASE WHEN $3='approve' THEN true ELSE verified END WHERE id=$1",[accountId,status,action]);
+            const status = action === 'ban' ? 'BANNED' : action === 'suspend' ? 'SUSPENDED' : 'ACTIVE';
+            await db.query('UPDATE users SET account_status=$2 WHERE id=$1',[accountId,status]);
             if (status !== 'ACTIVE') {
                 await db.query('UPDATE offers SET admin_disabled=true WHERE "userId"=$1 AND NOT admin_disabled',[accountId]);
                 await db.query('DELETE FROM user_refresh_tokens WHERE "userId"=$1',[accountId]);

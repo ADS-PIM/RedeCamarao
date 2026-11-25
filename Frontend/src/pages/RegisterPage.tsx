@@ -93,7 +93,7 @@ export function RegisterPage({ returnTo }: { returnTo?: string } = {}) {
             <div className="registration-success" role="status">
               <Icon name="check" />
               <h2 ref={headingRef} tabIndex={-1}>Conta criada com sucesso!</h2>
-              <p>{profile === 'PRODUCER' ? 'Seu cadastro aguarda aprovação. Após a liberação, você poderá entrar com seu e-mail e senha.' : 'Seu cadastro foi concluído. Agora você pode entrar com seu e-mail e senha.'}</p>
+              <p>Seu cadastro foi concluído. Agora você pode entrar com seu e-mail e senha.</p>
               <a className="button button-primary" href={loginHref}>Entrar</a>
             </div>
           ) : (

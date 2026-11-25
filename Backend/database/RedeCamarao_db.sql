@@ -121,7 +121,7 @@ CREATE TRIGGER users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNC
 CREATE TRIGGER offers_updated_at BEFORE UPDATE ON offers FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 ALTER TABLE users ADD COLUMN account_status text NOT NULL DEFAULT 'ACTIVE'
-    CHECK (account_status IN ('ACTIVE','PENDING','SUSPENDED','BANNED')),
+    CHECK (account_status IN ('ACTIVE','SUSPENDED','BANNED')),
     ADD COLUMN verified boolean NOT NULL DEFAULT false;
 ALTER TABLE offers ADD COLUMN admin_disabled boolean NOT NULL DEFAULT false;
 
@@ -185,4 +185,14 @@ CREATE TABLE admin_login_codes (
     admin_id char(36) PRIMARY KEY REFERENCES administrators(id) ON DELETE CASCADE,
     challenge uuid UNIQUE NOT NULL, digest text NOT NULL, email text NOT NULL, password_stamp text NOT NULL,
     expires_at timestamptz NOT NULL, attempts integer NOT NULL DEFAULT 0
+);
+
+CREATE TABLE offer_views (
+    offer_id char(36) PRIMARY KEY REFERENCES offers(id) ON DELETE CASCADE,
+    views bigint NOT NULL DEFAULT 0
+);
+CREATE TABLE offer_contacts (
+    offer_id char(36) REFERENCES offers(id) ON DELETE CASCADE,
+    user_id char(36) REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (offer_id, user_id)
 );

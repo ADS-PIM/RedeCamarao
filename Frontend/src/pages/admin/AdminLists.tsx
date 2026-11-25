@@ -13,10 +13,10 @@ type Row = OfferRow|AccountRow|HistoryRow
 const titles = { offers:'Ofertas',accounts:'Contas',history:'Histórico de ações' }
 const descriptions = { offers:'Gerencie a publicação e a segurança das ofertas do marketplace.',accounts:'Gerencie as contas de compradores e produtores.',history:'Consulte as decisões da equipe administrativa e os motivos de cada ação.' }
 const columns = { offers:['Oferta','Produtor','Preço','Status','Denúncias','Ações'],accounts:['Conta','Perfil','Status','Cadastro','Verificação','Ações'],history:['Data e hora','Ação','Referência','Responsável','Justificativa'] }
-const verification = (a:AccountRow) => a.status==='BANNED'?'Irregular':a.status==='PENDING'?'Em análise':a.verified?'Verificada':'Sem verificação'
+const verification = (a:AccountRow) => a.status==='BANNED'?'Irregular':a.verified?'Verificada':'Sem verificação'
 const choice = (value:string):[string,string]=>[value,labels[value]]
 const offerTabs:[string,string][]=[['','Todas as ofertas'],['ATIVO','Ativas'],['REVIEW','Em análise'],['PAUSADO','Pausadas'],['DISABLED','Desativadas']]
-const accountTabs:[string,string][]=[['','Todas as contas'],['BUYER','Compradores'],['PRODUCER','Produtores'],['PENDING','Pendentes']]
+const accountTabs:[string,string][]=[['','Todas as contas'],['BUYER','Compradores'],['PRODUCER','Produtores']]
 function exportRow(row:Row) {
   if ('title' in row) return [row.code,row.title,row.producer,formatPrice(Number(row.price)),formatQuantity(Number(row.weight)),labels[row.status],row.openReports]
   if ('email' in row) return [row.code,row.name,row.email,labels[row.profile],labels[row.status],dateText(row.createdAt),verification(row)]
@@ -29,6 +29,7 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
     const search=new URLSearchParams(window.location.search)
     const f:Filters=section==='history'?{days:search.get('days')??(search.has('accountId')?'':'7')}:{}
     for (const key of ['q','status','id','accountId','sort']) if(search.get(key)) f[key]=search.get(key)!
+    if (section==='accounts' && f.status==='PENDING') delete f.status
     return f
   })
   const [page,setPage]=useState(1)
@@ -71,25 +72,24 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
     ]
     if ('email' in row) return [
       <><strong>{row.name}</strong><small>{row.email}</small></>,labels[row.profile],<Badge status={row.status}/>,dateText(row.createdAt),verification(row),
-      <div className="mod-row-actions"><button onClick={()=>setDetail(row)}>Ver conta</button>{row.status==='PENDING'?<button onClick={()=>setDetail(row)}>Analisar cadastro</button>:row.status==='BANNED'?<button onClick={()=>setDetail(row)}>Revisar banimento</button>:<button className="mod-danger-text" onClick={()=>decideAccount(row,'ban')}>Banir conta</button>}</div>,
+      <div className="mod-row-actions"><button onClick={()=>setDetail(row)}>Ver conta</button>{row.status==='BANNED'?<button onClick={()=>setDetail(row)}>Revisar banimento</button>:<button className="mod-danger-text" onClick={()=>decideAccount(row,'ban')}>Banir conta</button>}</div>,
     ]
     return [dateText(row.createdAt,true),<strong>{row.action}</strong>,row.reference,row.actor,<><strong>{row.reason}</strong><small>{row.justification}</small>{row.note&&<small>Observação interna · {row.note}</small>}</>]
   }
-  const chosenAccountTab=filters.status==='PENDING'?'PENDING':filters.profile||''
   return <>
     <PageHeading title={titles[section]} description={descriptions[section]} action={<button className="button button-secondary" onClick={exportList} disabled={exporting}><Icon name="download"/>{exporting?'Exportando…':'Exportar relatório'}</button>}/>
     {history?<aside className="mod-notice"><strong>Histórico protegido contra alterações</strong><p>Cada registro inclui responsável, data, justificativa e referência da entidade afetada.</p></aside>:
       <Metrics items={offers?[['Total de ofertas',total],['Ativas',counts.ATIVO||0],['Em análise',counts.REVIEW||0],['Pausadas',counts.PAUSADO||0],['Desativadas',counts.DISABLED||0]]:
-        [['Total de contas',total],['Ativas',counts.ACTIVE||0],['Pendentes',counts.PENDING||0],['Suspensas',counts.SUSPENDED||0],['Banidas',counts.BANNED||0]]}/>}
+        [['Total de contas',total],['Ativas',counts.ACTIVE||0],['Suspensas',counts.SUSPENDED||0],['Banidas',counts.BANNED||0]]}/>}
     <section className="mod-panel mod-list" aria-label={titles[section]}>
-      {!history&&<Tabs items={offers?offerTabs:accountTabs} value={offers?filters.status||'':chosenAccountTab} change={v=>filter(offers?{status:v}:{profile:v==='PENDING'?'':v,status:v==='PENDING'?'PENDING':''})}/>}
+      {!history&&<Tabs items={offers?offerTabs:accountTabs} value={offers?filters.status||'':filters.profile||''} change={v=>filter(offers?{status:v}:{profile:v,status:''})}/>}
       <div className="mod-toolbar">
         {history&&<><SelectFilter label="Período" value={filters.days} change={days=>filter({days})} options={[['7','Últimos 7 dias'],['30','Últimos 30 dias'],['90','Últimos 90 dias'],['','Todo o período']]}/>
           <SelectFilter label="Ação" value={filters.action||''} change={action=>filter({action})} options={[['','Todas as ações'],...options.actions.map((s):[string,string]=>[s,s])]}/>
           <SelectFilter label="Responsável" value={filters.actor||''} change={actor=>filter({actor})} options={[['','Todos os responsáveis'],...options.actors.map((a):[string,string]=>[a.id,a.name])]}/></>}
         <label className="mod-search"><Icon name="search"/><input type="search" aria-label="Buscar" placeholder={offers?'Buscar por título, código ou produtor':accounts?'Buscar por nome, e-mail ou CPF/CNPJ':'Buscar por código da conta ou oferta'} value={filters.q||''} onChange={e=>filter({q:e.target.value})}/></label>
         {offers&&<SelectFilter label="Categoria" value={filters.category||''} change={category=>filter({category})} options={[['','Categoria: todas'],...options.categories.map((s):[string,string]=>[s,s])]}/>}
-        {accounts&&<SelectFilter label="Status" value={filters.status||''} change={status=>filter({status})} options={[['','Status: todos'],...['ACTIVE','PENDING','SUSPENDED','BANNED'].map(choice)]}/>}
+        {accounts&&<SelectFilter label="Status" value={filters.status||''} change={status=>filter({status})} options={[['','Status: todos'],...['ACTIVE','SUSPENDED','BANNED'].map(choice)]}/>}
         {accounts&&<SelectFilter label="Ordenar contas" value={filters.sort||''} change={sort=>filter({sort})} options={[['','Mais recentes primeiro'],['oldest','Mais antigas primeiro']]}/>}
         {!history&&<button className="button button-secondary" aria-expanded={more} onClick={()=>setMore(!more)}><Icon name="filters"/>Mais filtros</button>}
       </div>
@@ -107,7 +107,7 @@ export function AdminLists({section,auth,superAdmin,summary,options,version,relo
     {detail&&<Dialog className="mod-dialog" titleId="details-title" onClose={closeDetail}><div className="mod-dialog-heading"><h2 id="details-title">{'name' in detail?detail.name:detail.title}</h2><button className="mod-icon" aria-label="Fechar" onClick={closeDetail}><Icon name="close"/></button></div>
       <p>{detail.code} · <Badge status={detail.status}/></p>
       {'name' in detail?<><dl className="mod-facts">{[['Perfil',labels[detail.profile]],['E-mail',detail.email],['CPF/CNPJ',detail.document],['Contato',detail.phone],['Localização',detail.location],['Cadastro',dateText(detail.createdAt)],['Verificação',verification(detail)],['Ofertas ativas',detail.activeOffers]].map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v ?? '—'}</dd></div>)}</dl>
-      <div className="mod-actions">{detail.status==='PENDING'&&<button className="button button-success" onClick={()=>decideAccount(detail,'approve')}>Aprovar cadastro</button>}
+      <div className="mod-actions">
       {['BANNED','SUSPENDED'].includes(detail.status)&&<button className="button button-success" onClick={()=>decideAccount(detail,'restore')}>Reativar conta</button>}
       {detail.status==='ACTIVE'&&<button className="button button-warning" onClick={()=>decideAccount(detail,'suspend')}>Suspender conta</button>}
       {detail.status!=='BANNED'&&<button className="button mod-danger-button" onClick={()=>decideAccount(detail,'ban')}>Banir conta</button>}</div></>:<><p>{detail.description}</p><p>{detail.producer} · {detail.location} · {formatQuantity(Number(detail.weight))} · {formatPrice(Number(detail.price))}/kg</p></>}

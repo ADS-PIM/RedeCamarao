@@ -2,7 +2,9 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Icon } from '../components/Icon'
 import { QuantityRangeFields } from '../components/QuantityRangeFields'
+import { Pagination } from '../components/Pagination'
 import { filterOffers, formatPrice } from '../data/marketplace'
+import type { Offer } from '../data/marketplace'
 import { emptyCatalogSelection, shrimpTypeOptions } from '../data/catalogFilters'
 import type { CatalogSelection } from '../data/catalogFilters'
 import { sizeOptions } from '../data/products'
@@ -20,13 +22,36 @@ function scrollToOffers() {
   document.getElementById('ofertas')?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' })
 }
 
+const offersPerPage = 4
+
+function MarketplaceResults({ offers }: { offers: Offer[] }) {
+  const [page, setPage] = useState(1)
+  const totalPages = Math.ceil(offers.length / offersPerPage)
+  const currentPage = Math.min(page, totalPages)
+  const visible = offers.slice((currentPage - 1) * offersPerPage, currentPage * offersPerPage)
+  return <>
+    <div className="offer-grid">
+      {visible.map(offer => <article className="offer-card" key={offer.id}>
+        <div className="offer-content">
+          <div className="offer-labels"><span>{offer.type || 'Camarão'}</span><span className="offer-availability"><span aria-hidden="true">●</span> Disponível</span></div>
+          <h3>{offer.title}</h3>
+          <p className="offer-description">{offer.description}</p>
+          <div className="offer-specs"><span>{offer.size} · {offer.weight} kg</span><span><Icon name="pin" />{offer.location}</span></div>
+          <div className="offer-bottom"><p className="offer-price">{formatPrice(offer.price)} <small>/ kg</small></p><a className="button button-secondary" aria-label={`Ver oferta: ${offer.title}`} href={offerHref(offer.id)}>Ver oferta</a></div>
+        </div>
+      </article>)}
+    </div>
+    <Pagination label="Páginas de ofertas" currentPage={currentPage} totalPages={totalPages} onChange={next => { setPage(next); scrollToOffers() }} />
+  </>
+}
+
 export function MarketplacePage() {
   const [input, setInput] = useState('')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<CatalogSelection>(emptyCatalogSelection)
-  const { offers, loading, error, reloadOffers } = useMarketplaceOffers()
-  const filteredOffers = filterOffers(offers, query, filters)
   const filtering = Boolean(query.trim() || filters.types.length || filters.sizes.length || filters.states.length || filters.minQuantity || filters.maxQuantity)
+  const { offers, loading, error, reloadOffers } = useMarketplaceOffers(filtering ? 'popular' : 'featured')
+  const filteredOffers = filterOffers(offers, query, filters)
   const chips = [
     ...(query ? [{ id: 'query', label: `Busca: ${query}`, remove: () => { setInput(''); setQuery('') } }] : []),
     ...shrimpTypeOptions.filter(item => filters.types.includes(item.id)).map(item => ({ id: item.id, label: item.label, remove: () => setFilters(current => ({ ...current, types: toggle(current.types, item.id) })) })),
@@ -40,7 +65,7 @@ export function MarketplacePage() {
       ? 'Consulte as ofertas dos produtores assim que a conexão for restabelecida.'
       : filtering
         ? `${filteredOffers.length} ${filteredOffers.length === 1 ? 'oferta encontrada' : 'ofertas encontradas'}${query ? ` para “${query}”` : ''}`
-        : `${offers.length} ${offers.length === 1 ? 'oferta disponível' : 'ofertas disponíveis'} para sua próxima negociação`
+        : `${offers.length} ${offers.length === 1 ? 'oferta em destaque' : 'ofertas em destaque'}`
 
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -116,24 +141,15 @@ export function MarketplacePage() {
         <section className="offers-section" id="ofertas" aria-labelledby="offers-title">
           <div className="section-heading">
             <div>
-              <p className="market-eyebrow">Ofertas ativas</p>
               <h2 id="offers-title">{filtering ? 'Ofertas encontradas' : 'Ofertas disponíveis'}</h2>
               <p className="section-description">{offersDescription}</p>
             </div>
             {!filtering && <a className="button button-secondary view-all" href="/produtos"><Icon name="arrow" />Ver todas</a>}
           </div>
-          <div className="offer-grid" aria-live="polite" aria-atomic="true" aria-busy={loading}>
+          <div aria-live="polite" aria-atomic="true" aria-busy={loading}>
             {loading && <div className="offers-loading" role="status">Carregando ofertas...</div>}
             {!loading && error && <div className="empty-offers" role="alert"><Icon name="info" /><h3>Não foi possível carregar as ofertas</h3><p>{error}</p><button type="button" className="button button-secondary" onClick={reloadOffers}>Tentar novamente</button></div>}
-            {!loading && !error && filteredOffers.map(offer => <article className="offer-card" key={offer.id}>
-              <div className="offer-content">
-                <div className="offer-labels"><span>{offer.type || 'Camarão'}</span><span className="offer-availability"><span aria-hidden="true">●</span> Disponível</span></div>
-                <h3>{offer.title}</h3>
-                <p className="offer-description">{offer.description}</p>
-                <div className="offer-specs"><span>{offer.size} · {offer.weight} kg</span><span><Icon name="pin" />{offer.location}</span></div>
-                <div className="offer-bottom"><p className="offer-price">{formatPrice(offer.price)} <small>/ kg</small></p><a className="button button-secondary" aria-label={`Ver oferta: ${offer.title}`} href={offerHref(offer.id)}>Ver oferta</a></div>
-              </div>
-            </article>)}
+            {!loading && !error && filteredOffers.length > 0 && <MarketplaceResults key={JSON.stringify([query, filters])} offers={filteredOffers} />}
             {!loading && !error && filteredOffers.length === 0 && <div className="empty-offers"><Icon name="search" /><h3>{offers.length === 0 ? 'Ainda não há ofertas disponíveis' : 'Nenhuma oferta encontrada'}</h3><p>{offers.length === 0 ? 'Novas ofertas aparecerão aqui quando forem publicadas pelos produtores.' : 'Tente outro produto, tamanho ou região.'}</p></div>}
           </div>
         </section>

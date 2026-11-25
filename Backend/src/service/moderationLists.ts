@@ -21,12 +21,11 @@ export async function summary(superAdmin: boolean) {
 }
 
 export async function overview(superAdmin: boolean) {
-    const [reports, accounts, offers, reviews, pendingReports, pendingAccounts] = await Promise.all([
+    const [reports, accounts, offers, reviews, pendingReports] = await Promise.all([
         connection.query(`SELECT count(*)::int AS "highPriority"
             FROM moderation_reports WHERE status <> 'RESOLVED' AND ${reportPriority}`),
         superAdmin ? connection.query(`SELECT
             (count(*) FILTER (WHERE "createdAt" >= now() - interval '30 days'))::int AS "newAccounts",
-            (count(*) FILTER (WHERE account_status = 'PENDING' AND "createdAt" < now() - interval '24 hours'))::int AS "olderPending",
             (count(*) FILTER (WHERE user_type = 'PRODUCER' AND account_status = 'ACTIVE'))::int AS producers,
             (count(*) FILTER (WHERE user_type = 'PRODUCER' AND account_status = 'ACTIVE' AND verified))::int AS verified
             FROM users`) : null,
@@ -43,7 +42,6 @@ export async function overview(superAdmin: boolean) {
             (count(*) FILTER (WHERE f.reviewed_at <= r.created_at + interval '24 hours'))::int AS "onTime"
         FROM first_reviews f JOIN moderation_reports r ON r.id = f.report_id`),
         listing('reports', { status: 'PENDING', size: '3' }, superAdmin),
-        superAdmin ? listing('accounts', { status: 'PENDING', sort: 'oldest', size: '2' }, true) : null,
     ]);
     return {
         highPriorityReports: reports.rows[0].highPriority,
@@ -52,7 +50,6 @@ export async function overview(superAdmin: boolean) {
         reviews: reviews.rows[0],
         pendingReports: pendingReports.rows.map(({ id, code, category, status, accountName, offerTitle, priority, createdAt }) =>
             ({ id, code, category, status, accountName, offerTitle, priority, createdAt })),
-        pendingAccounts: pendingAccounts?.rows.map(({ id, code, name, createdAt }) => ({ id, code, name, createdAt })) ?? [],
     };
 }
 

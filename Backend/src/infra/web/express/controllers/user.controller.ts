@@ -1,4 +1,5 @@
 import { applicationErrorResponse } from '../applicationErrorResponse';
+import { recordOfferContact } from '../../../bd/postgres/offerPopularity';
 import type { Request, Response } from 'express';
 
 import { plainToInstance } from 'class-transformer';
@@ -127,7 +128,7 @@ export class UserController {
 
             if (user.accountStatus !== 'ACTIVE') {
                 const latest = await connection.query('SELECT message FROM moderation_notifications WHERE user_id=$1 ORDER BY id DESC LIMIT 1',[user.id]);
-                const status = user.accountStatus === 'PENDING' ? 'Seu cadastro de produtor aguarda aprovação.' : 'O acesso à sua conta está bloqueado.';
+                const status = 'O acesso à sua conta está bloqueado.';
                 return res.status(403).json({ error: status + (latest.rows[0] ? ' ' + latest.rows[0].message : '') });
             }
             const accessSecret = process.env.JWT_ACCESS_SECRET;
@@ -354,6 +355,11 @@ export class UserController {
                 return res.status(404).json({ error: 'Este produtor ainda não informou um telefone para WhatsApp' });
             }
 
+            const offerId = req.query.offerId;
+            if (typeof offerId === 'string' && offerId.length > 0 && offerId.length <= 36) {
+                await recordOfferContact(offerId, producerId, authenticatedUserId)
+                    .catch(error => console.error('Error recording offer contact:', error));
+            }
             return res.status(200).json({ phone });
         } catch (error: unknown) {
             console.error('Error searching producer WhatsApp contact:', error);

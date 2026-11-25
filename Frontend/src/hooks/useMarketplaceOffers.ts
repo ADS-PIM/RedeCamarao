@@ -1,29 +1,26 @@
 import { useEffect, useState } from 'react'
 import type { Offer } from '../data/marketplace'
 import { fetchMarketplaceOffers } from '../services/offers'
+import type { MarketplaceList } from '../services/offers'
 
-export function useMarketplaceOffers() {
-  const [offers, setOffers] = useState<Offer[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export function useMarketplaceOffers(list: MarketplaceList = 'recent') {
+  const [result, setResult] = useState<{ list: MarketplaceList; attempt: number; offers: Offer[]; error: string | null } | null>(null)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let active = true
-    fetchMarketplaceOffers()
-      .then(data => { if (active) setOffers(data) })
+    fetchMarketplaceOffers(undefined, list)
+      .then(offers => { if (active) setResult({ list, attempt, offers, error: null }) })
       .catch(reason => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Não foi possível carregar as ofertas.')
+        if (active) setResult({ list, attempt, offers: [], error: reason instanceof Error ? reason.message : 'Não foi possível carregar as ofertas.' })
       })
-      .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [attempt])
+  }, [attempt, list])
 
   function reloadOffers() {
-    setLoading(true)
-    setError(null)
     setAttempt(value => value + 1)
   }
 
-  return { offers, loading, error, reloadOffers }
+  const current = result?.list === list && result.attempt === attempt ? result : null
+  return { offers: current?.offers ?? [], loading: !current, error: current?.error ?? null, reloadOffers }
 }

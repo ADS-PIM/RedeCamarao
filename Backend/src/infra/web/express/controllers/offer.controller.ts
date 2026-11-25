@@ -1,4 +1,5 @@
 import { applicationErrorResponse } from '../applicationErrorResponse';
+import { recordOfferView } from '../../../bd/postgres/offerPopularity';
 import type { Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
@@ -39,9 +40,10 @@ export class OfferController {
         }
     }
 
-    public async searchPublic(_req: UserAuthRequest, res: Response): Promise<Response> {
+    public async searchPublic(req: UserAuthRequest, res: Response): Promise<Response> {
         try {
-            const offers = await this.searchOffer.executePublic();
+            const list = req.query.list;
+            const offers = await this.searchOffer.executePublic(list === 'featured' || list === 'popular' ? list : 'recent');
             return res.status(200).json(offers);
         } catch (error: unknown) {
             const response = applicationErrorResponse(error, res);
@@ -49,6 +51,18 @@ export class OfferController {
 
             console.error('Error searching public offers:', error);
             return res.status(500).json({ error: 'Error searching offers' });
+        }
+    }
+
+    public async recordView(req: UserAuthRequest, res: Response): Promise<Response> {
+        const id = req.params.id;
+        if (typeof id !== 'string' || !id.trim() || id.length > 36) return res.sendStatus(400);
+        try {
+            await recordOfferView(id);
+            return res.sendStatus(204);
+        } catch (error) {
+            console.error('Error recording offer view:', error);
+            return res.sendStatus(500);
         }
     }
 

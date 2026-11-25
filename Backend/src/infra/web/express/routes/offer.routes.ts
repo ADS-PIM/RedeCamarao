@@ -9,6 +9,7 @@ router.post('/create', authUser, (req, res) => controllers.offerController.creat
 router.post('/editor', authUser, saveOfferEditor);
 router.get('/marketplace', (req, res) => controllers.offerController.searchPublic(req, res));
 router.get('/marketplace/:id', (req, res) => controllers.offerController.searchPublicById(req, res));
+router.post('/marketplace/:id/view', (req, res) => controllers.offerController.recordView(req, res));
 router.get('/search', authUser, (req, res) => controllers.offerController.search(req, res));
 router.get('/user/:userId', authUser, (req, res) => controllers.offerController.listByUserId(req, res));
 router.patch('/:id', authUser, (req, res) => controllers.offerController.update(req, res));

@@ -8,8 +8,7 @@ const definitions = {
   enable: ['Reativar oferta','A oferta volta a seguir o status e o período de disponibilidade definidos pelo produtor.','Reativar oferta','Informações regularizadas'],
   remove: ['Excluir oferta','A publicação será removida permanentemente do marketplace.','Excluir oferta','Violação grave das políticas'],
   ban: ['Banir conta','O titular perderá o acesso à plataforma e todas as suas ofertas serão desativadas.','Banir conta','Fraude ou tentativa de golpe'],
-  restore: ['Reativar conta','O bloqueio será removido. Cadastros que aguardavam aprovação voltarão à fila. As ofertas desativadas poderão ser revisadas individualmente.','Reativar conta','Revisão do bloqueio'],
-  approve: ['Aprovar cadastro','O produtor poderá entrar e publicar ofertas no marketplace.','Aprovar cadastro','Cadastro verificado'],
+  restore: ['Reativar conta','O titular poderá acessar a plataforma novamente. As ofertas desativadas poderão ser revisadas individualmente.','Reativar conta','Revisão do bloqueio'],
   suspend: ['Suspender conta','O acesso será suspenso e as ofertas sairão do marketplace.','Suspender conta','Suspensão preventiva'],
   archive: ['Arquivar denúncia','A denúncia será encerrada e a decisão ficará disponível no histórico.','Arquivar denúncia','Análise concluída'],
   review: ['Iniciar análise','A denúncia entrará na sua fila de análise.','Iniciar análise','Triagem da denúncia'],
@@ -19,7 +18,7 @@ export function ModerationDialog({decision,auth,onClose,onSaved,emailConfigured}
   const [title,description,submit,defaultReason] = definitions[decision.action]
   const actionStyle = {
     disable: 'button-warning', suspend: 'button-warning', remove: 'mod-danger-button', ban: 'mod-danger-button',
-    enable: 'button-success', restore: 'button-success', approve: 'button-success',
+    enable: 'button-success', restore: 'button-success',
     archive: 'button-primary', review: 'button-primary',
   } satisfies Record<Decision['action'], string>
   const word = decision.action === 'ban' ? 'BANIR' : decision.action === 'remove' ? 'EXCLUIR' : ''

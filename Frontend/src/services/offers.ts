@@ -53,12 +53,31 @@ export async function fetchOfferDetail(id: string, baseUrl = apiBaseUrl): Promis
   return data
 }
 
-export async function fetchMarketplaceOffers(baseUrl = apiBaseUrl): Promise<Offer[]> {
+const viewedOffers = new Set<string>()
+
+export async function recordOfferView(id: string, baseUrl = apiBaseUrl) {
+  if (!baseUrl || viewedOffers.has(id)) return
+  const key = `marketplace:view:${id}`
+  try { if (sessionStorage.getItem(key)) return } catch { /* Storage may be unavailable. */ }
+  viewedOffers.add(id)
+  try {
+    const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/offer/marketplace/${encodeURIComponent(id)}/view`, {
+      method: 'POST', signal: AbortSignal.timeout(10000),
+    })
+    if (!response.ok) { viewedOffers.delete(id); return }
+  } catch { viewedOffers.delete(id); return }
+  try { sessionStorage.setItem(key, '1') } catch { /* The in-memory set still covers this page. */ }
+}
+
+export type MarketplaceList = 'recent' | 'popular' | 'featured'
+
+export async function fetchMarketplaceOffers(baseUrl = apiBaseUrl, list: MarketplaceList = 'recent'): Promise<Offer[]> {
   if (!baseUrl) throw new Error('O acesso às ofertas está temporariamente indisponível.')
 
   let response: Response
   try {
-    response = await fetch(`${baseUrl.replace(/\/+$/, '')}/offer/marketplace`, {
+    const query = list === 'recent' ? '' : `?list=${list}`
+    response = await fetch(`${baseUrl.replace(/\/+$/, '')}/offer/marketplace${query}`, {
       signal: AbortSignal.timeout(15000),
     })
   } catch {

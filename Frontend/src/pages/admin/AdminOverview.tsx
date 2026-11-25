@@ -23,7 +23,6 @@ export function AdminOverview({ summary, superAdmin, auth, version, reload }: {
   const data = overview.data
   const accounts = data?.accounts
   const highPriority = data?.highPriorityReports ?? 0
-  const olderPending = accounts?.olderPending
   const stats: Stat[] = [
     { label: 'Ofertas ativas', value: summary.offers.ATIVO ?? 0, url: '/admin/ofertas?status=ATIVO', icon: 'box' },
     { label: 'Denúncias abertas', value: summary.reports.OPEN ?? 0, url: '/admin/denuncias', icon: 'flag', detail: `${numberText.format(summary.reports.REVIEW ?? 0)} em análise` },
@@ -32,10 +31,6 @@ export function AdminOverview({ summary, superAdmin, auth, version, reload }: {
     stats.splice(1, 0, {
       label: 'Contas cadastradas', value: Object.values(summary.accounts).reduce((sum, count) => sum + count, 0), url: '/admin/contas', icon: 'people',
       detail: accounts ? `${numberText.format(accounts.newAccounts)} nos últimos 30 dias` : undefined,
-    })
-    stats.push({
-      label: 'Cadastros em análise', value: summary.accounts.PENDING ?? 0, url: '/admin/contas?status=PENDING&sort=oldest', icon: 'clock',
-      detail: olderPending === undefined ? undefined : `${numberText.format(olderPending)} ${olderPending === 1 ? 'cadastro feito' : 'cadastros feitos'} há mais de 24 h`,
     })
   }
 
@@ -58,16 +53,11 @@ export function AdminOverview({ summary, superAdmin, auth, version, reload }: {
     <div className="mod-overview-grid">
       <section className="mod-panel" aria-labelledby="priority-title">
         <div className="mod-dialog-heading"><h2 id="priority-title">Prioridades da operação</h2><a className="mod-link" href="/admin/denuncias">Ver denúncias <Icon name="arrow" /></a></div>
-        {data ? data.pendingReports.length || data.pendingAccounts.length ? <ul className="mod-overview-list">
+        {data ? data.pendingReports.length ? <ul className="mod-overview-list">
           {data.pendingReports.map(report => <li className="mod-member" key={'report-' + report.id}>
             <div><strong>{report.category}</strong><small>{report.code} · {report.offerTitle || report.accountName} · {dateText(report.createdAt, true)}</small></div>
             <div className="mod-overview-actions"><Badge status={report.priority ? 'PRIORITY' : report.status} />
               <a className="mod-link" href={'/admin/denuncias?id=' + encodeURIComponent(report.id)} aria-label={'Analisar denúncia ' + report.code}>Analisar <Icon name="arrow" /></a></div>
-          </li>)}
-          {data.pendingAccounts.map(account => <li className="mod-member" key={'account-' + account.id}>
-            <div><strong>{account.name}</strong><small>{account.code} · {dateText(account.createdAt, true)}</small></div>
-            <div className="mod-overview-actions"><Badge status="PENDING" />
-              <a className="mod-link" href={'/admin/contas?id=' + encodeURIComponent(account.id)} aria-label={'Analisar cadastro ' + account.code}>Analisar <Icon name="arrow" /></a></div>
           </li>)}
         </ul> : <p className="mod-empty">Nenhuma pendência na fila de análise.</p> : <LoadState error={overview.error} retry={reload} />}
       </section>
