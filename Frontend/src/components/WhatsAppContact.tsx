@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { producerWhatsAppHref } from '../data/producers'
-import { useAuthenticatedAction } from '../hooks/useAuthenticatedAction'
+import type { Authorized } from '../services/moderation'
 import { fetchProducerWhatsAppPhone } from '../services/producers'
 import type { UserSession } from '../services/auth'
 import './WhatsAppContact.css'
@@ -10,30 +10,26 @@ type Props = {
   producerId: string
   session: UserSession | null
   restoring: boolean
-  onSessionChange: (session: UserSession | null) => void
+  auth: Authorized
+  navigate: (href: string) => void
   message?: string
   className: string
 }
 
-export function WhatsAppContact({ producerId, session, restoring, onSessionChange, message, className }: Props) {
+export function WhatsAppContact({ producerId, session, restoring, auth, navigate, message, className }: Props) {
   const [opening, setOpening] = useState(false)
-  const [showAccountPrompt, setShowAccountPrompt] = useState(false)
   const [feedback, setFeedback] = useState('')
   const pending = useRef(false)
-  const withSession = useAuthenticatedAction(session, onSessionChange)
   const returnTo = window.location.pathname
   const loginHref = `/entrar?returnTo=${encodeURIComponent(returnTo)}`
-  const registerHref = `/registro?returnTo=${encodeURIComponent(returnTo)}`
 
   async function openWhatsApp() {
     if (restoring || pending.current) return
-    setShowAccountPrompt(false)
-    setFeedback('')
-
     if (!session) {
-      setShowAccountPrompt(true)
+      navigate(loginHref)
       return
     }
+    setFeedback('')
     if (session.userType === 'ADMIN') {
       setFeedback('O acesso aos contatos é exclusivo para contas de comprador ou produtor.')
       return
@@ -48,7 +44,7 @@ export function WhatsAppContact({ producerId, session, restoring, onSessionChang
     } catch { /* If popups are blocked, use the current tab after retrieving the contact. */ }
 
     try {
-      const phone = await withSession(token => fetchProducerWhatsAppPhone(producerId, token))
+      const phone = await auth(token => fetchProducerWhatsAppPhone(producerId, token))
       const href = producerWhatsAppHref(phone, message)
       if (!href) throw new Error('Este produtor ainda não informou um telefone válido para WhatsApp.')
       if (popup) popup.location.replace(href)
@@ -68,9 +64,7 @@ export function WhatsAppContact({ producerId, session, restoring, onSessionChang
       <button type="button" className={className} disabled={restoring || opening} onClick={openWhatsApp}>
         <Icon name="whatsapp" />{restoring ? 'Verificando acesso...' : opening ? 'Abrindo WhatsApp...' : 'Conversar pelo WhatsApp'}
       </button>
-      {(showAccountPrompt || feedback) && <p className="whatsapp-contact-status" role="status">
-        {showAccountPrompt ? <>Para acessar o WhatsApp do produtor, <a href={loginHref}>entre</a> ou <a href={registerHref}>crie uma conta</a>.</> : feedback}
-      </p>}
+      {feedback && <p className="whatsapp-contact-status" role="status">{feedback}</p>}
     </div>
   )
 }

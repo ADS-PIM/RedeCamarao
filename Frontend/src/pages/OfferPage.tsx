@@ -32,7 +32,6 @@ export function OfferPage({ offerId, session, restoring, auth, navigate }: { off
   const [showShareLink, setShowShareLink] = useState(false)
   const shareLinkRef = useRef<HTMLInputElement>(null)
   const userId = session?.userId
-  const saved = Boolean(userId && readSavedOffers({ getItem: key => key === savedOffersKey ? savedOffersSnapshot : null }).includes(offerId))
 
   useEffect(() => {
     document.title = `${loading ? 'Oferta de camarão' : error ? 'Oferta indisponível' : offer?.title ?? 'Oferta não encontrada'} | RedeCamarão`
@@ -120,7 +119,7 @@ export function OfferPage({ offerId, session, restoring, auth, navigate }: { off
               <div><dt><Icon name="pin" />Localização</dt><dd>{offer.location}</dd></div>
               <div><dt><Icon name="calendar" />Disponibilidade</dt><dd>Até {formatDate(offer.endDate)}</dd></div>
             </dl>
-            <div className="offer-contact-actions"><WhatsAppContact producerId={producer.id} session={session} restoring={restoring} onSessionChange={onSessionChange} className="button offer-contact-button" message={`Olá! Tenho interesse na oferta “${offer.title}” da RedeCamarão e gostaria de conversar sobre preço, retirada e disponibilidade.`} /></div>
+            <div className="offer-contact-actions"><WhatsAppContact producerId={producer.id} session={session} restoring={restoring} auth={auth} navigate={navigate} className="button offer-contact-button" message={`Olá! Tenho interesse na oferta “${offer.title}” da RedeCamarão e gostaria de conversar sobre preço, retirada e disponibilidade.`} /></div>
           </section>
 
           <section className="offer-about" aria-labelledby="offer-about-title">
